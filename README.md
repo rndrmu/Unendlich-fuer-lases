@@ -1,3 +1,4 @@
+## Eigentlich nur eine /r/ich_iel übersetzte version von Infinity for Reddit
 # Infinity-For-Reddit [<img src="https://img.shields.io/badge/Patreon-F96854?style=for-the-badge&logo=patreon&logoColor=white" alt="Patreon">](https://www.patreon.com/docile_alligator)
 This is a Reddit client on Android written in Java. It does not have any ads and it features clean UI and smooth browsing experience.
 
