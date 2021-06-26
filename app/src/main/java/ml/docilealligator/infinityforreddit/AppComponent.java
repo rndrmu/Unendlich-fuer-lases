@@ -21,11 +21,12 @@ import ml.docilealligator.infinityforreddit.activities.FullMarkdownActivity;
 import ml.docilealligator.infinityforreddit.activities.GiveAwardActivity;
 import ml.docilealligator.infinityforreddit.activities.InboxActivity;
 import ml.docilealligator.infinityforreddit.activities.LinkResolverActivity;
+import ml.docilealligator.infinityforreddit.activities.LockScreenActivity;
 import ml.docilealligator.infinityforreddit.activities.LoginActivity;
 import ml.docilealligator.infinityforreddit.activities.MainActivity;
 import ml.docilealligator.infinityforreddit.activities.MultiredditSelectionActivity;
-import ml.docilealligator.infinityforreddit.activities.PostFilterUsageListingActivity;
 import ml.docilealligator.infinityforreddit.activities.PostFilterPreferenceActivity;
+import ml.docilealligator.infinityforreddit.activities.PostFilterUsageListingActivity;
 import ml.docilealligator.infinityforreddit.activities.PostImageActivity;
 import ml.docilealligator.infinityforreddit.activities.PostLinkActivity;
 import ml.docilealligator.infinityforreddit.activities.PostTextActivity;
@@ -72,6 +73,7 @@ import ml.docilealligator.infinityforreddit.fragments.ViewRedditGalleryImageOrGi
 import ml.docilealligator.infinityforreddit.fragments.ViewRedditGalleryVideoFragment;
 import ml.docilealligator.infinityforreddit.services.DownloadMediaService;
 import ml.docilealligator.infinityforreddit.services.DownloadRedditVideoService;
+import ml.docilealligator.infinityforreddit.services.MaterialYouService;
 import ml.docilealligator.infinityforreddit.services.SubmitPostService;
 import ml.docilealligator.infinityforreddit.settings.AdvancedPreferenceFragment;
 import ml.docilealligator.infinityforreddit.settings.CrashReportsFragment;
@@ -263,4 +265,8 @@ public interface AppComponent {
     void inject(CrashReportsFragment crashReportsFragment);
 
     void inject(AnonymousSubscriptionsActivity anonymousSubscriptionsActivity);
+
+    void inject(LockScreenActivity lockScreenActivity);
+
+    void inject(MaterialYouService materialYouService);
 }

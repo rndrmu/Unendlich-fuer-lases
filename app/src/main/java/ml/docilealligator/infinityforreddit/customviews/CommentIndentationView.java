@@ -21,7 +21,8 @@ public class CommentIndentationView extends LinearLayout {
     private Integer[] colors;
     private ArrayList<Integer> startXs;
     private final int spacing;
-    private final int pathWidth;
+    private int pathWidth;
+    private boolean showOnlyOneDivider = false;
 
     public CommentIndentationView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -49,9 +50,16 @@ public class CommentIndentationView extends LinearLayout {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        for (int i = 0; i < startXs.size(); i++) {
-            paint.setColor(colors[i % 7]);
-            canvas.drawLine(startXs.get(i), 0, startXs.get(i), getHeight(), paint);
+        if (showOnlyOneDivider) {
+            if (startXs.size() > 0) {
+                paint.setColor(colors[(startXs.size() - 1) % 7]);
+                canvas.drawLine(level * pathWidth, 0, level * pathWidth, getHeight(), paint);
+            }
+        } else {
+            for (int i = 0; i < startXs.size(); i++) {
+                paint.setColor(colors[i % 7]);
+                canvas.drawLine(startXs.get(i), 0, startXs.get(i), getHeight(), paint);
+            }
         }
     }
 
@@ -81,12 +89,19 @@ public class CommentIndentationView extends LinearLayout {
         this.colors = colors;
         this.level = level;
         if (level > 0) {
-            int indentationSpacing = level * spacing + pathWidth;
+            int indentationSpacing = showOnlyOneDivider ? pathWidth * level : level * spacing + pathWidth;
             setPaddingRelative(indentationSpacing, 0, pathWidth, 0);
         } else {
             setPaddingRelative(0, 0, 0, 0);
         }
         invalidate();
+    }
+
+    public void setShowOnlyOneDivider(boolean showOnlyOneDivider) {
+        this.showOnlyOneDivider = showOnlyOneDivider;
+        if (showOnlyOneDivider) {
+            pathWidth = (int) Utils.convertDpToPixel(4, getContext());
+        }
     }
 
     private static class SavedState extends BaseSavedState {

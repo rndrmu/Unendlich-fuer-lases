@@ -87,6 +87,7 @@ public class SharedPreferencesUtils {
     public static final String NUMBER_OF_COLUMNS_IN_POST_FEED_PORTRAIT_GALLERY_LAYOUT = "number_of_columns_in_post_feed_portrait_gallery_layout";
     public static final String NUMBER_OF_COLUMNS_IN_POST_FEED_LANDSCAPE_GALLERY_LAYOUT = "number_of_columns_in_post_feed_landscape_gallery_layout";
     public static final String SWIPE_RIGHT_TO_GO_BACK = "swipe_to_go_back_from_post_detail";
+    public static final String SWIPE_VERTICALLY_TO_GO_BACK_FROM_MEDIA = "swipe_vertically_to_go_back_from_media";
     public static final String VOLUME_KEYS_NAVIGATE_COMMENTS = "volume_keys_navigate_comments";
     public static final String VOLUME_KEYS_NAVIGATE_POSTS = "volume_keys_navigate_posts";
     public static final String MUTE_VIDEO = "mute_video";
@@ -165,6 +166,7 @@ public class SharedPreferencesUtils {
     public static final String USER_DEFAULT_SORT_TIME = "user_default_sort_time";
     public static final String CLICK_TO_SHOW_MEDIA_IN_GALLERY_LAYOUT = "click_to_show_media_in_gallery_layout";
     public static final String HIDE_POST_TYPE = "hide_post_type";
+    public static final String HIDE_POST_FLAIR = "hide_post_flair";
     public static final String HIDE_THE_NUMBER_OF_AWARDS = "hide_the_number_of_awards";
     public static final String HIDE_SUBREDDIT_AND_USER_PREFIX = "hide_subreddit_and_user_prefix";
     public static final String HIDE_THE_NUMBER_OF_VOTES = "hide_the_number_of_votes";
@@ -177,6 +179,8 @@ public class SharedPreferencesUtils {
     public static final String NUMBER_OF_COLUMNS_IN_POST_FEED_PORTRAIT_CARD_LAYOUT_2 = "number_of_columns_in_post_feed_portrait_card_layout_2";
     public static final String NUMBER_OF_COLUMNS_IN_POST_FEED_LANDSCAPE_CARD_LAYOUT_2 = "number_of_columns_in_post_feed_landscape_card_layout_2";
     public static final String DISABLE_NSFW_FOREVER = "disable_nsfw_forever";
+    public static final String SHOW_ONLY_ONE_COMMENT_LEVEL_INDICATOR = "show_only_one_comment_level_indicator";
+    public static final String ENABLE_MATERIAL_YOU = "enable_material_you";
 
     public static final String DEFAULT_PREFERENCES_FILE = "ml.docilealligator.infinityforreddit_preferences";
     public static final String MAIN_PAGE_TABS_SHARED_PREFERENCES_FILE = "ml.docilealligator.infinityforreddit.main_page_tabs";
@@ -202,6 +206,8 @@ public class SharedPreferencesUtils {
     public static final int MAIN_PAGE_TAB_POST_TYPE_HIDDEN = 8;
     public static final int MAIN_PAGE_TAB_POST_TYPE_SAVED = 9;
     public static final int MAIN_PAGE_TAB_POST_TYPE_GILDED = 10;
+    public static final String MAIN_PAGE_SHOW_MULTIREDDITS = "_main_page_show_multireddits";
+    public static final String MAIN_PAGE_SHOW_FAVORITE_MULTIREDDITS = "_main_page_show_favorite_multireddits";
     public static final String MAIN_PAGE_SHOW_SUBSCRIBED_SUBREDDITS = "_main_page_show_subscribed_subreddits";
     public static final String MAIN_PAGE_SHOW_FAVORITE_SUBSCRIBED_SUBREDDITS = "_main_page_show_favorite_subscribed_subreddits";
 

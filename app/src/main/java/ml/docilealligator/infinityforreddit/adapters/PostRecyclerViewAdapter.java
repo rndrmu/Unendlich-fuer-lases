@@ -210,6 +210,7 @@ public class PostRecyclerViewAdapter extends PagedListAdapter<Post, RecyclerView
     private boolean mMarkPostsAsReadOnScroll;
     private boolean mHideReadPostsAutomatically;
     private boolean mHidePostType;
+    private boolean mHidePostFlair;
     private boolean mHideTheNumberOfAwards;
     private boolean mHideSubredditAndUserPrefix;
     private boolean mHideTheNumberOfVotes;
@@ -287,6 +288,7 @@ public class PostRecyclerViewAdapter extends PagedListAdapter<Post, RecyclerView
             mHideReadPostsAutomatically = postHistorySharedPreferences.getBoolean((accountName == null ? "" : accountName) + SharedPreferencesUtils.HIDE_READ_POSTS_AUTOMATICALLY_BASE, false);
 
             mHidePostType = sharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_POST_TYPE, false);
+            mHidePostFlair = sharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_POST_FLAIR, false);
             mHideTheNumberOfAwards = sharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_THE_NUMBER_OF_AWARDS, false);
             mHideSubredditAndUserPrefix = sharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_SUBREDDIT_AND_USER_PREFIX, false);
             mHideTheNumberOfVotes = sharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_THE_NUMBER_OF_VOTES, false);
@@ -474,7 +476,12 @@ public class PostRecyclerViewAdapter extends PagedListAdapter<Post, RecyclerView
                         holder.itemView.setLayoutParams(params);
                         return;
                     }
-                    holder.itemView.setBackgroundTintList(ColorStateList.valueOf(mReadPostCardViewBackgroundColor));
+                    if (((PostBaseViewHolder) holder).itemViewIsNotCardView) {
+                        holder.itemView.setBackgroundColor(mReadPostCardViewBackgroundColor);
+                    } else {
+                        holder.itemView.setBackgroundTintList(ColorStateList.valueOf(mReadPostCardViewBackgroundColor));
+                    }
+
                     ((PostBaseViewHolder) holder).titleTextView.setTextColor(mReadPostTitleColor);
                 }
                 String subredditNamePrefixed = post.getSubredditNamePrefixed();
@@ -622,8 +629,12 @@ public class PostRecyclerViewAdapter extends PagedListAdapter<Post, RecyclerView
                 }
 
                 if (flair != null && !flair.equals("")) {
-                    ((PostBaseViewHolder) holder).flairTextView.setVisibility(View.VISIBLE);
-                    Utils.setHTMLWithImageToTextView(((PostBaseViewHolder) holder).flairTextView, flair, false);
+                    if (mHidePostFlair) {
+                        ((PostBaseViewHolder) holder).flairTextView.setVisibility(View.GONE);
+                    } else {
+                        ((PostBaseViewHolder) holder).flairTextView.setVisibility(View.VISIBLE);
+                        Utils.setHTMLWithImageToTextView(((PostBaseViewHolder) holder).flairTextView, flair, false);
+                    }
                 }
 
                 if (nAwards > 0 && !mHideTheNumberOfAwards) {
@@ -720,8 +731,9 @@ public class PostRecyclerViewAdapter extends PagedListAdapter<Post, RecyclerView
                             }
                         });
                         ((PostVideoAutoplayViewHolder) holder).fetchGfycatOrRedgifsVideoLinks
-                                .fetchGfycatOrRedgifsVideoLinksInRecyclerViewAdapter(mGfycatRetrofit, mRedgifsRetrofit,
-                                        post.getGfycatId(), post.isGfycat(), mAutomaticallyTryRedgifs);
+                                .fetchGfycatOrRedgifsVideoLinksInRecyclerViewAdapter(mExecutor, new Handler(),
+                                        mGfycatRetrofit, mRedgifsRetrofit, post.getGfycatId(),
+                                        post.isGfycat(), mAutomaticallyTryRedgifs);
                     } else {
                         ((PostVideoAutoplayViewHolder) holder).bindVideoUri(Uri.parse(post.getVideoUrl()));
                     }
@@ -843,8 +855,9 @@ public class PostRecyclerViewAdapter extends PagedListAdapter<Post, RecyclerView
                             }
                         });
                         ((PostCard2VideoAutoplayViewHolder) holder).fetchGfycatOrRedgifsVideoLinks
-                                .fetchGfycatOrRedgifsVideoLinksInRecyclerViewAdapter(mGfycatRetrofit, mRedgifsRetrofit,
-                                        post.getGfycatId(), post.isGfycat(), mAutomaticallyTryRedgifs);
+                                .fetchGfycatOrRedgifsVideoLinksInRecyclerViewAdapter(mExecutor, new Handler(),
+                                        mGfycatRetrofit, mRedgifsRetrofit, post.getGfycatId(), post.isGfycat(),
+                                        mAutomaticallyTryRedgifs);
                     } else {
                         ((PostCard2VideoAutoplayViewHolder) holder).bindVideoUri(Uri.parse(post.getVideoUrl()));
                     }
@@ -1123,8 +1136,12 @@ public class PostRecyclerViewAdapter extends PagedListAdapter<Post, RecyclerView
                 }
 
                 if (flair != null && !flair.equals("")) {
-                    ((PostCompactBaseViewHolder) holder).flairTextView.setVisibility(View.VISIBLE);
-                    Utils.setHTMLWithImageToTextView(((PostCompactBaseViewHolder) holder).flairTextView, flair, false);
+                    if (mHidePostFlair) {
+                        ((PostCompactBaseViewHolder) holder).flairTextView.setVisibility(View.GONE);
+                    } else {
+                        ((PostCompactBaseViewHolder) holder).flairTextView.setVisibility(View.VISIBLE);
+                        Utils.setHTMLWithImageToTextView(((PostCompactBaseViewHolder) holder).flairTextView, flair, false);
+                    }
                 }
 
                 if (nAwards > 0 && !mHideTheNumberOfAwards) {
@@ -1801,6 +1818,10 @@ public class PostRecyclerViewAdapter extends PagedListAdapter<Post, RecyclerView
         mHidePostType = hidePostType;
     }
 
+    public void setHidePostFlair(boolean hidePostFlair) {
+        mHidePostFlair = hidePostFlair;
+    }
+
     public void setHideTheNumberOfAwards(boolean hideTheNumberOfAwards) {
         mHideTheNumberOfAwards = hideTheNumberOfAwards;
     }
@@ -1843,7 +1864,11 @@ public class PostRecyclerViewAdapter extends PagedListAdapter<Post, RecyclerView
                 params.bottomMargin = marginPixel;
             }
             holder.itemView.setLayoutParams(params);
-            ((PostBaseViewHolder) holder).itemView.setBackgroundTintList(ColorStateList.valueOf(mCardViewBackgroundColor));
+            if (((PostBaseViewHolder) holder).itemViewIsNotCardView) {
+                ((PostBaseViewHolder) holder).itemView.setBackgroundColor(mCardViewBackgroundColor);
+            } else {
+                ((PostBaseViewHolder) holder).itemView.setBackgroundTintList(ColorStateList.valueOf(mCardViewBackgroundColor));
+            }
             ((PostBaseViewHolder) holder).titleTextView.setTextColor(mPostTitleColor);
             if (holder instanceof PostVideoAutoplayViewHolder) {
                 ((PostVideoAutoplayViewHolder) holder).mediaUri = null;
@@ -1964,14 +1989,14 @@ public class PostRecyclerViewAdapter extends PagedListAdapter<Post, RecyclerView
         if (super.getItemCount() <= 0 || order >= super.getItemCount()) {
             return null;
         }
-        return getItem(order);
+        return order;
     }
 
     @Nullable
     @Override
     public Integer getOrderForKey(@NonNull Object key) {
-        if (getCurrentList() != null && key instanceof Post) {
-            return getCurrentList().indexOf(key);
+        if (key instanceof Integer) {
+            return (Integer) key;
         }
 
         return null;
@@ -2103,6 +2128,8 @@ public class PostRecyclerViewAdapter extends PagedListAdapter<Post, RecyclerView
         ImageView saveButton;
         ImageView shareButton;
 
+        boolean itemViewIsNotCardView = false;
+
         PostBaseViewHolder(@NonNull View itemView) {
             super(itemView);
         }
@@ -2171,7 +2198,11 @@ public class PostRecyclerViewAdapter extends PagedListAdapter<Post, RecyclerView
                 constraintSet.applyTo(bottomConstraintLayout);
             }
 
-            itemView.setBackgroundTintList(ColorStateList.valueOf(mCardViewBackgroundColor));
+            if (itemViewIsNotCardView) {
+                itemView.setBackgroundColor(mCardViewBackgroundColor);
+            } else {
+                itemView.setBackgroundTintList(ColorStateList.valueOf(mCardViewBackgroundColor));
+            }
             subredditTextView.setTextColor(mSubredditColor);
             userTextView.setTextColor(mUsernameColor);
             postTimeTextView.setTextColor(mSecondaryTextColor);
@@ -2587,11 +2618,44 @@ public class PostRecyclerViewAdapter extends PagedListAdapter<Post, RecyclerView
             });
         }
 
+        void setBaseView(AspectRatioGifImageView iconGifImageView,
+                         TextView subredditTextView,
+                         TextView userTextView,
+                         ImageView stickiedPostImageView,
+                         TextView postTimeTextView,
+                         TextView titleTextView,
+                         CustomTextView typeTextView,
+                         ImageView archivedImageView,
+                         ImageView lockedImageView,
+                         ImageView crosspostImageView,
+                         CustomTextView nsfwTextView,
+                         CustomTextView spoilerTextView,
+                         CustomTextView flairTextView,
+                         CustomTextView awardsTextView,
+                         ConstraintLayout bottomConstraintLayout,
+                         ImageView upvoteButton,
+                         TextView scoreTextView,
+                         ImageView downvoteButton,
+                         TextView commentsCountTextView,
+                         ImageView saveButton,
+                         ImageView shareButton, boolean itemViewIsNotCardView) {
+            this.itemViewIsNotCardView = itemViewIsNotCardView;
+
+            setBaseView(iconGifImageView, subredditTextView, userTextView, stickiedPostImageView, postTimeTextView,
+                    titleTextView, typeTextView, archivedImageView, lockedImageView, crosspostImageView,
+                    nsfwTextView, spoilerTextView, flairTextView, awardsTextView, bottomConstraintLayout,
+                    upvoteButton, scoreTextView, downvoteButton, commentsCountTextView, saveButton, shareButton);
+        }
+
         void markPostRead(Post post, boolean changePostItemColor) {
             if (mAccessToken != null && !post.isRead() && mMarkPostsAsRead) {
                 post.markAsRead(true);
                 if (changePostItemColor) {
-                    itemView.setBackgroundTintList(ColorStateList.valueOf(mReadPostCardViewBackgroundColor));
+                    if (itemViewIsNotCardView) {
+                        itemView.setBackgroundColor(mReadPostCardViewBackgroundColor);
+                    } else {
+                        itemView.setBackgroundTintList(ColorStateList.valueOf(mReadPostCardViewBackgroundColor));
+                    }
                     titleTextView.setTextColor(mReadPostTitleColor);
                     if (this instanceof PostTextTypeViewHolder) {
                         ((PostTextTypeViewHolder) this).contentTextView.setTextColor(mReadPostContentColor);
@@ -3902,7 +3966,8 @@ public class PostRecyclerViewAdapter extends PagedListAdapter<Post, RecyclerView
                     downvoteButton,
                     commentsCountTextView,
                     saveButton,
-                    shareButton);
+                    shareButton,
+                    true);
 
             divider.setBackgroundColor(mDividerColor);
 
@@ -4157,7 +4222,8 @@ public class PostRecyclerViewAdapter extends PagedListAdapter<Post, RecyclerView
                     downvoteButton,
                     commentsCountTextView,
                     saveButton,
-                    shareButton);
+                    shareButton,
+                    true);
 
             linkTextView.setTextColor(mSecondaryTextColor);
             noPreviewImageView.setBackgroundColor(mNoPreviewPostTypeBackgroundColor);
@@ -4256,7 +4322,8 @@ public class PostRecyclerViewAdapter extends PagedListAdapter<Post, RecyclerView
                     downvoteButton,
                     commentsCountTextView,
                     saveButton,
-                    shareButton);
+                    shareButton,
+                    true);
 
             contentTextView.setTextColor(mPostContentColor);
             divider.setBackgroundColor(mDividerColor);

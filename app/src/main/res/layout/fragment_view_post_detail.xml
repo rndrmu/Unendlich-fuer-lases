@@ -13,9 +13,9 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <ml.docilealligator.infinityforreddit.customviews.CustomToroContainer
-            android:id="@+id/recycler_view_view_post_detail_fragment"
+            android:id="@+id/post_detail_recycler_view_view_post_detail_fragment"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:paddingBottom="144dp"
             android:clipToPadding="false" />
 

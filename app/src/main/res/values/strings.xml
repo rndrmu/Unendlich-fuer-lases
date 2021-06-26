@@ -398,6 +398,7 @@
     <string name="settings_swap_tap_and_long_title">Swap Tap and Long Press in Comments</string>
     <string name="settings_swipe_to_go_back_title">Swipe Right to Go Back</string>
     <string name="settings_swipe_to_go_back_summary">Does Not Apply to All Pages</string>
+    <string name="settings_swipe_vertically_to_go_back_from_media_title">Swipe Vertically to Go Back From Image and Gif</string>
     <string name="settings_lock_jump_to_next_top_level_comment_button_title">Lock Jump to Next Top-level Comment Button</string>
     <string name="settings_lock_bottom_app_bar_title">Lock Bottom Navigation Bar</string>
     <string name="settings_swipe_up_to_hide_jump_to_next_top_level_comment_button_title">Swipe Up to Hide Jump to Next Top-level Comment Button</string>
@@ -456,6 +457,9 @@
     <string name="settings_customize_dark_theme_title">Dark Theme</string>
     <string name="settings_customize_amoled_theme_title">Amoled Theme</string>
     <string name="settings_manage_themes_title">Manage Themes</string>
+    <string name="settings_category_material_you_title">Material You</string>
+    <string name="settings_enable_material_you_title">Enable Material You</string>
+    <string name="settings_enable_material_you_summary">Personalize Infinity based on Your Wallpaper</string>
     <string name="settings_custom_theme_cannot_apply_to_settings_page_summary">Custom themes cannot be applied to settings page (except toolbar, status bar and navigation bar).</string>
     <string name="settings_advanced_master_title">Advanced</string>
     <string name="settings_delete_all_subreddits_data_in_database_title">Delete All Subreddits in Database</string>
@@ -475,6 +479,8 @@
     <string name="settings_tab_3_summary">Tab 3</string>
     <string name="settings_more_tabs_summary">More Tabs</string>
     <string name="settings_more_tabs_info_summary">Enabling the following options will cause an unintended behaviour:\nTabs may lose all the content after switching to others. This is the same as refreshing the page.</string>
+    <string name="settings_more_tabs_show_favorite_multireddits_title">Show Favorite Multireddits</string>
+    <string name="settings_more_tabs_show_multireddits_title">Show Multireddits</string>
     <string name="settings_more_tabs_show_favorite_subscribed_subreddits_title">Show Favorite Subscribed Subreddits</string>
     <string name="settings_more_tabs_show_subscribed_subreddits_title">Show Subscribed Subreddits</string>
     <string name="settings_tab_title">Title</string>
@@ -541,11 +547,12 @@
     <string name="settings_user_default_sort_time_title">User Default Sort Time</string>
     <string name="settings_click_to_show_media_in_gallery_layout">Click to Show Media in Gallery Layout</string>
     <string name="settings_hide_post_type">Hide Post Type</string>
+    <string name="settings_hide_post_flair">Hide Post Flair</string>
     <string name="settings_hide_the_number_of_awards">Hide the Number of Awards</string>
     <string name="settings_hide_subreddit_and_user_prefix">Hide Subreddit and User Prefix</string>
     <string name="settings_hide_the_number_of_votes">Hide the Number of Votes</string>
     <string name="settings_hide_the_number_of_comments">Hide the Number of Comments</string>
-    <string name="settings_show_avatar_on_the_right">Show Avatar on the Left</string>
+    <string name="settings_show_avatar_on_the_right">Show Avatar on the Right</string>
     <string name="settings_backup_settings_title">Backup Settings</string>
     <string name="settings_restore_settings_title">Restore Settings</string>
     <string name="settings_credits_love_animation_title">Love Animation</string>
@@ -562,6 +569,7 @@
     <string name="settings_crash_reports_title">Crash Reports</string>
     <string name="settings_nsfw_and_spoiler_dangerous_group_title">Dangerous</string>
     <string name="settings_disable_nsfw_forever_title">Disable NSFW Forever</string>
+    <string name="settings_show_only_one_comment_level_indicator">Show Only One Comment Level Indicator</string>
 
     <string name="no_link_available">Cannot get the link</string>
 
