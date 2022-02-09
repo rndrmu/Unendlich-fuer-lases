@@ -1,6 +1,5 @@
 package ml.docilealligator.infinityforreddit.settings;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,17 +8,17 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import ml.docilealligator.infinityforreddit.adapters.TranslationFragmentRecyclerViewAdapter;
-import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.Infinity;
 import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
+import ml.docilealligator.infinityforreddit.adapters.TranslationFragmentRecyclerViewAdapter;
+import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 
 public class TranslationFragment extends Fragment {
 
@@ -27,7 +26,7 @@ public class TranslationFragment extends Fragment {
     RecyclerView recyclerView;
     @Inject
     CustomThemeWrapper customThemeWrapper;
-    private Activity activity;
+    private BaseActivity activity;
 
     public TranslationFragment() {
         // Required empty public constructor
@@ -44,7 +43,6 @@ public class TranslationFragment extends Fragment {
         ButterKnife.bind(this, rootView);
 
         TranslationFragmentRecyclerViewAdapter adapter = new TranslationFragmentRecyclerViewAdapter(activity, customThemeWrapper);
-        recyclerView.setLayoutManager(new LinearLayoutManager(activity));
         recyclerView.setAdapter(adapter);
 
         return rootView;
@@ -53,6 +51,6 @@ public class TranslationFragment extends Fragment {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        activity = (Activity) context;
+        activity = (BaseActivity) context;
     }
 }

@@ -4,12 +4,15 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -29,6 +32,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.r0adkll.slidr.Slidr;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.concurrent.Executor;
 
@@ -55,6 +59,7 @@ public class CustomizePostFilterActivity extends BaseActivity {
     public static final String EXTRA_EXCLUDE_FLAIR = "EEF";
     public static final String EXTRA_CONTAIN_FLAIR = "ECF";
     public static final String EXTRA_EXCLUDE_DOMAIN = "EED";
+    public static final String EXTRA_CONTAIN_DOMAIN = "ECD";
     public static final String RETURN_EXTRA_POST_FILTER = "REPF";
     private static final String POST_FILTER_STATE = "PFS";
     private static final String ORIGINAL_NAME_STATE = "ONS";
@@ -126,10 +131,18 @@ public class CustomizePostFilterActivity extends BaseActivity {
     TextInputLayout titleExcludesStringsTextInputLayout;
     @BindView(R.id.title_excludes_strings_text_input_edit_text_customize_post_filter_activity)
     TextInputEditText titleExcludesStringsTextInputEditText;
+    @BindView(R.id.title_contains_strings_text_input_layout_customize_post_filter_activity)
+    TextInputLayout titleContainsStringsTextInputLayout;
+    @BindView(R.id.title_contains_strings_text_input_edit_text_customize_post_filter_activity)
+    TextInputEditText titleContainsStringsTextInputEditText;
     @BindView(R.id.title_excludes_regex_text_input_layout_customize_post_filter_activity)
     TextInputLayout titleExcludesRegexTextInputLayout;
     @BindView(R.id.title_excludes_regex_text_input_edit_text_customize_post_filter_activity)
     TextInputEditText titleExcludesRegexTextInputEditText;
+    @BindView(R.id.title_contains_regex_text_input_layout_customize_post_filter_activity)
+    TextInputLayout titleContainsRegexTextInputLayout;
+    @BindView(R.id.title_contains_regex_text_input_edit_text_customize_post_filter_activity)
+    TextInputEditText titleContainsRegexTextInputEditText;
     @BindView(R.id.excludes_subreddits_text_input_layout_customize_post_filter_activity)
     TextInputLayout excludesSubredditsTextInputLayout;
     @BindView(R.id.excludes_subreddits_text_input_edit_text_customize_post_filter_activity)
@@ -150,10 +163,14 @@ public class CustomizePostFilterActivity extends BaseActivity {
     TextInputLayout containsFlairsTextInputLayout;
     @BindView(R.id.contains_flairs_text_input_edit_text_customize_post_filter_activity)
     TextInputEditText containsFlairsTextInputEditText;
-    @BindView(R.id.excludes_domains_text_input_layout_customize_post_filter_activity)
-    TextInputLayout excludesDomainsTextInputLayout;
-    @BindView(R.id.excludes_domains_text_input_edit_text_customize_post_filter_activity)
-    TextInputEditText excludesDomainsTextInputEditText;
+    @BindView(R.id.exclude_domains_text_input_layout_customize_post_filter_activity)
+    TextInputLayout excludeDomainsTextInputLayout;
+    @BindView(R.id.exclude_domains_text_input_edit_text_customize_post_filter_activity)
+    TextInputEditText excludeDomainsTextInputEditText;
+    @BindView(R.id.contain_domains_text_input_layout_customize_post_filter_activity)
+    TextInputLayout containDomainsTextInputLayout;
+    @BindView(R.id.contain_domains_text_input_edit_text_customize_post_filter_activity)
+    TextInputEditText containDomainsTextInputEditText;
     @BindView(R.id.min_vote_text_input_layout_customize_post_filter_activity)
     TextInputLayout minVoteTextInputLayout;
     @BindView(R.id.min_vote_text_input_edit_text_customize_post_filter_activity)
@@ -303,12 +320,15 @@ public class CustomizePostFilterActivity extends BaseActivity {
         onlyNSFWSwitch.setChecked(postFilter.onlyNSFW);
         onlySpoilerSwitch.setChecked(postFilter.onlySpoiler);
         titleExcludesStringsTextInputEditText.setText(postFilter.postTitleExcludesStrings);
+        titleContainsStringsTextInputEditText.setText(postFilter.postTitleContainsStrings);
         titleExcludesRegexTextInputEditText.setText(postFilter.postTitleExcludesRegex);
+        titleContainsRegexTextInputEditText.setText(postFilter.postTitleContainsRegex);
         excludesSubredditsTextInputEditText.setText(postFilter.excludeSubreddits);
         excludesUsersTextInputEditText.setText(postFilter.excludeUsers);
         excludesFlairsTextInputEditText.setText(postFilter.excludeFlairs);
         containsFlairsTextInputEditText.setText(postFilter.containFlairs);
-        excludesDomainsTextInputEditText.setText(postFilter.excludeDomains);
+        excludeDomainsTextInputEditText.setText(postFilter.excludeDomains);
+        containDomainsTextInputEditText.setText(postFilter.containDomains);
         minVoteTextInputEditText.setText(Integer.toString(postFilter.minVote));
         maxVoteTextInputEditText.setText(Integer.toString(postFilter.maxVote));
         minCommentsTextInputEditText.setText(Integer.toString(postFilter.minComments));
@@ -322,6 +342,7 @@ public class CustomizePostFilterActivity extends BaseActivity {
         String excludeFlair = intent.getStringExtra(EXTRA_EXCLUDE_FLAIR);
         String containFlair = intent.getStringExtra(EXTRA_CONTAIN_FLAIR);
         String excludeDomain = intent.getStringExtra(EXTRA_EXCLUDE_DOMAIN);
+        String containDomain = intent.getStringExtra(EXTRA_CONTAIN_DOMAIN);
 
         if (excludeSubreddit != null && !excludeSubreddit.equals("")) {
             if (!excludesSubredditsTextInputEditText.getText().toString().equals("")) {
@@ -348,10 +369,16 @@ public class CustomizePostFilterActivity extends BaseActivity {
             containsFlairsTextInputEditText.append(containFlair);
         }
         if (excludeDomain != null && !excludeDomain.equals("")) {
-            if (!excludesDomainsTextInputEditText.getText().toString().equals("")) {
-                excludesDomainsTextInputEditText.append(",");
+            if (!excludeDomainsTextInputEditText.getText().toString().equals("")) {
+                excludeDomainsTextInputEditText.append(",");
             }
-            excludesDomainsTextInputEditText.append(Uri.parse(excludeDomain).getHost());
+            excludeDomainsTextInputEditText.append(Uri.parse(excludeDomain).getHost());
+        }
+        if (containDomain != null && !containDomain.equals("")) {
+            if (!containDomainsTextInputEditText.getText().toString().equals("")) {
+                containDomainsTextInputEditText.append(",");
+            }
+            containDomainsTextInputEditText.append(Uri.parse(containDomain).getHost());
         }
     }
 
@@ -368,9 +395,10 @@ public class CustomizePostFilterActivity extends BaseActivity {
     @Override
     protected void applyCustomTheme() {
         coordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, collapsingToolbarLayout, toolbar);
         int primaryTextColor = mCustomThemeWrapper.getPrimaryTextColor();
         int primaryIconColor = mCustomThemeWrapper.getPrimaryIconColor();
+        Drawable cursorDrawable = Utils.getTintedDrawable(this, R.drawable.edit_text_cursor, primaryTextColor);
         nameTextInputLayout.setBoxStrokeColor(primaryTextColor);
         nameTextInputLayout.setDefaultHintTextColor(ColorStateList.valueOf(primaryTextColor));
         nameTextInputEditText.setTextColor(primaryTextColor);
@@ -385,9 +413,15 @@ public class CustomizePostFilterActivity extends BaseActivity {
         titleExcludesStringsTextInputLayout.setBoxStrokeColor(primaryTextColor);
         titleExcludesStringsTextInputLayout.setDefaultHintTextColor(ColorStateList.valueOf(primaryTextColor));
         titleExcludesStringsTextInputEditText.setTextColor(primaryTextColor);
+        titleContainsStringsTextInputLayout.setBoxStrokeColor(primaryTextColor);
+        titleContainsStringsTextInputLayout.setDefaultHintTextColor(ColorStateList.valueOf(primaryTextColor));
+        titleContainsStringsTextInputEditText.setTextColor(primaryTextColor);
         titleExcludesRegexTextInputLayout.setBoxStrokeColor(primaryTextColor);
         titleExcludesRegexTextInputLayout.setDefaultHintTextColor(ColorStateList.valueOf(primaryTextColor));
         titleExcludesRegexTextInputEditText.setTextColor(primaryTextColor);
+        titleContainsRegexTextInputLayout.setBoxStrokeColor(primaryTextColor);
+        titleContainsRegexTextInputLayout.setDefaultHintTextColor(ColorStateList.valueOf(primaryTextColor));
+        titleContainsRegexTextInputEditText.setTextColor(primaryTextColor);
         excludesSubredditsTextInputLayout.setBoxStrokeColor(primaryTextColor);
         excludesSubredditsTextInputLayout.setDefaultHintTextColor(ColorStateList.valueOf(primaryTextColor));
         excludesSubredditsTextInputEditText.setTextColor(primaryTextColor);
@@ -402,9 +436,12 @@ public class CustomizePostFilterActivity extends BaseActivity {
         containsFlairsTextInputLayout.setBoxStrokeColor(primaryTextColor);
         containsFlairsTextInputLayout.setDefaultHintTextColor(ColorStateList.valueOf(primaryTextColor));
         containsFlairsTextInputEditText.setTextColor(primaryTextColor);
-        excludesDomainsTextInputLayout.setBoxStrokeColor(primaryTextColor);
-        excludesDomainsTextInputLayout.setDefaultHintTextColor(ColorStateList.valueOf(primaryTextColor));
-        excludesDomainsTextInputEditText.setTextColor(primaryTextColor);
+        excludeDomainsTextInputLayout.setBoxStrokeColor(primaryTextColor);
+        excludeDomainsTextInputLayout.setDefaultHintTextColor(ColorStateList.valueOf(primaryTextColor));
+        excludeDomainsTextInputEditText.setTextColor(primaryTextColor);
+        containDomainsTextInputLayout.setBoxStrokeColor(primaryTextColor);
+        containDomainsTextInputLayout.setDefaultHintTextColor(ColorStateList.valueOf(primaryTextColor));
+        containDomainsTextInputEditText.setTextColor(primaryTextColor);
         minVoteTextInputLayout.setBoxStrokeColor(primaryTextColor);
         minVoteTextInputLayout.setDefaultHintTextColor(ColorStateList.valueOf(primaryTextColor));
         minVoteTextInputEditText.setTextColor(primaryTextColor);
@@ -423,6 +460,68 @@ public class CustomizePostFilterActivity extends BaseActivity {
         maxAwardsTextInputLayout.setBoxStrokeColor(primaryTextColor);
         maxAwardsTextInputLayout.setDefaultHintTextColor(ColorStateList.valueOf(primaryTextColor));
         maxAwardsTextInputEditText.setTextColor(primaryTextColor);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            nameTextInputEditText.setTextCursorDrawable(cursorDrawable);
+            titleExcludesStringsTextInputEditText.setTextCursorDrawable(cursorDrawable);
+            titleContainsStringsTextInputEditText.setTextCursorDrawable(cursorDrawable);
+            titleExcludesRegexTextInputEditText.setTextCursorDrawable(cursorDrawable);
+            titleContainsRegexTextInputEditText.setTextCursorDrawable(cursorDrawable);
+            excludesSubredditsTextInputEditText.setTextCursorDrawable(cursorDrawable);
+            excludesUsersTextInputEditText.setTextCursorDrawable(cursorDrawable);
+            excludesFlairsTextInputEditText.setTextCursorDrawable(cursorDrawable);
+            containsFlairsTextInputEditText.setTextCursorDrawable(cursorDrawable);
+            excludeDomainsTextInputEditText.setTextCursorDrawable(cursorDrawable);
+            containDomainsTextInputEditText.setTextCursorDrawable(cursorDrawable);
+            minVoteTextInputEditText.setTextCursorDrawable(cursorDrawable);
+            maxVoteTextInputEditText.setTextCursorDrawable(cursorDrawable);
+            minCommentsTextInputEditText.setTextCursorDrawable(cursorDrawable);
+            maxCommentsTextInputEditText.setTextCursorDrawable(cursorDrawable);
+            minAwardsTextInputEditText.setTextCursorDrawable(cursorDrawable);
+            maxAwardsTextInputEditText.setTextCursorDrawable(cursorDrawable);
+        } else {
+            setCursorDrawableColor(nameTextInputEditText, primaryTextColor);
+            setCursorDrawableColor(titleExcludesStringsTextInputEditText, primaryTextColor);
+            setCursorDrawableColor(titleContainsStringsTextInputEditText, primaryTextColor);
+            setCursorDrawableColor(titleExcludesRegexTextInputEditText, primaryTextColor);
+            setCursorDrawableColor(titleContainsRegexTextInputEditText, primaryTextColor);
+            setCursorDrawableColor(excludesSubredditsTextInputEditText, primaryTextColor);
+            setCursorDrawableColor(excludesUsersTextInputEditText, primaryTextColor);
+            setCursorDrawableColor(excludesFlairsTextInputEditText, primaryTextColor);
+            setCursorDrawableColor(containsFlairsTextInputEditText, primaryTextColor);
+            setCursorDrawableColor(excludeDomainsTextInputEditText, primaryTextColor);
+            setCursorDrawableColor(containDomainsTextInputEditText, primaryTextColor);
+            setCursorDrawableColor(minVoteTextInputEditText, primaryTextColor);
+            setCursorDrawableColor(maxVoteTextInputEditText, primaryTextColor);
+            setCursorDrawableColor(minCommentsTextInputEditText, primaryTextColor);
+            setCursorDrawableColor(maxCommentsTextInputEditText, primaryTextColor);
+            setCursorDrawableColor(minAwardsTextInputEditText, primaryTextColor);
+            setCursorDrawableColor(maxAwardsTextInputEditText, primaryTextColor);
+        }
+
+        if (typeface != null) {
+            Utils.setFontToAllTextViews(coordinatorLayout, typeface);
+        }
+    }
+
+    public void setCursorDrawableColor(EditText editText, int color) {
+        try {
+            Field fCursorDrawableRes = TextView.class.getDeclaredField("mCursorDrawableRes");
+            fCursorDrawableRes.setAccessible(true);
+            int mCursorDrawableRes = fCursorDrawableRes.getInt(editText);
+            Field fEditor = TextView.class.getDeclaredField("mEditor");
+            fEditor.setAccessible(true);
+            Object editor = fEditor.get(editText);
+            Class<?> clazz = editor.getClass();
+            Field fCursorDrawable = clazz.getDeclaredField("mCursorDrawable");
+            fCursorDrawable.setAccessible(true);
+            Drawable[] drawables = new Drawable[2];
+            drawables[0] = editText.getContext().getResources().getDrawable(mCursorDrawableRes);
+            drawables[1] = editText.getContext().getResources().getDrawable(mCursorDrawableRes);
+            drawables[0].setColorFilter(color, PorterDuff.Mode.SRC_IN);
+            drawables[1].setColorFilter(color, PorterDuff.Mode.SRC_IN);
+            fCursorDrawable.set(editor, drawables);
+        } catch (Throwable ignored) { }
     }
 
     @Override
@@ -537,12 +636,15 @@ public class CustomizePostFilterActivity extends BaseActivity {
         postFilter.maxAwards = maxAwardsTextInputEditText.getText() == null || maxAwardsTextInputEditText.getText().toString().equals("") ? -1 : Integer.parseInt(maxAwardsTextInputEditText.getText().toString());
         postFilter.minAwards = minAwardsTextInputEditText.getText() == null || minAwardsTextInputEditText.getText().toString().equals("") ? -1 : Integer.parseInt(minAwardsTextInputEditText.getText().toString());
         postFilter.postTitleExcludesRegex = titleExcludesRegexTextInputEditText.getText().toString();
+        postFilter.postTitleContainsRegex = titleContainsRegexTextInputEditText.getText().toString();
         postFilter.postTitleExcludesStrings = titleExcludesStringsTextInputEditText.getText().toString();
+        postFilter.postTitleContainsStrings = titleContainsStringsTextInputEditText.getText().toString();
         postFilter.excludeSubreddits = excludesSubredditsTextInputEditText.getText().toString();
         postFilter.excludeUsers = excludesUsersTextInputEditText.getText().toString();
         postFilter.excludeFlairs = excludesFlairsTextInputEditText.getText().toString();
         postFilter.containFlairs = containsFlairsTextInputEditText.getText().toString();
-        postFilter.excludeDomains = excludesDomainsTextInputEditText.getText().toString();
+        postFilter.excludeDomains = excludeDomainsTextInputEditText.getText().toString();
+        postFilter.containDomains = containDomainsTextInputEditText.getText().toString();
         postFilter.containTextType = postTypeTextCheckBox.isChecked();
         postFilter.containLinkType = postTypeLinkCheckBox.isChecked();
         postFilter.containImageType = postTypeImageCheckBox.isChecked();

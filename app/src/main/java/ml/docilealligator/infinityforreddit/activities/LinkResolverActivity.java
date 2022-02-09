@@ -48,6 +48,10 @@ public class LinkResolverActivity extends AppCompatActivity {
     private static final String IMGUR_GALLERY_PATTERN = "/gallery/\\w+/?";
     private static final String IMGUR_ALBUM_PATTERN = "/(album|a)/\\w+/?";
     private static final String IMGUR_IMAGE_PATTERN = "/\\w+/?";
+    private static final String RPAN_BROADCAST_PATTERN = "/rpan/r/[\\w-]+/\\w+/?\\w+/?";
+    private static final String WIKI_PATTERN = "/[rR]/[\\w-]+/(wiki|w)?(?:/\\w+)+";
+    private static final String GOOGLE_AMP_PATTERN = "/amp/s/amp.reddit.com/.*";
+    private static final String STREAMABLE_PATTERN = "/\\w+/?";
 
     @Inject
     @Named("default")
@@ -117,7 +121,19 @@ public class LinkResolverActivity extends AppCompatActivity {
                     List<String> segments = uri.getPathSegments();
 
                     if (authority != null) {
-                        if (authority.equals("v.redd.it")) {
+                        if (authority.equals("reddit-uploaded-media.s3-accelerate.amazonaws.com")) {
+                            String unescapedUrl = uri.toString().replace("%2F", "/");
+                            int lastSlashIndex = unescapedUrl.lastIndexOf("/");
+                            if (lastSlashIndex < 0 || lastSlashIndex == unescapedUrl.length() - 1) {
+                                deepLinkError(uri);
+                                return;
+                            }
+                            String id = unescapedUrl.substring(lastSlashIndex + 1);
+                            Intent intent = new Intent(this, ViewImageOrGifActivity.class);
+                            intent.putExtra(ViewImageOrGifActivity.EXTRA_IMAGE_URL_KEY, uri.toString());
+                            intent.putExtra(ViewImageOrGifActivity.EXTRA_FILE_NAME_KEY, id + ".jpg");
+                            startActivity(intent);
+                        } else if (authority.equals("v.redd.it")) {
                             Intent intent = new Intent(this, ViewVideoActivity.class);
                             intent.putExtra(ViewVideoActivity.EXTRA_VIDEO_TYPE, ViewVideoActivity.VIDEO_TYPE_V_REDD_IT);
                             intent.putExtra(ViewVideoActivity.EXTRA_V_REDD_IT_URL, uri.toString());
@@ -158,6 +174,12 @@ public class LinkResolverActivity extends AppCompatActivity {
                                 } else {
                                     deepLinkError(uri);
                                 }
+                            } else if (path.matches(WIKI_PATTERN)) {
+                                final String wikiPage = path.substring(path.lastIndexOf("/wiki/") + 6);
+                                Intent intent = new Intent(this, WikiActivity.class);
+                                intent.putExtra(WikiActivity.EXTRA_SUBREDDIT_NAME, segments.get(1));
+                                intent.putExtra(WikiActivity.EXTRA_WIKI_PATH, wikiPage);
+                                startActivity(intent);
                             } else if (path.matches(SUBREDDIT_PATTERN)) {
                                 Intent intent = new Intent(this, ViewSubredditDetailActivity.class);
                                 intent.putExtra(ViewSubredditDetailActivity.EXTRA_SUBREDDIT_NAME_KEY, path.substring(3));
@@ -185,6 +207,10 @@ public class LinkResolverActivity extends AppCompatActivity {
                                 intent.putExtra(ViewSubredditDetailActivity.EXTRA_SUBREDDIT_NAME_KEY, subredditName);
                                 intent.putExtra(ViewSubredditDetailActivity.EXTRA_MESSAGE_FULLNAME, messageFullname);
                                 intent.putExtra(ViewSubredditDetailActivity.EXTRA_NEW_ACCOUNT_NAME, newAccountName);
+                                startActivity(intent);
+                            } else if (path.matches(RPAN_BROADCAST_PATTERN)) {
+                                Intent intent = new Intent(this, RPANActivity.class);
+                                intent.putExtra(RPANActivity.EXTRA_RPAN_BROADCAST_FULLNAME_OR_ID, path.substring(path.lastIndexOf('/') + 1));
                                 startActivity(intent);
                             } else if (authority.equals("redd.it") && path.matches(REDD_IT_POST_PATTERN)) {
                                 Intent intent = new Intent(this, ViewPostDetailActivity.class);
@@ -235,11 +261,30 @@ public class LinkResolverActivity extends AppCompatActivity {
                                 startActivity(intent);
                             } else if (path.endsWith("gifv")) {
                                 String url = uri.toString();
+                                // Insecure imgur links won't load
+                                url = url.replaceFirst("http://" , "https://");
                                 url = url.substring(0, url.length() - 5) + ".mp4";
                                 Intent intent = new Intent(this, ViewVideoActivity.class);
-                                intent.putExtra(ViewVideoActivity.EXTRA_VIDEO_TYPE, ViewVideoActivity.VIDEO_TYPE_DIRECT);
+                                intent.putExtra(ViewVideoActivity.EXTRA_VIDEO_TYPE, ViewVideoActivity.VIDEO_TYPE_IMGUR);
                                 intent.putExtra(ViewVideoActivity.EXTRA_IS_NSFW, getIntent().getBooleanExtra(EXTRA_IS_NSFW, false));
                                 intent.setData(Uri.parse(url));
+                                startActivity(intent);
+                            } else {
+                                deepLinkError(uri);
+                            }
+                        } else if (authority.contains("google.com")) {
+                            if (path.matches(GOOGLE_AMP_PATTERN)) {
+                                String url = path.substring(11);
+                                handleUri(Uri.parse("https://" + url));
+                            } else {
+                                deepLinkError(uri);
+                            }
+                        } else if (authority.equals("streamable.com")) {
+                            if (path.matches(STREAMABLE_PATTERN)) {
+                                String shortCode = segments.get(0);
+                                Intent intent = new Intent(this, ViewVideoActivity.class);
+                                intent.putExtra(ViewVideoActivity.EXTRA_VIDEO_TYPE, ViewVideoActivity.VIDEO_TYPE_STREAMABLE);
+                                intent.putExtra(ViewVideoActivity.EXTRA_STREAMABLE_SHORT_CODE, shortCode);
                                 startActivity(intent);
                             } else {
                                 deepLinkError(uri);
@@ -266,10 +311,13 @@ public class LinkResolverActivity extends AppCompatActivity {
             return;
         }
 
-        if (mSharedPreferences.getBoolean(SharedPreferencesUtils.OPEN_LINK_IN_APP, false)) {
+        int linkHandler = Integer.parseInt(mSharedPreferences.getString(SharedPreferencesUtils.LINK_HANDLER, "0"));
+        if (linkHandler == 0) {
+            openInBrowser(uri, pm, true);
+        } else if (linkHandler == 1) {
             openInCustomTabs(uri, pm, true);
         } else {
-            openInBrowser(uri, pm, true);
+            openInWebView(uri);
         }
     }
 

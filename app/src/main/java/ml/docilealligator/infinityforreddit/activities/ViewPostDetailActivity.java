@@ -1,8 +1,11 @@
 package ml.docilealligator.infinityforreddit.activities;
 
+import static ml.docilealligator.infinityforreddit.activities.CommentActivity.RETURN_EXTRA_COMMENT_DATA_KEY;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,6 +14,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -27,8 +31,12 @@ import com.evernote.android.state.State;
 import com.github.piasy.biv.BigImageViewer;
 import com.github.piasy.biv.loader.glide.GlideImageLoader;
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.livefront.bridge.Bridge;
 import com.r0adkll.slidr.Slidr;
 import com.r0adkll.slidr.model.SlidrInterface;
@@ -37,6 +45,8 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 import javax.inject.Inject;
@@ -62,8 +72,6 @@ import ml.docilealligator.infinityforreddit.post.Post;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 import retrofit2.Retrofit;
 
-import static ml.docilealligator.infinityforreddit.activities.CommentActivity.RETURN_EXTRA_COMMENT_DATA_KEY;
-
 public class ViewPostDetailActivity extends BaseActivity implements SortTypeSelectionCallback, ActivityToolbarInterface {
 
     public static final String EXTRA_POST_DATA = "EPD";
@@ -83,12 +91,26 @@ public class ViewPostDetailActivity extends BaseActivity implements SortTypeSele
     CoordinatorLayout mCoordinatorLayout;
     @BindView(R.id.appbar_layout_view_post_detail_activity)
     AppBarLayout mAppBarLayout;
+    @BindView(R.id.collapsing_toolbar_layout_view_post_detail_activity)
+    CollapsingToolbarLayout mCollapsingToolbarLayout;
     @BindView(R.id.toolbar_view_post_detail_activity)
     Toolbar mToolbar;
     @BindView(R.id.view_pager_2_view_post_detail_activity)
     ViewPager2 viewPager2;
     @BindView(R.id.fab_view_post_detail_activity)
     FloatingActionButton fab;
+    @BindView(R.id.search_panel_material_card_view_view_post_detail_activity)
+    MaterialCardView searchPanelMaterialCardView;
+    @BindView(R.id.search_text_input_layout_view_post_detail_activity)
+    TextInputLayout searchTextInputLayout;
+    @BindView(R.id.search_text_input_edit_text_view_post_detail_activity)
+    TextInputEditText searchTextInputEditText;
+    @BindView(R.id.previous_result_image_view_view_post_detail_activity)
+    ImageView previousResultImageView;
+    @BindView(R.id.next_result_image_view_view_post_detail_activity)
+    ImageView nextResultImageView;
+    @BindView(R.id.close_search_panel_image_view_view_post_detail_activity)
+    ImageView closeSearchPanelImageView;
     @Inject
     @Named("oauth")
     Retrofit mOauthRetrofit;
@@ -108,6 +130,7 @@ public class ViewPostDetailActivity extends BaseActivity implements SortTypeSele
     ArrayList<Post> posts;
     @State
     Post post;
+    public Map<String, String> authorIcons = new HashMap<>();
     private FragmentManager fragmentManager;
     private SlidrInterface mSlidrInterface;
     private SectionsPagerAdapter sectionsPagerAdapter;
@@ -160,6 +183,11 @@ public class ViewPostDetailActivity extends BaseActivity implements SortTypeSele
                     CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) fab.getLayoutParams();
                     params.bottomMargin += navBarHeight;
                     fab.setLayoutParams(params);
+
+                    searchPanelMaterialCardView.setContentPadding(searchPanelMaterialCardView.getPaddingStart(),
+                            searchPanelMaterialCardView.getPaddingTop(),
+                            searchPanelMaterialCardView.getPaddingEnd(),
+                            searchPanelMaterialCardView.getPaddingBottom() + navBarHeight);
                 }
             }
         }
@@ -209,6 +237,17 @@ public class ViewPostDetailActivity extends BaseActivity implements SortTypeSele
             }
         });
 
+        fab.setOnLongClickListener(view -> {
+            if (sectionsPagerAdapter != null) {
+                ViewPostDetailFragment fragment = sectionsPagerAdapter.getCurrentFragment();
+                if (fragment != null) {
+                    fragment.scrollToPreviousParentComment();
+                    return true;
+                }
+            }
+            return false;
+        });
+
         checkNewAccountAndBindView(savedInstanceState);
     }
 
@@ -243,8 +282,20 @@ public class ViewPostDetailActivity extends BaseActivity implements SortTypeSele
     @Override
     protected void applyCustomTheme() {
         mCoordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        applyAppBarLayoutAndToolbarTheme(mAppBarLayout, mToolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(mAppBarLayout, mCollapsingToolbarLayout, mToolbar);
         applyFABTheme(fab);
+        searchPanelMaterialCardView.setBackgroundTintList(ColorStateList.valueOf(mCustomThemeWrapper.getColorPrimary()));
+        int searchPanelTextAndIconColor = mCustomThemeWrapper.getToolbarPrimaryTextAndIconColor();
+        searchTextInputLayout.setBoxStrokeColor(searchPanelTextAndIconColor);
+        searchTextInputLayout.setDefaultHintTextColor(ColorStateList.valueOf(searchPanelTextAndIconColor));
+        searchTextInputEditText.setTextColor(searchPanelTextAndIconColor);
+        previousResultImageView.setColorFilter(searchPanelTextAndIconColor, android.graphics.PorterDuff.Mode.SRC_IN);
+        nextResultImageView.setColorFilter(searchPanelTextAndIconColor, android.graphics.PorterDuff.Mode.SRC_IN);
+        closeSearchPanelImageView.setColorFilter(searchPanelTextAndIconColor, android.graphics.PorterDuff.Mode.SRC_IN);
+        if (typeface != null) {
+            searchTextInputLayout.setTypeface(typeface);
+            searchTextInputEditText.setTypeface(typeface);
+        }
     }
 
     private void checkNewAccountAndBindView(Bundle savedInstanceState) {
@@ -273,6 +324,31 @@ public class ViewPostDetailActivity extends BaseActivity implements SortTypeSele
         if (savedInstanceState == null) {
             viewPager2.setCurrentItem(getIntent().getIntExtra(EXTRA_POST_LIST_POSITION, 0), false);
         }
+
+        searchPanelMaterialCardView.setOnClickListener(null);
+        
+        nextResultImageView.setOnClickListener(view -> {
+            ViewPostDetailFragment fragment = sectionsPagerAdapter.getCurrentFragment();
+            if (fragment != null) {
+                searchComment(fragment, true);
+            }
+        });
+
+        previousResultImageView.setOnClickListener(view -> {
+            ViewPostDetailFragment fragment = sectionsPagerAdapter.getCurrentFragment();
+            if (fragment != null) {
+                searchComment(fragment, false);
+            }
+        });
+
+        closeSearchPanelImageView.setOnClickListener(view -> {
+            ViewPostDetailFragment fragment = sectionsPagerAdapter.getCurrentFragment();
+            if (fragment != null) {
+                fragment.resetSearchCommentIndex();
+            }
+
+            searchPanelMaterialCardView.setVisibility(View.GONE);
+        });
     }
 
     public boolean isNsfwSubreddit() {
@@ -358,6 +434,23 @@ public class ViewPostDetailActivity extends BaseActivity implements SortTypeSele
                     Toast.makeText(ViewPostDetailActivity.this, R.string.comment_saved_failed, Toast.LENGTH_SHORT).show();
                 }
             });
+        }
+    }
+
+    public boolean toggleSearchPanelVisibility() {
+        if (searchPanelMaterialCardView.getVisibility() == View.GONE) {
+            searchPanelMaterialCardView.setVisibility(View.VISIBLE);
+            return false;
+        } else {
+            searchPanelMaterialCardView.setVisibility(View.GONE);
+            searchTextInputEditText.setText("");
+            return true;
+        }
+    }
+
+    public void searchComment(ViewPostDetailFragment fragment, boolean searchNextComment) {
+        if (!searchTextInputEditText.getText().toString().isEmpty()) {
+            fragment.searchComment(searchTextInputEditText.getText().toString(), searchNextComment);
         }
     }
 

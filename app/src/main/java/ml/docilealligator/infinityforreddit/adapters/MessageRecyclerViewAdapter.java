@@ -1,15 +1,9 @@
 package ml.docilealligator.infinityforreddit.adapters;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.net.Uri;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.TextPaint;
 import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
 import android.text.util.Linkify;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,8 +18,6 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -35,16 +27,25 @@ import io.noties.markwon.MarkwonConfiguration;
 import io.noties.markwon.core.MarkwonTheme;
 import io.noties.markwon.ext.strikethrough.StrikethroughPlugin;
 import io.noties.markwon.html.HtmlPlugin;
+import io.noties.markwon.html.tag.SuperScriptHandler;
+import io.noties.markwon.inlineparser.AutolinkInlineProcessor;
+import io.noties.markwon.inlineparser.BangInlineProcessor;
+import io.noties.markwon.inlineparser.HtmlInlineProcessor;
+import io.noties.markwon.inlineparser.MarkwonInlineParserPlugin;
 import io.noties.markwon.linkify.LinkifyPlugin;
 import ml.docilealligator.infinityforreddit.NetworkState;
 import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
 import ml.docilealligator.infinityforreddit.activities.LinkResolverActivity;
 import ml.docilealligator.infinityforreddit.activities.ViewPrivateMessagesActivity;
 import ml.docilealligator.infinityforreddit.activities.ViewUserDetailActivity;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
+import ml.docilealligator.infinityforreddit.markdown.SpoilerParserPlugin;
+import ml.docilealligator.infinityforreddit.markdown.SuperscriptInlineProcessor;
 import ml.docilealligator.infinityforreddit.message.FetchMessage;
 import ml.docilealligator.infinityforreddit.message.Message;
 import ml.docilealligator.infinityforreddit.message.ReadMessage;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 import retrofit2.Retrofit;
 
 public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, RecyclerView.ViewHolder> {
@@ -62,7 +63,7 @@ public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, Recycl
             return message.getBody().equals(t1.getBody());
         }
     };
-    private Context mContext;
+    private BaseActivity mActivity;
     private Retrofit mOauthRetrofit;
     private Markwon mMarkwon;
     private String mAccessToken;
@@ -79,12 +80,12 @@ public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, Recycl
     private int mButtonTextColor;
     private boolean markAllMessagesAsRead = false;
 
-    public MessageRecyclerViewAdapter(Context context, Retrofit oauthRetrofit,
+    public MessageRecyclerViewAdapter(BaseActivity activity, Retrofit oauthRetrofit,
                                       CustomThemeWrapper customThemeWrapper,
                                       String accessToken, String where,
                                       RetryLoadingMoreCallback retryLoadingMoreCallback) {
         super(DIFF_CALLBACK);
-        mContext = context;
+        mActivity = activity;
         mOauthRetrofit = oauthRetrofit;
         mRetryLoadingMoreCallback = retryLoadingMoreCallback;
 
@@ -98,75 +99,30 @@ public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, Recycl
         mColorPrimaryLightTheme = customThemeWrapper.getColorPrimaryLightTheme();
         mButtonTextColor = customThemeWrapper.getButtonTextColor();
 
-        mMarkwon = Markwon.builder(mContext)
-                .usePlugin(HtmlPlugin.create())
+        mMarkwon = Markwon.builder(mActivity)
+                .usePlugin(MarkwonInlineParserPlugin.create(plugin -> {
+                    plugin.excludeInlineProcessor(AutolinkInlineProcessor.class);
+                    plugin.excludeInlineProcessor(HtmlInlineProcessor.class);
+                    plugin.excludeInlineProcessor(BangInlineProcessor.class);
+                    plugin.addInlineProcessor(new SuperscriptInlineProcessor());
+                }))
+                .usePlugin(HtmlPlugin.create(plugin -> {
+                    plugin.excludeDefaults(true).addHandler(new SuperScriptHandler());
+                }))
                 .usePlugin(new AbstractMarkwonPlugin() {
                     @NonNull
                     @Override
                     public String processMarkdown(@NonNull String markdown) {
-                        StringBuilder markdownStringBuilder = new StringBuilder(markdown);
-                        Pattern spoilerPattern = Pattern.compile(">![\\S\\s]*?!<");
-                        Matcher matcher = spoilerPattern.matcher(markdownStringBuilder);
-                        while (matcher.find()) {
-                            markdownStringBuilder.replace(matcher.start(), matcher.start() + 1, "&gt;");
-                        }
-                        return super.processMarkdown(markdownStringBuilder.toString());
-                    }
-
-                    @Override
-                    public void afterSetText(@NonNull TextView textView) {
-                        textView.setHighlightColor(Color.TRANSPARENT);
-                        SpannableStringBuilder markdownStringBuilder = new SpannableStringBuilder(textView.getText().toString());
-                        Pattern spoilerPattern = Pattern.compile(">![\\S\\s]*?!<");
-                        Matcher matcher = spoilerPattern.matcher(markdownStringBuilder);
-                        int start = 0;
-                        boolean find = false;
-                        while (matcher.find(start)) {
-                            if (markdownStringBuilder.length() < 4
-                                    || matcher.start() < 0
-                                    || matcher.end() > markdownStringBuilder.length()) {
-                                break;
-                            }
-                            find = true;
-                            markdownStringBuilder.delete(matcher.end() - 2, matcher.end());
-                            markdownStringBuilder.delete(matcher.start(), matcher.start() + 2);
-                            int matcherStart = matcher.start();
-                            int matcherEnd = matcher.end();
-                            ClickableSpan clickableSpan = new ClickableSpan() {
-                                private boolean isShowing = false;
-                                @Override
-                                public void updateDrawState(@NonNull TextPaint ds) {
-                                    if (isShowing) {
-                                        super.updateDrawState(ds);
-                                        ds.setColor(mSecondaryTextColor);
-                                    } else {
-                                        ds.bgColor = spoilerBackgroundColor;
-                                        ds.setColor(mSecondaryTextColor);
-                                    }
-                                    ds.setUnderlineText(false);
-                                }
-
-                                @Override
-                                public void onClick(@NonNull View view) {
-                                    isShowing = !isShowing;
-                                    view.invalidate();
-                                }
-                            };
-                            markdownStringBuilder.setSpan(clickableSpan, matcherStart, matcherEnd - 4, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                            start = matcherEnd - 4;
-                        }
-                        if (find) {
-                            textView.setText(markdownStringBuilder);
-                        }
+                        return Utils.fixSuperScript(markdown);
                     }
 
                     @Override
                     public void configureConfiguration(@NonNull MarkwonConfiguration.Builder builder) {
                         builder.linkResolver((view, link) -> {
-                            Intent intent = new Intent(mContext, LinkResolverActivity.class);
+                            Intent intent = new Intent(mActivity, LinkResolverActivity.class);
                             Uri uri = Uri.parse(link);
                             intent.setData(uri);
-                            mContext.startActivity(intent);
+                            mActivity.startActivity(intent);
                         });
                     }
 
@@ -175,6 +131,7 @@ public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, Recycl
                         builder.linkColor(customThemeWrapper.getLinkColor());
                     }
                 })
+                .usePlugin(SpoilerParserPlugin.create(mSecondaryTextColor, spoilerBackgroundColor))
                 .usePlugin(StrikethroughPlugin.create())
                 .usePlugin(LinkifyPlugin.create(Linkify.WEB_URLS))
                 .build();
@@ -201,7 +158,7 @@ public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, Recycl
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         if (holder instanceof DataViewHolder) {
-            Message message = getItem(holder.getAdapterPosition());
+            Message message = getItem(holder.getBindingAdapterPosition());
             if (message != null) {
                 ArrayList<Message> replies = message.getReplies();
                 Message displayedMessage;
@@ -234,14 +191,14 @@ public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, Recycl
                     if (mMessageType == FetchMessage.MESSAGE_TYPE_INBOX
                             && message.getContext() != null && !message.getContext().equals("")) {
                         Uri uri = Uri.parse(message.getContext());
-                        Intent intent = new Intent(mContext, LinkResolverActivity.class);
+                        Intent intent = new Intent(mActivity, LinkResolverActivity.class);
                         intent.setData(uri);
-                        mContext.startActivity(intent);
+                        mActivity.startActivity(intent);
                     } else if (mMessageType == FetchMessage.MESSAGE_TYPE_PRIVATE_MESSAGE) {
-                        Intent intent = new Intent(mContext, ViewPrivateMessagesActivity.class);
+                        Intent intent = new Intent(mActivity, ViewPrivateMessagesActivity.class);
                         intent.putExtra(ViewPrivateMessagesActivity.EXTRA_PRIVATE_MESSAGE, message);
-                        intent.putExtra(ViewPrivateMessagesActivity.EXTRA_MESSAGE_POSITION, holder.getAdapterPosition());
-                        mContext.startActivity(intent);
+                        intent.putExtra(ViewPrivateMessagesActivity.EXTRA_MESSAGE_POSITION, holder.getBindingAdapterPosition());
+                        mActivity.startActivity(intent);
                     }
 
                     if (displayedMessage.isNew()) {
@@ -264,9 +221,9 @@ public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, Recycl
                 });
 
                 ((DataViewHolder) holder).authorTextView.setOnClickListener(view -> {
-                    Intent intent = new Intent(mContext, ViewUserDetailActivity.class);
+                    Intent intent = new Intent(mActivity, ViewUserDetailActivity.class);
                     intent.putExtra(ViewUserDetailActivity.EXTRA_USER_NAME_KEY, message.getAuthor());
-                    mContext.startActivity(intent);
+                    mActivity.startActivity(intent);
                 });
 
                 ((DataViewHolder) holder).contentCustomMarkwonView.setOnClickListener(view -> {
@@ -360,6 +317,12 @@ public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, Recycl
         DataViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
+            if (mActivity.typeface != null) {
+                authorTextView.setTypeface(mActivity.typeface);
+                subjectTextView.setTypeface(mActivity.typeface);
+                titleTextView.setTypeface(mActivity.titleTypeface);
+                contentCustomMarkwonView.setTypeface(mActivity.contentTypeface);
+            }
             itemView.setBackgroundColor(mMessageBackgroundColor);
             authorTextView.setTextColor(mUsernameColor);
             subjectTextView.setTextColor(mPrimaryTextColor);
@@ -379,6 +342,10 @@ public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, Recycl
         ErrorViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
+            if (mActivity.typeface != null) {
+                errorTextView.setTypeface(mActivity.typeface);
+                retryButton.setTypeface(mActivity.typeface);
+            }
             errorTextView.setText(R.string.load_comments_failed);
             errorTextView.setTextColor(mSecondaryTextColor);
             retryButton.setOnClickListener(view -> mRetryLoadingMoreCallback.retryLoadingMore());

@@ -1,7 +1,6 @@
 package ml.docilealligator.infinityforreddit.fragments;
 
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -17,7 +16,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -40,6 +38,7 @@ import ml.docilealligator.infinityforreddit.activities.BaseActivity;
 import ml.docilealligator.infinityforreddit.activities.SubscribedThingListingActivity;
 import ml.docilealligator.infinityforreddit.adapters.FollowedUsersRecyclerViewAdapter;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
+import ml.docilealligator.infinityforreddit.customviews.LinearLayoutManagerBugFixed;
 import ml.docilealligator.infinityforreddit.subscribeduser.SubscribedUserViewModel;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 import retrofit2.Retrofit;
@@ -76,9 +75,9 @@ public class FollowedUsersListingFragment extends Fragment implements FragmentCo
     @Inject
     Executor mExecutor;
     SubscribedUserViewModel mSubscribedUserViewModel;
-    private Activity mActivity;
+    private BaseActivity mActivity;
     private RequestManager mGlide;
-    private LinearLayoutManager mLinearLayoutManager;
+    private LinearLayoutManagerBugFixed mLinearLayoutManager;
 
     public FollowedUsersListingFragment() {
         // Required empty public constructor
@@ -109,11 +108,14 @@ public class FollowedUsersListingFragment extends Fragment implements FragmentCo
 
         mGlide = Glide.with(this);
 
-        mLinearLayoutManager = new LinearLayoutManager(mActivity);
+        String accessToken = getArguments().getString(EXTRA_ACCESS_TOKEN);
+        if (accessToken == null) {
+            mSwipeRefreshLayout.setEnabled(false);
+        }
+        mLinearLayoutManager = new LinearLayoutManagerBugFixed(mActivity);
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
         FollowedUsersRecyclerViewAdapter adapter = new FollowedUsersRecyclerViewAdapter(mActivity,
-                mExecutor, mOauthRetrofit, mRedditDataRoomDatabase, mCustomThemeWrapper,
-                getArguments().getString(EXTRA_ACCESS_TOKEN));
+                mExecutor, mOauthRetrofit, mRedditDataRoomDatabase, mCustomThemeWrapper, accessToken);
         mRecyclerView.setAdapter(adapter);
         new FastScrollerBuilder(mRecyclerView).build();
 
@@ -151,7 +153,7 @@ public class FollowedUsersListingFragment extends Fragment implements FragmentCo
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        mActivity = (Activity) context;
+        mActivity = (BaseActivity) context;
     }
 
     @Override
@@ -169,11 +171,18 @@ public class FollowedUsersListingFragment extends Fragment implements FragmentCo
             mSwipeRefreshLayout.setEnabled(false);
         }
         mErrorTextView.setTextColor(mCustomThemeWrapper.getSecondaryTextColor());
+        if (mActivity.typeface != null) {
+            mErrorTextView.setTypeface(mActivity.typeface);
+        }
     }
 
     public void goBackToTop() {
         if (mLinearLayoutManager != null) {
             mLinearLayoutManager.scrollToPositionWithOffset(0, 0);
         }
+    }
+
+    public void changeSearchQuery(String searchQuery) {
+        mSubscribedUserViewModel.setSearchQuery(searchQuery);
     }
 }

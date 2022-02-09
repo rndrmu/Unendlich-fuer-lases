@@ -1,5 +1,7 @@
 package ml.docilealligator.infinityforreddit.activities;
 
+import static android.content.ClipDescription.MIMETYPE_TEXT_PLAIN;
+
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -17,10 +19,10 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -37,6 +39,9 @@ import javax.inject.Named;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import ml.docilealligator.infinityforreddit.Infinity;
+import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.RedditDataRoomDatabase;
 import ml.docilealligator.infinityforreddit.adapters.CustomThemeListingRecyclerViewAdapter;
 import ml.docilealligator.infinityforreddit.asynctasks.ChangeThemeName;
 import ml.docilealligator.infinityforreddit.asynctasks.DeleteTheme;
@@ -48,12 +53,7 @@ import ml.docilealligator.infinityforreddit.customtheme.CustomTheme;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeViewModel;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.events.RecreateActivityEvent;
-import ml.docilealligator.infinityforreddit.Infinity;
-import ml.docilealligator.infinityforreddit.R;
-import ml.docilealligator.infinityforreddit.RedditDataRoomDatabase;
 import ml.docilealligator.infinityforreddit.utils.CustomThemeSharedPreferencesUtils;
-
-import static android.content.ClipDescription.MIMETYPE_TEXT_PLAIN;
 
 public class CustomThemeListingActivity extends BaseActivity implements
         CustomThemeOptionsBottomSheetFragment.CustomThemeOptionsBottomSheetFragmentListener,
@@ -63,6 +63,8 @@ public class CustomThemeListingActivity extends BaseActivity implements
     CoordinatorLayout coordinatorLayout;
     @BindView(R.id.appbar_layout_customize_theme_listing_activity)
     AppBarLayout appBarLayout;
+    @BindView(R.id.collapsing_toolbar_layout_customize_theme_listing_activity)
+    CollapsingToolbarLayout collapsingToolbarLayout;
     @BindView(R.id.toolbar_customize_theme_listing_activity)
     Toolbar toolbar;
     @BindView(R.id.recycler_view_customize_theme_listing_activity)
@@ -110,7 +112,6 @@ public class CustomThemeListingActivity extends BaseActivity implements
         CustomThemeListingRecyclerViewAdapter adapter = new CustomThemeListingRecyclerViewAdapter(this,
                 CustomThemeWrapper.getPredefinedThemes(this));
         recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -154,7 +155,7 @@ public class CustomThemeListingActivity extends BaseActivity implements
 
     @Override
     protected void applyCustomTheme() {
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, collapsingToolbarLayout, toolbar);
     }
 
     @Override

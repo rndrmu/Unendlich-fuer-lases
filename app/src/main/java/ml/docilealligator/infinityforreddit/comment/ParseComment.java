@@ -1,5 +1,9 @@
 package ml.docilealligator.infinityforreddit.comment;
 
+import static ml.docilealligator.infinityforreddit.comment.Comment.VOTE_TYPE_DOWNVOTE;
+import static ml.docilealligator.infinityforreddit.comment.Comment.VOTE_TYPE_NO_VOTE;
+import static ml.docilealligator.infinityforreddit.comment.Comment.VOTE_TYPE_UPVOTE;
+
 import android.os.Handler;
 import android.text.Html;
 
@@ -14,10 +18,6 @@ import java.util.concurrent.Executor;
 
 import ml.docilealligator.infinityforreddit.utils.JSONUtils;
 import ml.docilealligator.infinityforreddit.utils.Utils;
-
-import static ml.docilealligator.infinityforreddit.comment.Comment.VOTE_TYPE_DOWNVOTE;
-import static ml.docilealligator.infinityforreddit.comment.Comment.VOTE_TYPE_NO_VOTE;
-import static ml.docilealligator.infinityforreddit.comment.Comment.VOTE_TYPE_UPVOTE;
 
 public class ParseComment {
     public static void parseComment(Executor executor, Handler handler, String response,
@@ -135,10 +135,22 @@ public class ParseComment {
                 parseCommentRecursion(childrenArray, children, nextMoreChildrenFullnames, singleComment.getDepth());
                 singleComment.addChildren(children);
                 singleComment.setMoreChildrenFullnames(nextMoreChildrenFullnames);
+                singleComment.setChildCount(getChildCount(singleComment));
             }
 
             newCommentData.add(singleComment);
         }
+    }
+
+    private static int getChildCount(Comment comment) {
+        if (comment.getChildren() == null) {
+            return 0;
+        }
+        int count = 0;
+        for (Comment c : comment.getChildren()) {
+            count += getChildCount(c);
+        }
+        return comment.getChildren().size() + count;
     }
 
     private static void expandChildren(ArrayList<Comment> comments, ArrayList<Comment> visibleComments,
@@ -189,6 +201,10 @@ public class ParseComment {
         String commentMarkdown = "";
         if (!singleCommentData.isNull(JSONUtils.BODY_KEY)) {
             commentMarkdown = Utils.parseInlineGifInComments(Utils.modifyMarkdown(singleCommentData.getString(JSONUtils.BODY_KEY).trim()));
+            if (!singleCommentData.isNull(JSONUtils.MEDIA_METADATA_KEY)) {
+                JSONObject mediaMetadataObject = singleCommentData.getJSONObject(JSONUtils.MEDIA_METADATA_KEY);
+                commentMarkdown = Utils.parseInlineEmotes(commentMarkdown, mediaMetadataObject);
+            }
         }
         String commentRawText = Utils.trimTrailingWhitespace(
                 Html.fromHtml(singleCommentData.getString(JSONUtils.BODY_HTML_KEY))).toString();
@@ -229,7 +245,7 @@ public class ParseComment {
         return new Comment(id, fullName, author, authorFlair, authorFlairHTMLBuilder.toString(),
                 linkAuthor, submitTime, commentMarkdown, commentRawText,
                 linkId, subredditName, parentId, score, voteType, isSubmitter, distinguished,
-                permalink, awardingsBuilder.toString(),depth, collapsed, hasReply, scoreHidden, saved);
+                permalink, awardingsBuilder.toString(), depth, collapsed, hasReply, scoreHidden, saved);
     }
 
     @Nullable

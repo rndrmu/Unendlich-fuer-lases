@@ -1,7 +1,6 @@
 package ml.docilealligator.infinityforreddit.bottomsheetfragments;
 
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Build;
@@ -14,19 +13,20 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.deishelon.roundedbottomsheet.RoundedBottomSheetDialogFragment;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.SortType;
 import ml.docilealligator.infinityforreddit.SortTypeSelectionCallback;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
+import ml.docilealligator.infinityforreddit.customviews.LandscapeExpandedRoundedBottomSheetDialogFragment;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class SortTypeBottomSheetFragment extends RoundedBottomSheetDialogFragment {
+public class SortTypeBottomSheetFragment extends LandscapeExpandedRoundedBottomSheetDialogFragment {
 
     public static final String EXTRA_NO_BEST_TYPE = "ENBT";
     @BindView(R.id.best_type_text_view_sort_type_bottom_sheet_fragment)
@@ -41,7 +41,7 @@ public class SortTypeBottomSheetFragment extends RoundedBottomSheetDialogFragmen
     TextView topTypeTextView;
     @BindView(R.id.controversial_type_text_view_sort_type_bottom_sheet_fragment)
     TextView controversialTypeTextView;
-    private Activity activity;
+    private BaseActivity activity;
     public SortTypeBottomSheetFragment() {
         // Required empty public constructor
     }
@@ -91,12 +91,16 @@ public class SortTypeBottomSheetFragment extends RoundedBottomSheetDialogFragmen
             dismiss();
         });
 
+        if (activity.typeface != null) {
+            Utils.setFontToAllTextViews(rootView, activity.typeface);
+        }
+
         return rootView;
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        activity = (Activity) context;
+        activity = (BaseActivity) context;
     }
 }

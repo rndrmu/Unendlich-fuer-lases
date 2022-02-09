@@ -16,14 +16,16 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.deishelon.roundedbottomsheet.RoundedBottomSheetDialogFragment;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import ml.docilealligator.infinityforreddit.activities.LinkResolverActivity;
 import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
+import ml.docilealligator.infinityforreddit.activities.LinkResolverActivity;
+import ml.docilealligator.infinityforreddit.activities.ViewRedditGalleryActivity;
+import ml.docilealligator.infinityforreddit.customviews.LandscapeExpandedRoundedBottomSheetDialogFragment;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
-public class UrlMenuBottomSheetFragment extends RoundedBottomSheetDialogFragment {
+public class UrlMenuBottomSheetFragment extends LandscapeExpandedRoundedBottomSheetDialogFragment {
 
     public static final String EXTRA_URL = "EU";
     @BindView(R.id.link_text_view_url_menu_bottom_sheet_fragment)
@@ -88,6 +90,16 @@ public class UrlMenuBottomSheetFragment extends RoundedBottomSheetDialogFragment
             }
             dismiss();
         });
+
+        if (activity instanceof BaseActivity) {
+            if (((BaseActivity) activity).typeface != null) {
+                Utils.setFontToAllTextViews(rootView, ((BaseActivity) activity).typeface);
+            }
+        } else if (activity instanceof ViewRedditGalleryActivity) {
+            if (((ViewRedditGalleryActivity) activity).typeface != null) {
+                Utils.setFontToAllTextViews(rootView, ((ViewRedditGalleryActivity) activity).typeface);
+            }
+        }
 
         return rootView;
     }

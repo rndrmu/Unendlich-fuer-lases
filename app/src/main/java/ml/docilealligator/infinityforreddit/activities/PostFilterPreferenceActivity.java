@@ -12,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -36,11 +37,15 @@ import ml.docilealligator.infinityforreddit.postfilter.PostFilterViewModel;
 public class PostFilterPreferenceActivity extends BaseActivity {
 
     public static final String EXTRA_POST = "EP";
+    public static final String EXTRA_SUBREDDIT_NAME = "ESN";
+    public static final String EXTRA_USER_NAME = "EUN";
 
     @BindView(R.id.coordinator_layout_post_filter_preference_activity)
     CoordinatorLayout coordinatorLayout;
     @BindView(R.id.appbar_layout_post_filter_preference_activity)
     AppBarLayout appBarLayout;
+    @BindView(R.id.collapsing_toolbar_layout_post_filter_preference_activity)
+    CollapsingToolbarLayout collapsingToolbarLayout;
     @BindView(R.id.toolbar_post_filter_preference_activity)
     Toolbar toolbar;
     @BindView(R.id.recycler_view_post_filter_preference_activity)
@@ -76,26 +81,36 @@ public class PostFilterPreferenceActivity extends BaseActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         Post post = getIntent().getParcelableExtra(EXTRA_POST);
+        String subredditName = getIntent().getStringExtra(EXTRA_SUBREDDIT_NAME);
+        String username = getIntent().getStringExtra(EXTRA_USER_NAME);
 
         fab.setOnClickListener(view -> {
-            if (post == null) {
+            if (post != null) {
+                showPostFilterOptions(post, null);
+            } else if (subredditName != null) {
+                excludeSubredditInFilter(subredditName, null);
+            } else if (username != null) {
+                excludeUserInFilter(username, null);
+            } else {
                 Intent intent = new Intent(PostFilterPreferenceActivity.this, CustomizePostFilterActivity.class);
                 intent.putExtra(CustomizePostFilterActivity.EXTRA_FROM_SETTINGS, true);
                 startActivity(intent);
-            } else {
-                showPostFilterOptions(post, null);
             }
         });
 
-        adapter = new PostFilterRecyclerViewAdapter(postFilter -> {
-            if (post == null) {
+        adapter = new PostFilterRecyclerViewAdapter(this, postFilter -> {
+            if (post != null) {
+                showPostFilterOptions(post, postFilter);
+            } else if (subredditName != null) {
+                excludeSubredditInFilter(subredditName, postFilter);
+            } else if (username != null) {
+                excludeUserInFilter(username, postFilter);
+            } else {
                 PostFilterOptionsBottomSheetFragment postFilterOptionsBottomSheetFragment = new PostFilterOptionsBottomSheetFragment();
                 Bundle bundle = new Bundle();
                 bundle.putParcelable(PostFilterOptionsBottomSheetFragment.EXTRA_POST_FILTER, postFilter);
                 postFilterOptionsBottomSheetFragment.setArguments(bundle);
                 postFilterOptionsBottomSheetFragment.show(getSupportFragmentManager(), postFilterOptionsBottomSheetFragment.getTag());
-            } else {
-                showPostFilterOptions(post, postFilter);
             }
         });
 
@@ -109,7 +124,7 @@ public class PostFilterPreferenceActivity extends BaseActivity {
 
     public void showPostFilterOptions(Post post, PostFilter postFilter) {
         String[] options = getResources().getStringArray(R.array.add_to_post_filter_options);
-        boolean[] selectedOptions = new boolean[]{false, false, false, false, false};
+        boolean[] selectedOptions = new boolean[]{false, false, false, false, false, false};
         new MaterialAlertDialogBuilder(this, R.style.MaterialAlertDialogTheme)
                 .setTitle(R.string.select)
                 .setMultiChoiceItems(options, selectedOptions, (dialogInterface, i, b) -> selectedOptions[i] = b)
@@ -137,12 +152,33 @@ public class PostFilterPreferenceActivity extends BaseActivity {
                                 case 4:
                                     intent.putExtra(CustomizePostFilterActivity.EXTRA_EXCLUDE_DOMAIN, post.getUrl());
                                     break;
+                                case 5:
+                                    intent.putExtra(CustomizePostFilterActivity.EXTRA_CONTAIN_DOMAIN, post.getUrl());
+                                    break;
                             }
                         }
                     }
                     startActivity(intent);
                 })
                 .show();
+    }
+
+    public void excludeSubredditInFilter(String subredditName, PostFilter postFilter) {
+        Intent intent = new Intent(this, CustomizePostFilterActivity.class);
+        intent.putExtra(CustomizePostFilterActivity.EXTRA_EXCLUDE_SUBREDDIT, subredditName);
+        if (postFilter != null) {
+            intent.putExtra(CustomizePostFilterActivity.EXTRA_POST_FILTER, postFilter);
+        }
+        startActivity(intent);
+    }
+
+    public void excludeUserInFilter(String username, PostFilter postFilter) {
+        Intent intent = new Intent(this, CustomizePostFilterActivity.class);
+        intent.putExtra(CustomizePostFilterActivity.EXTRA_EXCLUDE_USER, username);
+        if (postFilter != null) {
+            intent.putExtra(CustomizePostFilterActivity.EXTRA_POST_FILTER, postFilter);
+        }
+        startActivity(intent);
     }
 
     public void editPostFilter(PostFilter postFilter) {
@@ -174,7 +210,7 @@ public class PostFilterPreferenceActivity extends BaseActivity {
 
     @Override
     protected void applyCustomTheme() {
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, collapsingToolbarLayout, toolbar);
     }
 
     @Override

@@ -29,6 +29,7 @@ public class MarkdownBottomBarRecyclerViewAdapter extends RecyclerView.Adapter<R
     public static final int SPOILER = 7;
     public static final int QUOTE = 8;
     public static final int CODE_BLOCK = 9;
+    public static final int UPLOAD_IMAGE = 10;
 
     private static final int ITEM_COUNT = 10;
 
@@ -37,6 +38,7 @@ public class MarkdownBottomBarRecyclerViewAdapter extends RecyclerView.Adapter<R
 
     public interface ItemClickListener {
         void onClick(int item);
+        void onUploadImage();
     }
 
     public MarkdownBottomBarRecyclerViewAdapter(CustomThemeWrapper customThemeWrapper,
@@ -84,6 +86,9 @@ public class MarkdownBottomBarRecyclerViewAdapter extends RecyclerView.Adapter<R
                     break;
                 case CODE_BLOCK:
                     ((MarkdownBottomBarItemViewHolder) holder).imageView.setImageResource(R.drawable.ic_code_24dp);
+                    break;
+                case UPLOAD_IMAGE:
+                    ((MarkdownBottomBarItemViewHolder) holder).imageView.setImageResource(R.drawable.ic_image_24dp);
                     break;
             }
         }
@@ -289,7 +294,14 @@ public class MarkdownBottomBarRecyclerViewAdapter extends RecyclerView.Adapter<R
         public MarkdownBottomBarItemViewHolder(@NonNull View itemView) {
             super(itemView);
             imageView = (ImageView) itemView;
-            itemView.setOnClickListener(view -> itemClickListener.onClick(getAdapterPosition()));
+            itemView.setOnClickListener(view -> {
+                int position = getBindingAdapterPosition();
+                if (position == UPLOAD_IMAGE) {
+                    itemClickListener.onUploadImage();
+                } else {
+                    itemClickListener.onClick(position);
+                }
+            });
 
             imageView.setColorFilter(customThemeWrapper.getPrimaryIconColor(), android.graphics.PorterDuff.Mode.SRC_IN);
         }

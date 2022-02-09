@@ -14,19 +14,19 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.deishelon.roundedbottomsheet.RoundedBottomSheetDialogFragment;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.activities.EditMultiRedditActivity;
 import ml.docilealligator.infinityforreddit.activities.SubscribedThingListingActivity;
+import ml.docilealligator.infinityforreddit.customviews.LandscapeExpandedRoundedBottomSheetDialogFragment;
 import ml.docilealligator.infinityforreddit.multireddit.MultiReddit;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class MultiRedditOptionsBottomSheetFragment extends RoundedBottomSheetDialogFragment {
+public class MultiRedditOptionsBottomSheetFragment extends LandscapeExpandedRoundedBottomSheetDialogFragment {
 
     public static final String EXTRA_MULTI_REDDIT = "EMR";
 
@@ -79,6 +79,10 @@ public class MultiRedditOptionsBottomSheetFragment extends RoundedBottomSheetDia
             subscribedThingListingActivity.deleteMultiReddit(multiReddit);
             dismiss();
         });
+
+        if (subscribedThingListingActivity.typeface != null) {
+            Utils.setFontToAllTextViews(rootView, subscribedThingListingActivity.typeface);
+        }
 
         return rootView;
     }

@@ -174,7 +174,7 @@ public class SendPrivateMessageActivity extends BaseActivity {
     @Override
     protected void applyCustomTheme() {
         coordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, null, toolbar);
         int primaryTextColor = mCustomThemeWrapper.getPrimaryTextColor();
         usernameEditText.setTextColor(primaryTextColor);
         subjectEditText.setTextColor(primaryTextColor);
@@ -186,5 +186,10 @@ public class SendPrivateMessageActivity extends BaseActivity {
         int dividerColor = mCustomThemeWrapper.getDividerColor();
         divider1.setBackgroundColor(dividerColor);
         divider2.setBackgroundColor(dividerColor);
+        if (typeface != null) {
+            usernameEditText.setTypeface(typeface);
+            subjectEditText.setTypeface(typeface);
+            messageEditText.setTypeface(typeface);
+        }
     }
 }

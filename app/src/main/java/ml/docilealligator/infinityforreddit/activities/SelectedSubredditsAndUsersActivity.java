@@ -11,10 +11,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.r0adkll.slidr.Slidr;
 
@@ -31,6 +31,7 @@ import ml.docilealligator.infinityforreddit.bottomsheetfragments.SelectSubreddit
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.Infinity;
 import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.customviews.LinearLayoutManagerBugFixed;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 
 public class SelectedSubredditsAndUsersActivity extends BaseActivity implements ActivityToolbarInterface {
@@ -45,6 +46,8 @@ public class SelectedSubredditsAndUsersActivity extends BaseActivity implements 
     CoordinatorLayout coordinatorLayout;
     @BindView(R.id.appbar_layout_selected_subreddits_and_users_activity)
     AppBarLayout appBarLayout;
+    @BindView(R.id.collapsing_toolbar_layout_selected_subreddits_and_users_activity)
+    CollapsingToolbarLayout collapsingToolbarLayout;
     @BindView(R.id.toolbar_selected_subreddits_and_users_activity)
     Toolbar toolbar;
     @BindView(R.id.recycler_view_selected_subreddits_and_users_activity)
@@ -56,7 +59,7 @@ public class SelectedSubredditsAndUsersActivity extends BaseActivity implements 
     SharedPreferences mSharedPreferences;
     @Inject
     CustomThemeWrapper mCustomThemeWrapper;
-    private LinearLayoutManager linearLayoutManager;
+    private LinearLayoutManagerBugFixed linearLayoutManager;
     private SelectedSubredditsRecyclerViewAdapter adapter;
     private ArrayList<String> subreddits;
 
@@ -87,8 +90,8 @@ public class SelectedSubredditsAndUsersActivity extends BaseActivity implements 
             subreddits = getIntent().getStringArrayListExtra(EXTRA_SELECTED_SUBREDDITS);
         }
 
-        adapter = new SelectedSubredditsRecyclerViewAdapter(mCustomThemeWrapper, subreddits);
-        linearLayoutManager = new LinearLayoutManager(this);
+        adapter = new SelectedSubredditsRecyclerViewAdapter(this, mCustomThemeWrapper, subreddits);
+        linearLayoutManager = new LinearLayoutManagerBugFixed(this);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setAdapter(adapter);
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -187,7 +190,7 @@ public class SelectedSubredditsAndUsersActivity extends BaseActivity implements 
     @Override
     protected void applyCustomTheme() {
         coordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, collapsingToolbarLayout, toolbar);
         applyFABTheme(fab);
     }
 

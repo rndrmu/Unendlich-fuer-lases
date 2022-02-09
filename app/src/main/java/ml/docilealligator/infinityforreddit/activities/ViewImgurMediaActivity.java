@@ -1,11 +1,13 @@
 package ml.docilealligator.infinityforreddit.activities;
 
 import android.content.SharedPreferences;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,9 +23,6 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
-import com.thefuntasty.hauler.DragDirection;
-import com.thefuntasty.hauler.HaulerView;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,9 +33,18 @@ import java.util.concurrent.Executor;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import app.futured.hauler.DragDirection;
+import app.futured.hauler.HaulerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import ml.docilealligator.infinityforreddit.CustomFontReceiver;
+import ml.docilealligator.infinityforreddit.ImgurMedia;
+import ml.docilealligator.infinityforreddit.Infinity;
+import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.SetAsWallpaperCallback;
+import ml.docilealligator.infinityforreddit.WallpaperSetter;
 import ml.docilealligator.infinityforreddit.apis.ImgurAPI;
+import ml.docilealligator.infinityforreddit.customviews.ViewPagerBugFixed;
 import ml.docilealligator.infinityforreddit.font.ContentFontFamily;
 import ml.docilealligator.infinityforreddit.font.ContentFontStyle;
 import ml.docilealligator.infinityforreddit.font.FontFamily;
@@ -45,20 +53,16 @@ import ml.docilealligator.infinityforreddit.font.TitleFontFamily;
 import ml.docilealligator.infinityforreddit.font.TitleFontStyle;
 import ml.docilealligator.infinityforreddit.fragments.ViewImgurImageFragment;
 import ml.docilealligator.infinityforreddit.fragments.ViewImgurVideoFragment;
-import ml.docilealligator.infinityforreddit.ImgurMedia;
-import ml.docilealligator.infinityforreddit.Infinity;
-import ml.docilealligator.infinityforreddit.R;
-import ml.docilealligator.infinityforreddit.SetAsWallpaperCallback;
 import ml.docilealligator.infinityforreddit.utils.APIUtils;
 import ml.docilealligator.infinityforreddit.utils.JSONUtils;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
-import ml.docilealligator.infinityforreddit.WallpaperSetter;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
-public class ViewImgurMediaActivity extends AppCompatActivity implements SetAsWallpaperCallback {
+public class ViewImgurMediaActivity extends AppCompatActivity implements SetAsWallpaperCallback, CustomFontReceiver {
 
     public static final String EXTRA_IMGUR_TYPE = "EIT";
     public static final String EXTRA_IMGUR_ID = "EII";
@@ -72,11 +76,13 @@ public class ViewImgurMediaActivity extends AppCompatActivity implements SetAsWa
     @BindView(R.id.progress_bar_view_imgur_media_activity)
     ProgressBar progressBar;
     @BindView(R.id.view_pager_view_imgur_media_activity)
-    ViewPager viewPager;
+    ViewPagerBugFixed viewPager;
     @BindView(R.id.load_image_error_linear_layout_view_imgur_media_activity)
     LinearLayout errorLinearLayout;
+    public Typeface typeface;
     private SectionsPagerAdapter sectionsPagerAdapter;
     private ArrayList<ImgurMedia> images;
+    private boolean useBottomAppBar;
     @Inject
     @Named("imgur")
     Retrofit imgurRetrofit;
@@ -116,12 +122,22 @@ public class ViewImgurMediaActivity extends AppCompatActivity implements SetAsWa
 
         ButterKnife.bind(this);
 
-        ActionBar actionBar = getSupportActionBar();
-        Drawable upArrow = getResources().getDrawable(R.drawable.ic_arrow_back_white_24dp);
-        actionBar.setHomeAsUpIndicator(upArrow);
-        actionBar.setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.transparentActionBarAndExoPlayerControllerColor)));
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
 
-        setTitle(" ");
+        useBottomAppBar = sharedPreferences.getBoolean(SharedPreferencesUtils.USE_BOTTOM_TOOLBAR_IN_MEDIA_VIEWER, false);
+
+        if (!useBottomAppBar) {
+            ActionBar actionBar = getSupportActionBar();
+            Drawable upArrow = getResources().getDrawable(R.drawable.ic_arrow_back_white_24dp);
+            actionBar.setHomeAsUpIndicator(upArrow);
+            actionBar.setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.transparentActionBarAndExoPlayerControllerColor)));
+            setTitle(" ");
+        } else {
+            getSupportActionBar().hide();
+        }
 
         String imgurId = getIntent().getStringExtra(EXTRA_IMGUR_ID);
         if (imgurId == null) {
@@ -151,6 +167,10 @@ public class ViewImgurMediaActivity extends AppCompatActivity implements SetAsWa
         }
 
         errorLinearLayout.setOnClickListener(view -> fetchImgurMedia(imgurId));
+    }
+
+    public boolean isUseBottomAppBar() {
+        return useBottomAppBar;
     }
 
     private void fetchImgurMedia(String imgurId) {
@@ -264,23 +284,26 @@ public class ViewImgurMediaActivity extends AppCompatActivity implements SetAsWa
     }
 
     private void setupViewPager() {
-        setToolbarTitle(0);
+        if (!useBottomAppBar) {
+            setToolbarTitle(0);
+            viewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+                @Override
+                public void onPageSelected(int position) {
+                    setToolbarTitle(position);
+                }
+            });
+        }
         sectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-        viewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-            @Override
-            public void onPageSelected(int position) {
-                setToolbarTitle(position);
-            }
-        });
         viewPager.setAdapter(sectionsPagerAdapter);
+        viewPager.setOffscreenPageLimit(3);
     }
 
     private void setToolbarTitle(int position) {
         if (images != null && position >= 0 && position < images.size()) {
             if (images.get(position).getType() == ImgurMedia.TYPE_VIDEO) {
-                setTitle(getString(R.string.view_imgur_media_activity_video_label, position + 1, images.size()));
+                setTitle(Utils.getTabTextWithCustomFont(typeface, Html.fromHtml("<font color=\"#FFFFFF\">" + getString(R.string.view_imgur_media_activity_video_label, position + 1, images.size()) + "</font>")));
             } else {
-                setTitle(getString(R.string.view_imgur_media_activity_image_label, position + 1, images.size()));
+                setTitle(Utils.getTabTextWithCustomFont(typeface, Html.fromHtml("<font color=\"#FFFFFF\">" + getString(R.string.view_imgur_media_activity_image_label, position + 1, images.size()) + "</font>")));
             }
         }
     }
@@ -364,6 +387,11 @@ public class ViewImgurMediaActivity extends AppCompatActivity implements SetAsWa
         return viewPager.getCurrentItem();
     }
 
+    @Override
+    public void setCustomFont(Typeface typeface, Typeface titleTypeface, Typeface contentTypeface) {
+        this.typeface = typeface;
+    }
+
     private class SectionsPagerAdapter extends FragmentStatePagerAdapter {
 
         SectionsPagerAdapter(@NonNull FragmentManager fm) {
@@ -378,12 +406,16 @@ public class ViewImgurMediaActivity extends AppCompatActivity implements SetAsWa
                 ViewImgurVideoFragment fragment = new ViewImgurVideoFragment();
                 Bundle bundle = new Bundle();
                 bundle.putParcelable(ViewImgurVideoFragment.EXTRA_IMGUR_VIDEO, imgurMedia);
+                bundle.putInt(ViewImgurVideoFragment.EXTRA_INDEX, position);
+                bundle.putInt(ViewImgurVideoFragment.EXTRA_MEDIA_COUNT, images.size());
                 fragment.setArguments(bundle);
                 return fragment;
             } else {
                 ViewImgurImageFragment fragment = new ViewImgurImageFragment();
                 Bundle bundle = new Bundle();
                 bundle.putParcelable(ViewImgurImageFragment.EXTRA_IMGUR_IMAGES, imgurMedia);
+                bundle.putInt(ViewImgurImageFragment.EXTRA_INDEX, position);
+                bundle.putInt(ViewImgurImageFragment.EXTRA_MEDIA_COUNT, images.size());
                 fragment.setArguments(bundle);
                 return fragment;
             }

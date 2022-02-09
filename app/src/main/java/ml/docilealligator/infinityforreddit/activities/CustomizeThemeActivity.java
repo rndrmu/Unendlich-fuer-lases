@@ -12,10 +12,11 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 
 import org.greenrobot.eventbus.EventBus;
@@ -28,6 +29,9 @@ import javax.inject.Named;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import ml.docilealligator.infinityforreddit.Infinity;
+import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.RedditDataRoomDatabase;
 import ml.docilealligator.infinityforreddit.adapters.CustomizeThemeRecyclerViewAdapter;
 import ml.docilealligator.infinityforreddit.asynctasks.GetCustomTheme;
 import ml.docilealligator.infinityforreddit.asynctasks.InsertCustomTheme;
@@ -35,9 +39,6 @@ import ml.docilealligator.infinityforreddit.customtheme.CustomTheme;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeSettingsItem;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.events.RecreateActivityEvent;
-import ml.docilealligator.infinityforreddit.Infinity;
-import ml.docilealligator.infinityforreddit.R;
-import ml.docilealligator.infinityforreddit.RedditDataRoomDatabase;
 import ml.docilealligator.infinityforreddit.utils.CustomThemeSharedPreferencesUtils;
 
 public class CustomizeThemeActivity extends BaseActivity {
@@ -56,6 +57,8 @@ public class CustomizeThemeActivity extends BaseActivity {
     CoordinatorLayout coordinatorLayout;
     @BindView(R.id.appbar_layout_customize_theme_activity)
     AppBarLayout appBarLayout;
+    @BindView(R.id.collapsing_toolbar_layout_customize_theme_activity)
+    CollapsingToolbarLayout collapsingToolbarLayout;
     @BindView(R.id.toolbar_customize_theme_activity)
     Toolbar toolbar;
     @BindView(R.id.recycler_view_customize_theme_activity)
@@ -103,8 +106,6 @@ public class CustomizeThemeActivity extends BaseActivity {
         if (getIntent().getBooleanExtra(EXTRA_CREATE_THEME, false)) {
             setTitle(R.string.customize_theme_activity_create_theme_label);
         }
-
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         if (savedInstanceState != null) {
             customThemeSettingsItems = savedInstanceState.getParcelableArrayList(CUSTOM_THEME_SETTINGS_ITEMS_STATE);
@@ -234,6 +235,16 @@ public class CustomizeThemeActivity extends BaseActivity {
     }
 
     @Override
+    public void onBackPressed() {
+        new MaterialAlertDialogBuilder(this, R.style.MaterialAlertDialogTheme)
+                .setTitle(R.string.discard)
+                .setPositiveButton(R.string.discard_dialog_button, (dialogInterface, i)
+                        -> super.onBackPressed())
+                .setNegativeButton(R.string.no, null)
+                .show();
+    }
+
+    @Override
     protected SharedPreferences getDefaultSharedPreferences() {
         return sharedPreferences;
     }
@@ -245,6 +256,6 @@ public class CustomizeThemeActivity extends BaseActivity {
 
     @Override
     protected void applyCustomTheme() {
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, collapsingToolbarLayout, toolbar);
     }
 }

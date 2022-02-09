@@ -11,7 +11,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.AppBarLayout;
@@ -113,11 +112,10 @@ public class ReportActivity extends BaseActivity {
         }
 
         if (generalReasons != null) {
-            mAdapter = new ReportReasonRecyclerViewAdapter(mCustomThemeWrapper, generalReasons);
+            mAdapter = new ReportReasonRecyclerViewAdapter(this, mCustomThemeWrapper, generalReasons);
         } else {
-            mAdapter = new ReportReasonRecyclerViewAdapter(mCustomThemeWrapper, ReportReason.getGeneralReasons(this));
+            mAdapter = new ReportReasonRecyclerViewAdapter(this, mCustomThemeWrapper, ReportReason.getGeneralReasons(this));
         }
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(mAdapter);
 
         if (rulesReasons == null) {
@@ -198,6 +196,6 @@ public class ReportActivity extends BaseActivity {
     @Override
     protected void applyCustomTheme() {
         coordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, null, toolbar);
     }
 }

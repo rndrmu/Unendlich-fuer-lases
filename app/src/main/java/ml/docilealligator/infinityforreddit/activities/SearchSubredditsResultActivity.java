@@ -23,7 +23,6 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -36,7 +35,6 @@ import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.events.SwitchAccountEvent;
 import ml.docilealligator.infinityforreddit.fragments.SubredditListingFragment;
-import ml.docilealligator.infinityforreddit.subreddit.SubredditData;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 
 public class SearchSubredditsResultActivity extends BaseActivity implements ActivityToolbarInterface {
@@ -122,11 +120,12 @@ public class SearchSubredditsResultActivity extends BaseActivity implements Acti
             bundle.putString(SubredditListingFragment.EXTRA_ACCOUNT_NAME, mAccountName);
             bundle.putBoolean(SubredditListingFragment.EXTRA_IS_MULTI_SELECTION, getIntent().getBooleanExtra(EXTRA_IS_MULTI_SELECTION, false));
             mFragment.setArguments(bundle);
-            getSupportFragmentManager().beginTransaction().replace(R.id.frame_layout_search_subreddits_result_activity, mFragment).commit();
         } else {
             mFragment = getSupportFragmentManager().getFragment(savedInstanceState, FRAGMENT_OUT_STATE);
-            getSupportFragmentManager().beginTransaction().replace(R.id.frame_layout_search_subreddits_result_activity, mFragment).commit();
         }
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.frame_layout_search_subreddits_result_activity, mFragment)
+                .commit();
     }
 
     @Override
@@ -142,7 +141,7 @@ public class SearchSubredditsResultActivity extends BaseActivity implements Acti
     @Override
     protected void applyCustomTheme() {
         coordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, null, toolbar);
     }
 
     public void getSelectedSubreddit(String name, String iconUrl) {

@@ -71,36 +71,44 @@
     <string name="parse_user_info_error">"Ein Fehler trat beim Abruf der Benutzerinformationen auf"</string>
     <string name="no_system_webview_error">"Fehler beim Öffnen des System-WebView"</string>
     <string name="error_loading_image_tap_to_retry">"Fehler beim Laden des Bildes. Tippen für Neuversuch."</string>
-    <string name="load_posts_error">"Fehler beim Laden der Beiträge. Tippen für Neuversuch."</string>
+    <string name="load_posts_error">"Fehler beim Laden der Beiträge.
+Tippen für Neuversuch."</string>
     <string name="load_more_posts_error">"Fehler beim Laden der Beiträge."</string>
-    <string name="load_post_error">"Fehler beim Laden des Beitrags. Tippen für Neuversuch."</string>
-    <string name="search_subreddits_error">"Fehler beim Suchen von Subreddits. Tippen für Neuversuch."</string>
-    <string name="search_users_error">"Fehler beim Suchen nach Benutzern. Tippen für Neuversuch."</string>
+    <string name="load_post_error">"Fehler beim Laden des Beitrags.
+Tippen für Neuversuch."</string>
+    <string name="search_subreddits_error">"Fehler beim Suchen von Subreddits.
+Tippen für Neuversuch."</string>
+    <string name="search_users_error">"Fehler beim Suchen nach Benutzern.
+Tippen für Neuversuch."</string>
     <string name="no_posts">"Keine Beiträge gefunden"</string>
     <string name="no_comments">"Keine Kommentare gefunden"</string>
     <string name="no_subreddits">"Keine Subreddits gefunden"</string>
     <string name="no_users">"Keine Benutzer gefunden"</string>
     <string name="no_multi_reddits">"Keine Multireddits gefunden"</string>
     <string name="no_storage_permission">"Keine Speicherberechtigung, um diese Datei zu speichern"</string>
-    <string name="load_comments_failed">"Fehler beim Laden der Kommentare. Berühren, um es erneut zu versuchen."</string>
+    <string name="load_comments_failed">"Fehler beim Laden der Kommentare.
+Tippen für Neuversuch."</string>
     <string name="retry">"Wiederholen"</string>
     <string name="comments">"Kommentare"</string>
     <string name="no_comments_yet">"Noch keine Kommentare. Einen Kommentar schreiben?"</string>
     <string name="vote_failed">"Abstimmung fehlgeschlagen"</string>
     <string name="refresh_post_failed">"Fehler beim Aktualisieren des Beitrags"</string>
-    <string name="load_messages_failed">"Fehler beim Laden der Nachrichten. Berühren, um es erneut zu versuchen."</string>
+    <string name="load_messages_failed">"Fehler beim Laden der Nachrichten.
+Tippen für Neuversuch."</string>
     <string name="no_messages">"Leer"</string>
     <string name="nsfw">"NSFW"</string>
     <string name="karma_info">"Karma: %1$d"</string>
-    <string name="karma_info_user_detail">"Karma: %1$d (%2$d + %3$d)"</string>
-    <string name="cakeday_info">"Cake Day: %1$s"</string>
+    <string name="karma_info_user_detail">"Karma:
+%1$d (%2$d + %3$d)"</string>
+    <string name="cakeday_info">"Cake Day:
+%1$s"</string>
     <string name="since">"Seit:"</string>
     <string name="profile">"Profil"</string>
     <string name="subscriptions">"Abonnements"</string>
     <string name="multi_reddit">"Multireddit"</string>
     <string name="inbox">"Posteingang"</string>
-    <string name="upvoted">"Upgevoted"</string>
-    <string name="downvoted">"Downgevoted"</string>
+    <string name="upvoted">"Upgevotet"</string>
+    <string name="downvoted">"Downgevotet"</string>
     <string name="hidden">"Versteckt"</string>
     <string name="saved">"Gespeichert"</string>
     <string name="gilded">"Vergoldet"</string>
@@ -135,7 +143,7 @@
     <string name="send_comment_success">"Kommentar gesendet"</string>
     <string name="send_comment_failed">"Konnte diesen Kommentar nicht senden"</string>
     <string name="send_message_username_hint">"Benutzer"</string>
-    <string name="send_message_subject_hint">"Betreff"</string>
+    <string name="send_message_subject_hint">"Betreff (maximal 100 Zeichen)"</string>
     <string name="send_message_content_hint">"Nachricht"</string>
     <string name="reply_message_failed">"Konnte nicht auf diese Nachricht antworten"</string>
     <string name="error_getting_message">"Fehler beim Abrufen dieser Nachricht"</string>
@@ -144,8 +152,10 @@
     <string name="message_content_required">"Du musst dem Empfänger auch was schreiben"</string>
     <string name="sending_message">"Sende"</string>
     <string name="send_message_success">"Nachricht gesendet"</string>
-    <string name="send_message_failed">"Nachricht konnte nicht gesendet werden."</string>
+    <string name="send_message_failed">"Nachricht konnte nicht gesendet werden"</string>
     <string name="select_a_subreddit">"Bitte wähle zuerst ein Subreddit aus"</string>
+
+    <!-- Fuzzy -->
     <string name="title_required">"Der Beitrag braucht einen guten Titel"</string>
     <string name="link_required">"Hey, wo ist der Link?"</string>
     <string name="select_an_image">"Bitte wähle zuerst ein Bild"</string>
@@ -153,7 +163,7 @@
     <string name="post_failed">"Konnte es nicht posten"</string>
     <string name="error_processing_image">"Fehler beim Verarbeiten des Bildes"</string>
     <string name="error_processing_video">"Fehler beim Bearbeiten des Videos"</string>
-    <string name="download_started">"Herunterladen gestartet. Prüfe die Benachrichtigung bzgl. des Fortschritts."</string>
+    <string name="download_started">"Herunterladen gestartet. Prüfe die Benachrichtigung bezüglich des Fortschritts."</string>
     <string name="comment_load_more_comments">"Lade mehr Kommentare"</string>
     <string name="comment_load_more_comments_failed">"Laden fehlgeschlagen. Tippen für Neuversuch."</string>
     <string name="loading">"Lade"</string>
@@ -181,9 +191,11 @@
     <string name="flair">"Flair"</string>
     <string name="spoiler">"Spoiler"</string>
     <string name="no_flair">"Kein Flair"</string>
-    <string name="error_loading_flairs">"Fehler beim Laden der Flairs. Berühren, um es erneut zu versuchen."</string>
+    <string name="error_loading_flairs">"Fehler beim Laden der Flairs.
+Tippen für Neuversuch."</string>
     <string name="no_rule">"Keine Regel"</string>
-    <string name="error_loading_rules">"Fehler beim Laden der Regeln. Berühren, um es erneut zu versuchen."</string>
+    <string name="error_loading_rules">"Fehler beim Laden der Regeln.
+Tippen für Neuversuch."</string>
     <string name="error_loading_rules_without_retry">"Fehler beim Laden der Regeln"</string>
     <string name="search_in">"Suchen in"</string>
     <string name="all_subreddits">"Alle Subreddits"</string>
@@ -220,12 +232,14 @@
     <string name="image">"BILD"</string>
     <string name="video">"VIDEO"</string>
     <string name="gif">"GIF"</string>
-    <string name="gallery">"GALLERIE"</string>
+    <string name="gallery">"GALERIE"</string>
     <string name="best">"Beste"</string>
     <string name="search">"Suchen"</string>
     <string name="posting_video">"Poste Video"</string>
     <string name="posting_image">"Poste Bild"</string>
-    <string name="please_wait">"Bitte warten."</string>
+    <string name="please_wait">"Bitte warten"</string>
+
+    <!-- Fuzzy -->
     <string name="add_account">"Konto hinzufügen"</string>
     <string name="anonymous_account">"Anonym"</string>
     <string name="log_out">"Abmelden"</string>
@@ -299,7 +313,6 @@
     <string name="settings_gestures_and_buttons_title">"Gesten &amp; Knöpfe"</string>
     <string name="settings_save_front_page_scrolled_position_title">"Scrollposition in HOME speichern"</string>
     <string name="settings_save_front_page_scrolled_position_summary">"Neue Beitrage nach dem Aktualisieren von HOME anzeigen (Frontseite, Sortierung: Beste)"</string>
-    <string name="settings_open_link_in_app_title">"Link in App öffnen"</string>
     <string name="settigns_video_title">"Video"</string>
     <string name="settings_video_autoplay_title">"Videos automatisch abspielen"</string>
     <string name="settings_mute_autoplaying_videos_title">"Automatisch abgespielte Videos stummschalten"</string>
@@ -311,19 +324,19 @@
     <string name="settings_immersive_interface_title">"Immersive Oberfläche"</string>
 
     <!-- Fuzzy -->
-    <string name="settings_immersive_interface_summary">"Funktioniert nicht auf allen Seiten
-Funktioniert vielleicht nicht auf Android 11"</string>
+    <string name="settings_immersive_interface_summary">"Funktioniert nicht auf allen Seiten"</string>
     <string name="settings_immersive_interface_ignore_nav_bar_title">"Navigationsleiste in der immersiven Oberfläche ignorieren"</string>
     <string name="settings_immersive_interface_ignore_nav_bar_summary">"Weniger Abstand für die untere Navigationsleiste"</string>
     <string name="settings_customize_tabs_in_main_page_title">"Reiter auf der Hauptseite anpassen"</string>
     <string name="settings_enable_bottom_app_bar_title">"Untere Navigation aktivieren"</string>
-    <string name="settings_enable_bottom_app_bar_summary">"Hat keinen Effekt im anonymen Modus"</string>
     <string name="settings_category_post_and_comment_title">"Posten und Kommentieren"</string>
     <string name="settings_vote_buttons_on_the_right_title">"Abstimmungsknöpfe auf der rechten Seite"</string>
     <string name="settings_volume_keys_navigate_comments_title">"Lautstärketasten nutzen, um durch Kommentare in Beträgen zu navigieren"</string>
     <string name="settings_volume_keys_navigate_posts_title">"Lautstärketasten nutzen, um durch Beiträge zu navigieren"</string>
     <string name="settings_mute_video_title">"Videos stummschalten"</string>
     <string name="settings_mute_nsfw_video_title">"NSFW-Videos stummschalten"</string>
+
+    <!-- Fuzzy -->
     <string name="settings_automatically_try_redgifs_title">"Automatisch versuchen, Redgifs abzurufen, falls Videos auf Gfycat entfernt wurden."</string>
     <string name="settings_video_player_ignore_nav_bar_title">"Navigationsleiste im Video-Player ignorieren"</string>
     <string name="settings_video_player_ignore_nav_bar_summary">"Kein extra Rand beim Video-Controller"</string>
@@ -348,8 +361,12 @@ Funktioniert vielleicht nicht auf Android 11"</string>
     <string name="settings_swap_tap_and_long_title">"Antippen und Gedrückthalten in Kommentaren tauschen"</string>
     <string name="settings_swipe_to_go_back_title">"Nach rechts wischen, um zurück zu gehen"</string>
     <string name="settings_swipe_to_go_back_summary">"Trifft nicht auf alle Seiten zu"</string>
+
+    <!-- Fuzzy -->
     <string name="settings_lock_jump_to_next_top_level_comment_button_title">"\"Zum nächsten Top-Level-Kommentar springen\"-Knopf sperren"</string>
     <string name="settings_lock_bottom_app_bar_title">"Untere Navigationsleiste sperren"</string>
+
+    <!-- Fuzzy -->
     <string name="settings_swipe_up_to_hide_jump_to_next_top_level_comment_button_title">"Nach oben wischen, um den \"Zum nächsten Top-Level-Kommentar springen\"-Knopf zu verstecken"</string>
     <string name="settings_lazy_mode_interval_title">"Intervall für Faulen Modus"</string>
     <string name="settings_font_title">"Schriftart"</string>
@@ -405,7 +422,7 @@ Funktioniert vielleicht nicht auf Android 11"</string>
     <string name="settings_customize_dark_theme_title">"Dunkles Thema"</string>
     <string name="settings_customize_amoled_theme_title">"AMOLED-Thema"</string>
     <string name="settings_manage_themes_title">"Themen verwalten"</string>
-    <string name="settings_custom_theme_cannot_apply_to_settings_page_summary">"Benutzerdefiniterte Themen können nicht auf die Einstellungs-Seite angewandt werden (ausgenommen Werkzeug-, Status- und Navigationsleiste)"</string>
+    <string name="settings_custom_theme_cannot_apply_to_settings_page_summary">"Benutzerdefinierte Themen können nicht auf die Einstellungs-Seite angewandt werden (ausgenommen Werkzeug-, Status- und Navigationsleiste)."</string>
     <string name="settings_advanced_master_title">"Erweitert"</string>
     <string name="settings_delete_all_subreddits_data_in_database_title">"Alle Subreddits aus der Datenbank löschen"</string>
     <string name="settings_delete_all_users_data_in_database_title">"Alle Benutzer aus der Datenbank löschen"</string>
@@ -420,6 +437,8 @@ Funktioniert vielleicht nicht auf Android 11"</string>
     <string name="settings_tab_title">"Titel"</string>
     <string name="settings_tab_post_type">"Typ"</string>
     <string name="settings_tab_subreddit_name">"Subreddit-Name (ohne r/ Präfix)"</string>
+
+    <!-- Fuzzy -->
     <string name="settings_tab_multi_reddit_name">"Multireddit-Name (/user/DeinBenutzername/m/DeinMultiredditName)"</string>
     <string name="settings_tab_username">"Benutzername (ohne u/ Präfix)"</string>
     <string name="no_developer_easter_egg">"Es gibt hier keine Entwickleroptionen"</string>
@@ -461,7 +480,8 @@ Funktioniert vielleicht nicht auf Android 11"</string>
     <string name="error_getting_multi_reddit_data">"Fehler beim Abrufen der Multireddit-Daten"</string>
     <string name="error_loading_multi_reddit_list">"Kann Multireddits nicht synchronisieren"</string>
     <string name="error_loading_subscriptions">"Kann Abonnements nicht synchronisieren"</string>
-    <string name="share_this_app">"Schau dir Infinity for Reddit an, ein super Reddit-Client! https://play.google.com/store/apps/details?id=ml.docilealligator.infinityforreddit"</string>
+    <string name="share_this_app">"Schau dir Infinity for Reddit an, ein super Reddit-Client!
+https://play.google.com/store/apps/details?id=ml.docilealligator.infinityforreddit"</string>
     <string name="error_getting_subreddit_name">"Fehler beim Abrufen des Subreddit-Namens"</string>
     <string name="share_post_link">"Beitrags-Link teilen"</string>
     <string name="share_image_link">"Bild-Link teilen"</string>
@@ -484,14 +504,13 @@ Funktioniert vielleicht nicht auf Android 11"</string>
     <string name="exit_app">"Verlassen?"</string>
     <string name="light_theme">"Helles Thema"</string>
     <string name="dark_theme">"Dunkles Thema"</string>
-    <string name="multi_reddit_name_hint">"Name (Max. 50 Zeichen)"</string>
+    <string name="multi_reddit_name_hint">"Name (Maximal 50 Zeichen)"</string>
     <string name="multi_reddit_description_hint">"Beschreibung"</string>
     <string name="private_multi_reddit">"Privat"</string>
     <string name="no_multi_reddit_name">"Wo ist der Name?"</string>
     <string name="create_multi_reddit_failed">"Kann dieses Multireddit nicht erstellen"</string>
     <string name="duplicate_multi_reddit">"Dieses Multireddit existiert bereits"</string>
     <string name="edit_multi_reddit_failed">"Kann dieses Multireddit nicht bearbeiten"</string>
-    <string name="logged_out">"Du bist abgemeldet"</string>
     <string name="delete_multi_reddit_success">"Löschen erfolgreich"</string>
     <string name="delete_multi_reddit_failed">"Löschen fehlgeschlagen"</string>
     <string name="delete_multi_reddit_dialog_message">"Bist du sicher?"</string>
@@ -553,7 +572,7 @@ Funktioniert vielleicht nicht auf Android 11"</string>
     <string name="theme_item_bottom_app_bar_background_color">"Farbe für untere Navigationsleiste"</string>
     <string name="theme_item_bottom_app_bar_background_color_detail">"Angewandt auf: Untere Navigationsleiste"</string>
     <string name="theme_item_primary_icon_color">"Primäre Symbolfarbe"</string>
-    <string name="theme_item_primary_icon_color_detail">"Angewandt auf: Symbole in der Navigationsleiste"</string>
+    <string name="theme_item_primary_icon_color_detail">"Angewandt auf: Symbole in der Navigationsleiste."</string>
     <string name="theme_item_bottom_app_bar_icon_color">"Symbolfarbe für untere Navigationsleiste"</string>
     <string name="theme_item_bottom_app_bar_icon_color_detail">"Angewandt auf: Symbole in der unteren Navigationsleiste"</string>
     <string name="theme_item_post_icon_and_info_color">"Farbe für Beitragssymbol und Information"</string>
@@ -584,10 +603,10 @@ Funktioniert vielleicht nicht auf Android 11"</string>
     <string name="theme_item_tab_layout_with_collapsed_collapsing_toolbar_text_color_detail">"Angewandt auf: Textfarbe im Reiterlayout (eingeklappte Werkzeugleiste)"</string>
     <string name="theme_item_tab_layout_with_collapsed_collapsing_toolbar_tab_indicator">"Indikatorfarbe für Reiterlayout in der eingeklappten Werkzeugleiste"</string>
     <string name="theme_item_tab_layout_with_collapsed_collapsing_toolbar_tab_indicator_detail">"Angewandt auf: Indikatorfarbe im Reiterlayout (eingeklappte Werkzeugleiste)"</string>
-    <string name="theme_item_upvoted_color">"Upgevoted Farbe"</string>
-    <string name="theme_item_upvoted_color_detail">"Angewandt auf: Abstimmungs-Knöpfe und Punktzahlen (upgevoted)"</string>
-    <string name="theme_item_downvoted_color">"Downgevoted Farbe"</string>
-    <string name="theme_item_downvoted_color_detail">"Angewandt auf: Abstimmungs-Knöpfe und Punktzahlen (downgevoted)"</string>
+    <string name="theme_item_upvoted_color">"Upgevotet Farbe"</string>
+    <string name="theme_item_upvoted_color_detail">"Angewandt auf: Abstimmungs-Knöpfe und Punktzahlen (upgevotet)"</string>
+    <string name="theme_item_downvoted_color">"Downgevotet Farbe"</string>
+    <string name="theme_item_downvoted_color_detail">"Angewandt auf: Abstimmungs-Knöpfe und Punktzahlen (downgevotet)"</string>
     <string name="theme_item_post_type_background_color">"Hintergrundfarbe für Beitragsart"</string>
     <string name="theme_item_post_type_background_color_detail">"Angewandt auf: Hintergrund der Beitragsart (BILD, TEXT, VIDEO, GIF, LINK)"</string>
     <string name="theme_item_post_type_text_color">"Textfarbe für Beitragsart"</string>
@@ -678,10 +697,13 @@ Funktioniert vielleicht nicht auf Android 11"</string>
     <string name="theme_name_red_amoled">"Rot AMOLED"</string>
     <string name="theme_name_dracula">"Drakula"</string>
     <string name="theme_name_calm_pastel">"Ruhiges Pastell"</string>
-    <string name="create_light_theme">"Erstelle ein helles Thema basierend auf dem Indigo-Thema"</string>
-    <string name="create_dark_theme">"Erstelle ein dunkles Thema basierend auf dem Indigo-Dunkel-Thema"</string>
-    <string name="create_amoled_theme">"Erstelle ein AMOLED-Thema basierend auf dem Indigo-AMOLED-Thema"</string>
-    <string name="create_theme_info">"Wenn du stattdessen ein Thema basierend auf einem anderen Thema erstellen möchtest, klicke auf den \"+\"-Knopf auf einem Thema"</string>
+    <string name="create_light_theme">"Erstelle ein helles Thema
+Basiere auf Indigo-Thema"</string>
+    <string name="create_dark_theme">"Erstelle ein dunkles Thema
+Basiere auf Indigo dunklen Thema"</string>
+    <string name="create_amoled_theme">"Erstelle ein AMOLED-Thema
+Basiere auf Indigo-AMOLED-Thema"</string>
+    <string name="create_theme_info">"Wenn du stattdessen ein Thema basierend auf einem anderen Thema erstellen möchtest, klicke auf den \"+\"-Knopf auf einem Thema."</string>
     <string name="edit_theme_name">"Thema-Name bearbeiten"</string>
     <string name="edit_theme">"Thema bearbeiten"</string>
     <string name="delete_theme">"Thema löschen"</string>
@@ -734,7 +756,7 @@ Funktioniert vielleicht nicht auf Android 11"</string>
     <string name="flair_preview">"Flair"</string>
     <string name="awards_preview">"4 Auszeichnungen"</string>
     <string name="author_flair_preview">"Autor-Flair"</string>
-    <string name="comment_content_preview">"Ich habe für meine Freundin eine \"Gute Besserung\"-Karte besorgt.
+    <string name="comment_content_preview">"Ich habe für meine Freundin eine “Gute Besserung“-Karte besorgt.
 Sie ist nicht krank oder so, aber sie könnte sich definitiv bessern."</string>
     <string name="edit_multi_reddit">"Multireddit bearbeiten"</string>
     <string name="delete_multi_reddit">"Multireddit löschen"</string>
@@ -793,7 +815,6 @@ Beispiel: DeinPasswort:123456"</string>
     <string name="action_select_user_flair">"Benutzerflair auswählen"</string>
     <string name="action_give_award">"Auszeichnung verleihen"</string>
     <string name="posts">"Beiträge"</string>
-    <string name="sidebar">"Seitenleiste"</string>
     <string name="only_for_logged_in_user">"Nur für angemeldete Benutzer"</string>
     <string name="settings_number_of_columns_in_post_feed_title">"Anzahl an Spalten im Beitragsfeed"</string>
     <string name="settings_number_of_columns_in_post_feed_portrait_title">"Hochformat"</string>
@@ -838,7 +859,10 @@ Reiter könnten den Inhalt verlieren, wenn zu anderen gewechselt wird. Selbes Ve
     <string name="settings_data_saving_mode">"Datensparmodus"</string>
 
     <!-- Fuzzy -->
-    <string name="settings_data_saving_mode_info_summary">"Im Datensparmodus werden Vorschaubilder mit geringerer Auflösung geladen."</string>
+    <string name="settings_data_saving_mode_info_summary">"Im Datensparmodus:
+Vorschaubilder haben eine geringere Auflösung.
+Reddit-Videos haben eine geringere Auflösung.
+Automatisches Abspielen von Videos ist deaktiviert."</string>
     <string name="settings_translation_title">"Übersetzung"</string>
     <string name="settings_translation_summary">"Übersetze diese App auf POEditor. Danke an alle Beitragenden."</string>
     <string name="settings_credits_national_flags">"Nationalflaggen"</string>
@@ -868,12 +892,12 @@ Reiter könnten den Inhalt verlieren, wenn zu anderen gewechselt wird. Selbes Ve
     <string name="anonymous">"Anonym"</string>
 
     <!-- Fuzzy -->
-    <string name="give_award_error_message">"Code: %1$d/ Nachricht: %2$s"</string>
+    <string name="give_award_error_message">"Code: %1$d/
+Nachricht: %2$s"</string>
     <string name="give_award_success">"Auszeichnung verliehen"</string>
     <string name="give_award_failed">"Fehlgeschlagen"</string>
-    <string name="recent_searches">"Kürzliche Suchanfragen"</string>
     <string name="warning">"Warnung"</string>
-    <string name="this_is_a_nsfw_subreddit">"Dieses ist ein NSFW-Subreddit"</string>
+    <string name="this_is_a_nsfw_subreddit">"Dies ist ein NSFW-Subreddit."</string>
     <string name="this_user_has_nsfw_content">"Dieser Nutzer hat NSFW-Inhalte"</string>
     <string name="dismiss">"Verwerfen"</string>
     <string name="leave">"Verlassen"</string>
@@ -1007,6 +1031,8 @@ Reiter könnten den Inhalt verlieren, wenn zu anderen gewechselt wird. Selbes Ve
     <string name="action_copy_link">"Link kopieren"</string>
     <string name="action_add_to_post_filter">"Zum Beitrags-Filter hinzufügen"</string>
     <string name="settings_do_not_blur_nsfw_in_nsfw_subreddits_title">"NSFW-Bilder in NSFW-Subreddits nicht verwischen"</string>
+
+    <!-- Fuzzy -->
     <string name="settings_show_avatar_on_the_right">"Avatar links anzeigen"</string>
     <string name="settings_backup_settings_title">"Einstellungen sichern"</string>
     <string name="settings_restore_settings_title">"Einstellungen wiederherstellen"</string>
@@ -1031,7 +1057,7 @@ Reiter könnten den Inhalt verlieren, wenn zu anderen gewechselt wird. Selbes Ve
     <string name="anonymous_front_page_no_subscriptions">"Beginne, indem du einem Subreddit beitrittst!"</string>
 
     <!-- Fuzzy -->
-    <string name="backup_settings_success">"Die Einstellungen wurden erfolgreich in den Zielordner exportiert"</string>
+    <string name="backup_settings_success">"Die Einstellungen wurden erfolgreich in den Zielordner exportiert. Das Passwort der generierten ZIP-Datei ist 123321. Die ZIP-Datei bitte nicht bearbeiten."</string>
     <string name="create_zip_in_destination_directory_failed">"Konnte keine ZIP-Datei im Zielordner erstellen"</string>
     <string name="backup_some_settings_failed">"Nicht alle Einstellungen konnten exportiert werden, aber alle anderen wurden erfolgreich in den Zielordner exportiert"</string>
     <string name="restore_settings_success">"Einstellungen erfolgreich wiederhergestellt. Starte die Anwendung neu, um die Änderungen zu sehen."</string>
@@ -1060,7 +1086,171 @@ Reiter könnten den Inhalt verlieren, wenn zu anderen gewechselt wird. Selbes Ve
     <string name="exclude_user">"Diesen Benutzer ausschließen"</string>
     <string name="exclude_flair">"Dieses Flair ausschließen"</string>
     <string name="contain_flair">"Dieses Flair einbeziehen"</string>
+
+    <!-- Fuzzy -->
     <string name="exclude_domain">"Diese Domain ausschließen"</string>
     <string name="suggest_title">"Titel vorschlagen"</string>
     <string name="suggest_title_failed">"Konnte Titel nicht vorschlagen"</string>
+    <string name="action_delete_logs">"Logs löschen"</string>
+    <string name="inbox_with_count">"Posteingang (%1$d)"</string>
+    <string name="comment_continue_thread">"Thread fortsetzen"</string>
+
+    <!-- Fuzzy -->
+    <string name="settings_swipe_vertically_to_go_back_from_media_title">"Vertikal wischen, um zurück zu den Medien zu gelangen"</string>
+    <string name="settings_hide_post_flair">"Beitragsflair verstecken"</string>
+    <string name="settings_crash_reports_title">"Absturzmeldungen"</string>
+    <string name="settings_nsfw_and_spoiler_dangerous_group_title">"Gefährlich"</string>
+    <string name="settings_disable_nsfw_forever_title">"NSFW dauerhaft deaktivieren"</string>
+    <string name="settings_show_only_one_comment_level_indicator">"Nur einen Indikator für die Kommentarebene anzeigen"</string>
+    <string name="save_comment">"Speichern"</string>
+    <string name="unsave_comment">"Nicht mehr speichern"</string>
+    <string name="copy_multi_reddit_path">"Pfad des Multireddit kopieren"</string>
+    <string name="copy_multi_reddit_path_failed">"Pfad des Multireddit kann nicht kopiert werden"</string>
+    <string name="crash_reports_deleted">"Absturzmeldungen werden gelöscht"</string>
+    <string name="disable_nsfw_forever_message">"Wenn du diese Option aktivierst, wird NSFW dauerhaft deaktiviert, egal ob die NSFW-Option ein- oder ausgeschaltet ist. Diese Option ist irreversibel, wenn du NSFW wieder einschalten willst, müssen die Daten der App gelöscht werden.
+
+Möchtest du trotzdem fortfahren?"</string>
+    <string name="reply">"Antworten"</string>
+    <string name="rpan_activity_label">"RPAN"</string>
+    <string name="post_gallery_activity_label">"Galeriebeitrag"</string>
+    <string name="trending_activity_label">"Trending"</string>
+    <string name="action_share_rpan_link">"Teile RPAN-Link"</string>
+    <string name="action_share_post_link">"Teile Beitragslink"</string>
+    <string name="rpan">"RPAN"</string>
+    <string name="trending">"Trending"</string>
+    <string name="receive_post_reply_notifications">"Benachrichtigungen für Antworten auf Beiträge empfangen"</string>
+    <string name="bottom_sheet_post_gallery">"Galerie"</string>
+    <string name="posting_gallery">"Posts Galerie"</string>
+    <string name="label_reddit">"Reddit"</string>
+    <string name="settings_default_link_post_layout">"Standard Link Beitragslayout"</string>
+    <string name="settings_category_material_you_title">"Material You"</string>
+    <string name="settings_enable_material_you_warning_summary">"Stelle sicher, dass keine Themen die Namen
+\"Material You\",
+\"Material You Dark\" oder
+\"Material You Amoled\" besitzen.
+Benenne diese Themen sonst neu."</string>
+
+    <!-- What exactly is material you supposed to be? A custom theme, right? -->
+    <string name="settings_enable_material_you_title">"Material You aktivieren"</string>
+    <string name="settings_enable_material_you_summary">"Infinity Theme ihrem Hintergrund anpassen"</string>
+    <string name="settings_apply_material_you_title">"Material You anwenden"</string>
+    <string name="settings_apply_material_you_summary">"Sollte Infinity den Theme nicht gewechselt haben"</string>
+    <string name="settings_more_tabs_show_favorite_multireddits_title">"Multireddits Favoriten anzeigen"</string>
+    <string name="settings_more_tabs_show_multireddits_title">"Multireddits anzeigen"</string>
+    <string name="settings_collapse_reddit_section_title">"Sektion für Reddit zusammenklappen"</string>
+    <string name="settings_video_player_automatic_landscape_orientation">"Automatisch zum Querformat im Videospieler wechseln"</string>
+    <string name="settings_remember_muting_option_in_post_feed">"Stummschalt-Option im Beitragsfeed merken"</string>
+    <string name="link_post_layout_auto">"Automatisch"</string>
+    <string name="uploaded_images">"Hochgeladene Bilder"</string>
+    <string name="select_image">"Ein Bild auswählen"</string>
+    <string name="capture">"Aufnehmen"</string>
+    <string name="uploading_image">"Wird hochgeladen"</string>
+    <string name="upload_image_success">"Bild erfolgreich hochgeladen. Klicken Sie nochmal auf Bilder um hochgeladene Bilder zu sehen."</string>
+    <string name="get_image_bitmap_failed">"Konnte das Bitmap des Bildes nicht herunterladen"</string>
+    <string name="upload_image_failed">"Das Bild konnte nicht hochgeladen werden"</string>
+    <string name="load_rpan_broadcasts_failed">"RPAN Broadcasts konnten nicht geladen werden"</string>
+    <string name="parse_rpan_broadcasts_failed">"RPAN Broadcasts konnten nicht gelesen werden"</string>
+    <string name="parse_rpan_broadcast_failed">"RPAN Broadcast konnte nicht gelesen werden"</string>
+    <string name="search_comments">"Kommentare durchsuchen"</string>
+    <string name="please_wait_image_is_uploading">"Ein Bild wird noch hochgeladen. Bitte warten Sie."</string>
+
+    <!-- Fuzzy -->
+    <string name="error_fetch_trending_search">"Das Laden der beliebten Suchanfragen ist gescheitert.
+Antippen zum Wiederholen."</string>
+    <string name="error_parse_trending_search">"Parsen der beliebten Suche fehlgeschlagen.
+Tippe für Neuversuch."</string>
+    <string name="no_trending_search">"Keine beliebten Suchanfragen gefunden.
+Antippen zum Wiederholen."</string>
+    <string name="wiki_activity_label">"Wiki"</string>
+    <string name="settings_post_details_title">"Post Informationen"</string>
+    <string name="settings_separate_post_and_comments_in_portrait_mode_title">"Post und Kommentare im Hochformat trennen"</string>
+    <string name="settings_separate_post_and_comments_in_landscape_mode_title">"Post und Kommentare im Querformat trennen"</string>
+    <string name="settings_separate_post_and_comments_summary">"Automatisches Abspielen von Videos wird in der Post Detailseite ausgeschaltet"</string>
+    <string name="settings_use_bottom_toolbar_in_media_viewer_title">"Nutzen Sie die untere Toolbar im Medienviewer"</string>
+    <string name="settings_secure_mode_title">"Sicherer Modus"</string>
+    <string name="settings_secure_mode_summary">"Bildschirmaufnahmen und -aufzeichnungen sind nicht erlaubt. In der Appübersicht wird keine Voransicht gezeigt."</string>
+    <string name="discard_dialog_button">"Abbrechen"</string>
+    <string name="error_loading_wiki">"Fehler beim Laden des Wiki"</string>
+    <string name="no_wiki">"Dieser Subreddit hat keine Wiki-Seite"</string>
+    <string name="material_you_notification_title">"Material You anwenden"</string>
+    <string name="action_go_to_wiki">"Zum Wiki"</string>
+    <string name="action_playback_speed">"Abspielgeschwindigkeit"</string>
+    <string name="about">"Über"</string>
+    <string name="settings_link_handler_title">"Link Handler"</string>
+    <string name="settings_main_page_back_button_action">"Hauptseite Zurück-Tasten Aktion"</string>
+    <string name="settings_open_navigation_drawer">"Navigationsleiste öffnen"</string>
+    <string name="settings_number_of_columns_in_post_feed_unfolded_portrait_title">"Hochformat (ausgeklappt)"</string>
+    <string name="settings_number_of_columns_in_post_feed_unfolded_landscape_title">"Querformat (ausgeklappt)"</string>
+    <string name="settings_loop_video_title">"Video wiederholen"</string>
+    <string name="settings_loop_video_summary">"Starte die App neu, um die Einstellung auf Videos anzuwenden"</string>
+    <string name="settings_credits_lock_screen_animation_title">"Sperrbildschirm Animation"</string>
+    <string name="settings_app_lock_title">"App-Sperre"</string>
+    <string name="settings_app_lock_summary">"Authentifizierung für App erfordern"</string>
+    <string name="settings_app_lock_timeout_title">"App sperren nach"</string>
+    <string name="settings_enable_fold_support_title">"Fold-Handy Unterstützung aktivieren"</string>
+    <string name="settings_default_playback_speed_title">"Standard Wiedergabegeschwindigkeit"</string>
+    <string name="settings_link_handler_value_external_browser">"Externer Browser"</string>
+    <string name="settings_link_handler_value_custom_tab">"Eigener Reiter"</string>
+    <string name="settings_link_handler_value_internal_browser">"Interner Browser"</string>
+    <string name="settings_legacy_autoplay_video_controller_ui_title">"Altes Video-Steuerungs UI"</string>
+    <string name="settings_pinch_to_zoom_video_title">"Pinch-To-Zoom Video"</string>
+    <string name="settings_experimental_feature">"Experimentelles Feature"</string>
+    <string name="theme_item_media_indicator_icon_color">"Medien-Indikator Symbolfarbe"</string>
+    <string name="theme_item_media_indicator_icon_color_detail">"Angewendet auf: Video- oder Galleriesymbol in Beitrag-Vorschau"</string>
+    <string name="theme_item_media_indicator_background_color">"Medien-Indikator Hintergrundfarbe"</string>
+    <string name="theme_item_media_indicator_background_color_detail">"Angewendet auf: Hintergrund- oder Galleriesymbol in Beitrag-Vorschau"</string>
+    <string name="go_to_top">"Nach oben"</string>
+    <string name="title_contains_strings_hint">"Titel: enthält Schlüsselwörter (key1,key2)"</string>
+    <string name="title_contains_regex_hint">"Titel: enthält Regex"</string>
+    <string name="contain_domains_hint">"Domains cont"</string>
+    <string name="anonymous_multireddit_no_subreddit">"Dieses Multireddit hat kein Subreddit!"</string>
+    <string name="error_fetching_v_redd_it_video_cannot_get_video_url">"Fehler beim Abrufen von v.redd.it video: Kann Video URL nicht finden"</string>
+    <string name="contain_domain">"Diese Domain containen"</string>
+    <string name="lock_screen_text">"Ruhig Brauner!!!"</string>
+    <string name="app_lock_timeout_immediately">"Sofort"</string>
+    <string name="app_lock_timeout_1_min">"1 Minute"</string>
+    <string name="app_lock_timeout_2_mins">"2 Minuten"</string>
+    <string name="app_lock_timeout_5_mins">"5 Minuten"</string>
+    <string name="app_lock_timeout_10_mins">"10 Minuten"</string>
+    <string name="app_lock_timeout_15_mins">"15 Minuten"</string>
+    <string name="app_lock_timeout_20_mins">"20 Minuten"</string>
+    <string name="app_lock_timeout_30_mins">"30 Minuten"</string>
+    <string name="app_lock_timeout_1_hour">"1 Stunde"</string>
+    <string name="app_lock_timeout_2_hours">"2 Stunden"</string>
+    <string name="app_lock_timeout_3_hours">"3 Stunden"</string>
+    <string name="app_lock_timeout_4_hours">"4 Stunden"</string>
+    <string name="app_lock_timeout_5_hours">"5 Stunden"</string>
+    <string name="app_lock_timeout_6_hours">"6 Stunden"</string>
+    <string name="app_lock_timeout_12_hours">"12 Stunden"</string>
+    <string name="app_lock_timeout_24_hours">"24 Stunden"</string>
+    <string name="edit_profile_activity_label">"Profil bearbeiten"</string>
+    <string name="action_contact_mods">"Moderator kontaktieren"</string>
+    <string name="settings_save_nsfw_media_in_different_folder_title">"NSFW-Medien an anderem Speicherort"</string>
+    <string name="settings_nsfw_download_location_title">"NSFW Speicherort"</string>
+    <string name="fetch_streamable_video_failed">"Ergreifen von Streamable-Vide fehlgeschlagen"</string>
+
+    <!-- EditProfileService Notification -->
+    <string name="submit_change_avatar">"Avatar-Änderung einreichen"</string>
+    <string name="submit_change_banner">"Banner-Änderung einreichen"</string>
+    <string name="submit_save_profile">"Profil-Speicherung einreichen"</string>
+
+    <!-- EditProfileActivity -->
+    <string name="action_edit_profile">"Profil bearbeiten"</string>
+    <string name="remove_avatar">"Avatar entfernen"</string>
+    <string name="remove_banner">"Banner entfernen"</string>
+    <string name="display_name_text">"Anzeige-Name"</string>
+    <string name="display_name_hint">"Auf deinem Profil zeigen"</string>
+    <string name="display_name_description">"Dies wird nur Besuchern deiner Profilseite angezeigt und ändert nicht deinen Benutzernamen."</string>
+    <string name="about_you_text">"Über dich"</string>
+    <string name="about_you_hint">"Eine kleine Beschreibung von dir"</string>
+    <string name="message_remove_avatar_success">"Avatar erfolgreich entfernt"</string>
+    <string name="message_remove_avatar_failed">"Avatar konnte nicht entfernt werden %s"</string>
+    <string name="message_remove_banner_success">"Banner erfolgreich entfernt"</string>
+    <string name="message_remove_banner_failed">"Banner konnte nicht entfernt werden %s"</string>
+    <string name="message_change_avatar_success">"Avatar erfolgreich geändert"</string>
+    <string name="message_change_avatar_failed">"Avatar konnte nicht geändert werden %s"</string>
+    <string name="message_change_banner_success">"Banner erfolgreich geändert"</string>
+    <string name="message_change_banner_failed">"Banner konnte nicht geändert werden %s"</string>
+    <string name="message_save_profile_success">"Profil erfolgreich gespeichert"</string>
+    <string name="message_save_profile_failed">"Profil konnte nicht gespeichert werden %s"</string>
 </resources>

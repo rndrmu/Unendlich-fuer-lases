@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -11,7 +12,6 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,10 +19,12 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.snackbar.Snackbar;
 import com.r0adkll.slidr.Slidr;
 
 import java.util.ArrayList;
+import java.util.concurrent.Executor;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -36,6 +38,7 @@ import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.multireddit.CreateMultiReddit;
 import ml.docilealligator.infinityforreddit.multireddit.MultiRedditJSONModel;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 import retrofit2.Retrofit;
 
 public class CreateMultiRedditActivity extends BaseActivity {
@@ -46,6 +49,8 @@ public class CreateMultiRedditActivity extends BaseActivity {
     CoordinatorLayout coordinatorLayout;
     @BindView(R.id.appbar_layout_create_multi_reddit_activity)
     AppBarLayout appBarLayout;
+    @BindView(R.id.collapsing_toolbar_layout_create_multi_reddit_activity)
+    CollapsingToolbarLayout collapsingToolbarLayout;
     @BindView(R.id.toolbar_create_multi_reddit_activity)
     Toolbar toolbar;
     @BindView(R.id.multi_reddit_name_edit_text_create_multi_reddit_activity)
@@ -77,6 +82,8 @@ public class CreateMultiRedditActivity extends BaseActivity {
     SharedPreferences mCurrentAccountSharedPreferences;
     @Inject
     CustomThemeWrapper mCustomThemeWrapper;
+    @Inject
+    Executor mExecutor;
     private String mAccessToken;
     private String mAccountName;
     private ArrayList<String> mSubreddits;
@@ -106,12 +113,10 @@ public class CreateMultiRedditActivity extends BaseActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mAccessToken = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCESS_TOKEN, null);
-        mAccountName = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, null);
+        mAccountName = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, "-");
 
         if (mAccessToken == null) {
-            Toast.makeText(this, R.string.logged_out, Toast.LENGTH_SHORT).show();
-            finish();
-            return;
+            visibilityLinearLayout.setVisibility(View.GONE);
         }
 
         if (savedInstanceState != null) {
@@ -139,20 +144,17 @@ public class CreateMultiRedditActivity extends BaseActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            finish();
+            return true;
+        } else if (itemId == R.id.action_save_create_multi_reddit_activity) {
+            if (nameEditText.getText() == null || nameEditText.getText().toString().equals("")) {
+                Snackbar.make(coordinatorLayout, R.string.no_multi_reddit_name, Snackbar.LENGTH_SHORT).show();
                 return true;
-            case R.id.action_save_create_multi_reddit_activity:
-                if (mAccountName == null || mAccessToken == null) {
-                    Snackbar.make(coordinatorLayout, R.string.something_went_wrong, Snackbar.LENGTH_SHORT).show();
-                    return true;
-                }
-                if (nameEditText.getText() == null || nameEditText.getText().toString().equals("")) {
-                    Snackbar.make(coordinatorLayout, R.string.no_multi_reddit_name, Snackbar.LENGTH_SHORT).show();
-                    return true;
-                }
+            }
 
+            if (mAccessToken != null) {
                 String jsonModel = new MultiRedditJSONModel(nameEditText.getText().toString(), descriptionEditText.getText().toString(),
                         visibilitySwitch.isChecked(), mSubreddits).createJSONModel();
                 CreateMultiReddit.createMultiReddit(mOauthRetrofit, mRedditDataRoomDatabase, mAccessToken,
@@ -172,6 +174,22 @@ public class CreateMultiRedditActivity extends BaseActivity {
                                 }
                             }
                         });
+            } else {
+                CreateMultiReddit.anonymousCreateMultiReddit(mExecutor, new Handler(), mRedditDataRoomDatabase,
+                        "/user/-/m/" + nameEditText.getText().toString(),
+                        nameEditText.getText().toString(), descriptionEditText.getText().toString(),
+                        mSubreddits, new CreateMultiReddit.CreateMultiRedditListener() {
+                            @Override
+                            public void success() {
+                                finish();
+                            }
+
+                            @Override
+                            public void failed(int errorType) {
+                                //Will not be called
+                            }
+                        });
+            }
         }
         return false;
     }
@@ -206,7 +224,7 @@ public class CreateMultiRedditActivity extends BaseActivity {
     @Override
     protected void applyCustomTheme() {
         coordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, collapsingToolbarLayout, toolbar);
         int primaryTextColor = mCustomThemeWrapper.getPrimaryTextColor();
         int secondaryTextColor = mCustomThemeWrapper.getSecondaryTextColor();
         nameEditText.setTextColor(primaryTextColor);
@@ -218,5 +236,9 @@ public class CreateMultiRedditActivity extends BaseActivity {
         descriptionEditText.setHintTextColor(secondaryTextColor);
         visibilityTextView.setTextColor(primaryTextColor);
         selectSubredditTextView.setTextColor(primaryTextColor);
+
+        if (typeface != null) {
+            Utils.setFontToAllTextViews(coordinatorLayout, typeface);
+        }
     }
 }

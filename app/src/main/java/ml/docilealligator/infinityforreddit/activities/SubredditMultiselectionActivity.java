@@ -12,20 +12,19 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestManager;
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.r0adkll.slidr.Slidr;
 
 import java.util.ArrayList;
@@ -41,6 +40,7 @@ import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.RedditDataRoomDatabase;
 import ml.docilealligator.infinityforreddit.adapters.SubredditMultiselectionRecyclerViewAdapter;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
+import ml.docilealligator.infinityforreddit.customviews.LinearLayoutManagerBugFixed;
 import ml.docilealligator.infinityforreddit.subscribedsubreddit.SubscribedSubredditViewModel;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 import retrofit2.Retrofit;
@@ -55,6 +55,8 @@ public class SubredditMultiselectionActivity extends BaseActivity implements Act
     CoordinatorLayout mCoordinatorLayout;
     @BindView(R.id.appbar_layout_subreddits_multiselection_activity)
     AppBarLayout mAppBarLayout;
+    @BindView(R.id.collapsing_toolbar_layout_subscribed_subreddits_multiselection_activity)
+    CollapsingToolbarLayout mCollapsingToolbarLayout;
     @BindView(R.id.toolbar_subscribed_subreddits_multiselection_activity)
     Toolbar mToolbar;
     @BindView(R.id.swipe_refresh_layout_subscribed_subscribed_subreddits_multiselection_activity)
@@ -81,9 +83,8 @@ public class SubredditMultiselectionActivity extends BaseActivity implements Act
     @Inject
     CustomThemeWrapper mCustomThemeWrapper;
     public SubscribedSubredditViewModel mSubscribedSubredditViewModel;
-    private String mAccessToken;
     private String mAccountName;
-    private LinearLayoutManager mLinearLayoutManager;
+    private LinearLayoutManagerBugFixed mLinearLayoutManager;
     private SubredditMultiselectionRecyclerViewAdapter mAdapter;
     private RequestManager mGlide;
 
@@ -132,17 +133,13 @@ public class SubredditMultiselectionActivity extends BaseActivity implements Act
 
         mSwipeRefreshLayout.setEnabled(false);
 
-        mAccessToken = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCESS_TOKEN, null);
-        mAccountName = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, null);
-        if (mAccessToken == null) {
-            Toast.makeText(this, R.string.logged_out, Toast.LENGTH_SHORT).show();
-            finish();
-        }
+        mAccountName = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, "-");
+
         bindView();
     }
 
     private void bindView() {
-        mLinearLayoutManager = new LinearLayoutManager(this);
+        mLinearLayoutManager = new LinearLayoutManagerBugFixed(this);
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mAdapter = new SubredditMultiselectionRecyclerViewAdapter(this, mCustomThemeWrapper);
         mRecyclerView.setAdapter(mAdapter);
@@ -232,8 +229,11 @@ public class SubredditMultiselectionActivity extends BaseActivity implements Act
     @Override
     protected void applyCustomTheme() {
         mCoordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        applyAppBarLayoutAndToolbarTheme(mAppBarLayout, mToolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(mAppBarLayout, mCollapsingToolbarLayout, mToolbar);
         mErrorTextView.setTextColor(mCustomThemeWrapper.getSecondaryTextColor());
+        if (typeface != null) {
+            mErrorTextView.setTypeface(typeface);
+        }
     }
 
     @Override

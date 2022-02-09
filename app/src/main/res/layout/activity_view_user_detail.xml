@@ -5,13 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/coordinator_layout_view_user_detail_activity"
-    tools:application=".ViewUserDetailActivity">
-
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/view_pager_view_user_detail_activity"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+    tools:application="ml.docilealligator.infinityforreddit.activities.ViewUserDetailActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appbar_layout_view_user_detail"
@@ -73,7 +67,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
                         android:layout_gravity="center_horizontal"
-                        android:visibility="gone"/>
+                        android:visibility="gone"
+                        app:chipStrokeColor="#00000000" />
 
                     <RelativeLayout
                         android:layout_width="match_parent"
@@ -113,15 +108,15 @@
 
             </RelativeLayout>
 
-            <androidx.appcompat.widget.Toolbar
+            <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/toolbar_view_user_detail_activity"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:minHeight="?attr/actionBarSize"
                 app:layout_collapseMode="pin"
-                app:layout_scrollFlags="scroll|enterAlways|enterAlwaysCollapsed"
+                app:layout_scrollFlags="scroll|enterAlways"
                 app:popupTheme="@style/AppTheme.PopupOverlay"
-                app:navigationIcon="?attr/homeAsUpIndicator"/>
+                app:navigationIcon="?attr/homeAsUpIndicator" />
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
 
@@ -138,6 +133,12 @@
             app:tabUnboundedRipple="false" />
 
     </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager_view_user_detail_activity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     <include
         layout="@layout/bottom_app_bar"

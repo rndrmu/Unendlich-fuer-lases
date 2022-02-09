@@ -1,7 +1,6 @@
 package ml.docilealligator.infinityforreddit.bottomsheetfragments;
 
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Build;
@@ -14,18 +13,19 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.deishelon.roundedbottomsheet.RoundedBottomSheetDialogFragment;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.SortType;
 import ml.docilealligator.infinityforreddit.SortTypeSelectionCallback;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
+import ml.docilealligator.infinityforreddit.customviews.LandscapeExpandedRoundedBottomSheetDialogFragment;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class SortTimeBottomSheetFragment extends RoundedBottomSheetDialogFragment {
+public class SortTimeBottomSheetFragment extends LandscapeExpandedRoundedBottomSheetDialogFragment {
 
     public static final String EXTRA_SORT_TYPE = "EST";
 
@@ -41,7 +41,7 @@ public class SortTimeBottomSheetFragment extends RoundedBottomSheetDialogFragmen
     TextView yearTextView;
     @BindView(R.id.all_time_text_view_sort_time_bottom_sheet_fragment)
     TextView allTimeTextView;
-    private Activity activity;
+    private BaseActivity activity;
     public SortTimeBottomSheetFragment() {
         // Required empty public constructor
     }
@@ -60,7 +60,7 @@ public class SortTimeBottomSheetFragment extends RoundedBottomSheetDialogFragmen
         }
 
         String sortType = getArguments() != null ? getArguments().getString(EXTRA_SORT_TYPE) : null;
-        if(sortType == null) {
+        if (sortType == null) {
             dismiss();
             return rootView;
         }
@@ -101,12 +101,16 @@ public class SortTimeBottomSheetFragment extends RoundedBottomSheetDialogFragmen
             dismiss();
         });
 
+        if (activity.typeface != null) {
+            Utils.setFontToAllTextViews(rootView, activity.typeface);
+        }
+
         return rootView;
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        this.activity = (Activity) context;
+        this.activity = (BaseActivity) context;
     }
 }

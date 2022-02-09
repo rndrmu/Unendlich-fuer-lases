@@ -55,6 +55,22 @@
         <item>2</item>
     </string-array>
 
+    <string-array name="settings_default_link_post_layout">
+        <item>@string/link_post_layout_auto</item>
+        <item>@string/post_layout_card</item>
+        <item>@string/post_layout_card_2</item>
+        <item>@string/post_layout_compact</item>
+        <item>@string/post_layout_gallery</item>
+    </string-array>
+
+    <string-array name="settings_default_link_post_layout_values">
+        <item>-1</item>
+        <item>0</item>
+        <item>3</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
     <string-array name="settings_video_autoplay">
         <item>@string/always_on</item>
         <item>@string/only_on_wifi</item>
@@ -146,6 +162,7 @@
         <item>Manrope (No Italic)</item>
         <item>Manrope Bold (No Italic)</item>
         <item>Sriracha</item>
+        <item>@string/settings_custom_font_family_title</item>
     </string-array>
 
     <string-array name="settings_font_family_values">
@@ -163,6 +180,7 @@
         <item>Manrope</item>
         <item>ManropeBold</item>
         <item>Sriracha</item>
+        <item>Custom</item>
     </string-array>
 
     <string-array name="settings_tab_post_type">
@@ -179,29 +197,39 @@
         <item>@string/gilded</item>
     </string-array>
 
+    <string-array name="settings_tab_post_type_anonymous">
+        <item>@string/home</item>
+        <item>@string/popular</item>
+        <item>@string/all</item>
+        <item>@string/subreddit</item>
+        <item>@string/multi_reddit</item>
+        <item>@string/user</item>
+    </string-array>
+
     <string-array name="settings_time_format">
-        <item>Jan 2, 2020, 01:00</item>
-        <item>Jan 2, 2020, 01:00 PM</item>
-        <item>2 Jan, 2020, 01:00</item>
-        <item>2 Jan, 2020, 01:00 PM</item>
-        <item>1/2/2020 01:00 (Month first)</item>
-        <item>1/2/2020 01:00 PM (Month first)</item>
-        <item>2/1/2020 01:00 (Day first)</item>
-        <item>2/1/2020 01:00 PM (Day first)</item>
-        <item>2020/1/2 01:00 (Month first)</item>
-        <item>2020/1/2 01:00 PM (Month first)</item>
-        <item>1-2-2020 01:00 (Month first)</item>
-        <item>1-2-2020 01:00 PM (Month first)</item>
-        <item>2-1-2020 01:00 (Day first)</item>
-        <item>2-1-2020 01:00 PM (Day first)</item>
-        <item>2020-1-2 01:00 (Month first)</item>
-        <item>2020-1-2 01:00 PM (Month first)</item>
-        <item>1.2.2020 01:00 (Month first)</item>
-        <item>1.2.2020 01:00 PM (Month first)</item>
-        <item>2.1.2020 01:00 (Day first)</item>
-        <item>2.1.2020 01:00 PM (Day first)</item>
-        <item>2020.1.2 01:00 (Month first)</item>
-        <item>2020.1.2 01:00 PM (Month first)</item>
+        <!-- 2020/01/23 23:45 -->
+        <item>Jan 23, 2020, 23:45</item>
+        <item>Jan 23, 2020, 11:45 PM</item>
+        <item>23 Jan, 2020, 23:45</item>
+        <item>23 Jan, 2020, 11:45 PM</item>
+        <item>1/23/2020 23:45</item>
+        <item>1/23/2020 11:45 PM</item>
+        <item>23/1/2020 23:45</item>
+        <item>23/1/2020 11:45 PM</item>
+        <item>2020/1/23 23:45</item>
+        <item>2020/1/23 11:45 PM</item>
+        <item>1-23-2020 23:45</item>
+        <item>1-23-2020 11:45 PM</item>
+        <item>23-1-2020 23:45</item>
+        <item>23-1-2020 11:45 PM</item>
+        <item>2020-1-23 23:45</item>
+        <item>2020-1-23 11:45 PM</item>
+        <item>1.23.2020 23:45</item>
+        <item>1.23.2020 11:45 PM</item>
+        <item>23.1.2020 23:45</item>
+        <item>23.1.2020 11:45 PM</item>
+        <item>2020.1.23 23:45</item>
+        <item>2020.1.23 11:45 PM</item>
     </string-array>
 
     <string-array name="settings_time_format_values">
@@ -266,6 +294,35 @@
         <item>@string/hidden</item>
         <item>@string/saved</item>
         <item>@string/gilded</item>
+        <item>@string/go_to_top</item>
+    </string-array>
+
+    <string-array name="settings_main_activity_bottom_app_bar_options_anonymous">
+        <item>@string/subscriptions</item>
+        <item>@string/multi_reddits</item>
+        <item>@string/refresh</item>
+        <item>@string/change_sort_type</item>
+        <item>@string/change_post_layout</item>
+        <item>@string/search</item>
+        <item>@string/go_to_subreddit</item>
+        <item>@string/go_to_user</item>
+        <item>@string/random</item>
+        <item>@string/filter_posts</item>
+        <item>@string/go_to_top</item>
+    </string-array>
+
+    <string-array name="settings_main_activity_bottom_app_bar_options_anonymous_values">
+        <item>0</item>
+        <item>1</item>
+        <item>5</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>11</item>
+        <item>13</item>
+        <item>19</item>
     </string-array>
 
     <string-array name="settings_other_activities_bottom_app_bar_options">
@@ -289,6 +346,37 @@
         <item>@string/hidden</item>
         <item>@string/saved</item>
         <item>@string/gilded</item>
+        <item>@string/go_to_top</item>
+    </string-array>
+
+    <string-array name="settings_other_activities_bottom_app_bar_options_anonymous">
+        <item>@string/home</item>
+        <item>@string/subscriptions</item>
+        <item>@string/multi_reddits</item>
+        <item>@string/refresh</item>
+        <item>@string/change_sort_type</item>
+        <item>@string/change_post_layout</item>
+        <item>@string/search</item>
+        <item>@string/go_to_subreddit</item>
+        <item>@string/go_to_user</item>
+        <item>@string/random</item>
+        <item>@string/filter_posts</item>
+        <item>@string/go_to_top</item>
+    </string-array>
+
+    <string-array name="settings_other_activities_bottom_app_bar_options_anonymous_values">
+        <item>0</item>
+        <item>1</item>
+        <item>4</item>
+        <item>6</item>
+        <item>7</item>
+        <item>8</item>
+        <item>9</item>
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+        <item>14</item>
+        <item>20</item>
     </string-array>
 
     <string-array name="settings_bottom_app_bar_fab_options">
@@ -301,6 +389,17 @@
         <item>@string/go_to_user</item>
         <item>@string/random</item>
         <item>@string/hide_read_posts</item>
+        <item>@string/filter_posts</item>
+    </string-array>
+
+    <string-array name="settings_bottom_app_bar_fab_options_anonymous">
+        <item>@string/refresh</item>
+        <item>@string/change_sort_type</item>
+        <item>@string/change_post_layout</item>
+        <item>@string/search</item>
+        <item>@string/go_to_subreddit</item>
+        <item>@string/go_to_user</item>
+        <item>@string/random</item>
         <item>@string/filter_posts</item>
     </string-array>
 
@@ -341,6 +440,7 @@
         <item>Auto</item>
         <item>简体中文</item>
         <item>Hrvatski</item>
+        <item>čeština</item>
         <item>Nederlands</item>
         <item>English</item>
         <item>Française</item>
@@ -350,10 +450,14 @@
         <item>Italiana</item>
         <item>日本語</item>
         <item>Polskie</item>
+        <item>Português</item>
         <item>Português (BR)</item>
+        <item>Română</item>
         <item>русский</item>
+        <item>Soomaali</item>
         <item>Español</item>
         <item>Türkçe</item>
+        <item>Українська</item>
         <item>Tiếng Việt</item>
     </string-array>
 
@@ -361,6 +465,7 @@
         <item>auto</item>
         <item>zh-rCN</item>
         <item>hr</item>
+        <item>cs</item>
         <item>nl</item>
         <item>en</item>
         <item>fr</item>
@@ -370,10 +475,14 @@
         <item>it</item>
         <item>ja</item>
         <item>pl</item>
+        <item>pt</item>
         <item>pt-rBR</item>
+        <item>ro</item>
         <item>ru</item>
+        <item>so</item>
         <item>es</item>
         <item>tr-rTR</item>
+        <item>uk</item>
         <item>vi</item>
     </string-array>
 
@@ -443,6 +552,91 @@
         <item>@string/exclude_flair</item>
         <item>@string/contain_flair</item>
         <item>@string/exclude_domain</item>
+        <item>@string/contain_domain</item>
+    </string-array>
+
+    <string-array name="settings_app_lock_timeout">
+        <item>@string/app_lock_timeout_immediately</item>
+        <item>@string/app_lock_timeout_1_min</item>
+        <item>@string/app_lock_timeout_2_mins</item>
+        <item>@string/app_lock_timeout_5_mins</item>
+        <item>@string/app_lock_timeout_10_mins</item>
+        <item>@string/app_lock_timeout_15_mins</item>
+        <item>@string/app_lock_timeout_20_mins</item>
+        <item>@string/app_lock_timeout_30_mins</item>
+        <item>@string/app_lock_timeout_1_hour</item>
+        <item>@string/app_lock_timeout_2_hours</item>
+        <item>@string/app_lock_timeout_3_hours</item>
+        <item>@string/app_lock_timeout_4_hours</item>
+        <item>@string/app_lock_timeout_5_hours</item>
+        <item>@string/app_lock_timeout_6_hours</item>
+        <item>@string/app_lock_timeout_12_hours</item>
+        <item>@string/app_lock_timeout_24_hours</item>
+    </string-array>
+
+    <string-array name="settings_app_lock_timeout_values">
+        <item>0</item>
+        <item>60000</item>
+        <item>120000</item>
+        <item>300000</item>
+        <item>600000</item>
+        <item>900000</item>
+        <item>1200000</item>
+        <item>1800000</item>
+        <item>3600000</item>
+        <item>7200000</item>
+        <item>10800000</item>
+        <item>14400000</item>
+        <item>18000000</item>
+        <item>21600000</item>
+        <item>43200000</item>
+        <item>86400000</item>
+    </string-array>
+
+    <string-array name="main_page_back_button_action">
+        <item>@string/default_in_array</item>
+        <item>@string/settings_confirm_to_exit</item>
+        <item>@string/settings_open_navigation_drawer</item>
+    </string-array>
+
+    <string-array name="main_page_back_button_action_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <string-array name="default_playback_speed">
+        <item>0.25x</item>
+        <item>0.5x</item>
+        <item>0.75x</item>
+        <item>@string/normal</item>
+        <item>1.25x</item>
+        <item>1.5x</item>
+        <item>1.75x</item>
+        <item>2x</item>
+    </string-array>
+
+    <string-array name="default_playback_speed_values">
+        <item>25</item>
+        <item>50</item>
+        <item>75</item>
+        <item>100</item>
+        <item>125</item>
+        <item>150</item>
+        <item>175</item>
+        <item>200</item>
+    </string-array>
+
+    <string-array name="link_handler">
+        <item>@string/settings_link_handler_value_external_browser</item>
+        <item>@string/settings_link_handler_value_custom_tab</item>
+        <item>@string/settings_link_handler_value_internal_browser</item>
+    </string-array>
+
+    <string-array name="link_handler_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
     </string-array>
 
 </resources>

@@ -25,12 +25,14 @@ import im.ene.toro.exoplayer.ExoCreator;
 import im.ene.toro.exoplayer.MediaSourceBuilder;
 import im.ene.toro.exoplayer.ToroExo;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
+import ml.docilealligator.infinityforreddit.customviews.LoopAvailableExoCreator;
 import ml.docilealligator.infinityforreddit.utils.APIUtils;
 import ml.docilealligator.infinityforreddit.utils.CustomThemeSharedPreferencesUtils;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
+import retrofit2.adapter.guava.GuavaCallAdapterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 @Module
@@ -44,11 +46,12 @@ class AppModule {
     @Provides
     @Named("oauth")
     @Singleton
-    Retrofit provideOauthRetrofit(OkHttpClient okHttpClient) {
+    Retrofit provideOauthRetrofit(@Named("default") OkHttpClient okHttpClient) {
         return new Retrofit.Builder()
                 .baseUrl(APIUtils.OAUTH_API_BASE_URI)
                 .client(okHttpClient)
                 .addConverterFactory(ScalarsConverterFactory.create())
+                .addCallAdapterFactory(GuavaCallAdapterFactory.create())
                 .build();
     }
 
@@ -69,6 +72,7 @@ class AppModule {
         return new Retrofit.Builder()
                 .baseUrl(APIUtils.API_BASE_URI)
                 .addConverterFactory(ScalarsConverterFactory.create())
+                .addCallAdapterFactory(GuavaCallAdapterFactory.create())
                 .build();
     }
 
@@ -143,6 +147,16 @@ class AppModule {
     }
 
     @Provides
+    @Named("reveddit")
+    @Singleton
+    Retrofit provideRevedditRetrofit() {
+        return new Retrofit.Builder()
+                .baseUrl(APIUtils.REVEDDIT_API_BASE_URI)
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .build();
+    }
+
+    @Provides
     @Named("vReddIt")
     @Singleton
     Retrofit provideVReddItRetrofit() {
@@ -153,6 +167,28 @@ class AppModule {
     }
 
     @Provides
+    @Named("strapi")
+    @Singleton
+    Retrofit providestrapiRetrofit(@Named("default") OkHttpClient okHttpClient) {
+        return new Retrofit.Builder()
+                .baseUrl(APIUtils.STRAPI_BASE_URI)
+                .client(okHttpClient)
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .build();
+    }
+
+    @Provides
+    @Named("streamable")
+    @Singleton
+    Retrofit provideStreamableRetrofit(@Named("default") OkHttpClient okHttpClient) {
+        return new Retrofit.Builder()
+                .baseUrl(APIUtils.STREAMABLE_API_BASE_URI)
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .build();
+    }
+
+    @Provides
+    @Named("default")
     @Singleton
     OkHttpClient provideOkHttpClient(@Named("no_oauth") Retrofit retrofit, RedditDataRoomDatabase accountRoomDatabase,
                                      @Named("current_account") SharedPreferences currentAccountSharedPreferences) {
@@ -163,6 +199,17 @@ class AppModule {
                 .writeTimeout(30, TimeUnit.SECONDS)
                 .connectionPool(new ConnectionPool(0, 1, TimeUnit.NANOSECONDS));
         return okHttpClientBuilder.build();
+    }
+
+    @Provides
+    @Named("rpan")
+    @Singleton
+    OkHttpClient provideRPANOkHttpClient() {
+        return new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .build();
     }
 
     @Provides
@@ -254,6 +301,19 @@ class AppModule {
     }
 
     @Provides
+    @Named("post_details")
+    SharedPreferences providePostDetailsSharedPreferences() {
+        return mApplication.getSharedPreferences(SharedPreferencesUtils.POST_DETAILS_SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE);
+    }
+
+    @Provides
+    @Named("security")
+    @Singleton
+    SharedPreferences provideSecuritySharedPreferences() {
+        return mApplication.getSharedPreferences(SharedPreferencesUtils.SECURITY_SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE);
+    }
+
+    @Provides
     @Singleton
     CustomThemeWrapper provideCustomThemeWrapper(@Named("light_theme") SharedPreferences lightThemeSharedPreferences,
                                                  @Named("dark_theme") SharedPreferences darkThemeSharedPreferences,
@@ -263,12 +323,17 @@ class AppModule {
 
     @Provides
     @Singleton
-    ExoCreator provideExoCreator() {
-        SimpleCache cache = new SimpleCache(new File(mApplication.getCacheDir(), "/toro_cache"),
+    SimpleCache provideSimpleCache() {
+        return new SimpleCache(new File(mApplication.getCacheDir(), "/exoplayer"),
                 new LeastRecentlyUsedCacheEvictor(200 * 1024 * 1024), new ExoDatabaseProvider(mApplication));
-        Config config = new Config.Builder(mApplication).setMediaSourceBuilder(MediaSourceBuilder.LOOPING).setCache(cache)
+    }
+
+    @Provides
+    @Singleton
+    ExoCreator provideExoCreator(SimpleCache simpleCache, @Named("default") SharedPreferences sharedPreferences) {
+        Config config = new Config.Builder(mApplication).setMediaSourceBuilder(MediaSourceBuilder.DEFAULT).setCache(simpleCache)
                 .build();
-        return ToroExo.with(mApplication).getCreator(config);
+        return new LoopAvailableExoCreator(ToroExo.with(mApplication), config, sharedPreferences);
     }
 
     @Provides

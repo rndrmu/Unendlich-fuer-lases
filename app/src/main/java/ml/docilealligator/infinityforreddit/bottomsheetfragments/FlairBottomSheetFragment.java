@@ -1,7 +1,6 @@
 package ml.docilealligator.infinityforreddit.bottomsheetfragments;
 
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,9 +11,9 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 import org.greenrobot.eventbus.EventBus;
@@ -26,13 +25,15 @@ import javax.inject.Named;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import ml.docilealligator.infinityforreddit.adapters.FlairBottomSheetRecyclerViewAdapter;
-import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.FetchFlairs;
 import ml.docilealligator.infinityforreddit.Flair;
 import ml.docilealligator.infinityforreddit.Infinity;
 import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
+import ml.docilealligator.infinityforreddit.adapters.FlairBottomSheetRecyclerViewAdapter;
+import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.events.FlairSelectedEvent;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 import retrofit2.Retrofit;
 
 
@@ -60,7 +61,7 @@ public class FlairBottomSheetFragment extends BottomSheetDialogFragment {
     CustomThemeWrapper mCustomThemeWrapper;
     private String mAccessToken;
     private String mSubredditName;
-    private Activity mActivity;
+    private BaseActivity mActivity;
     private FlairBottomSheetRecyclerViewAdapter mAdapter;
 
     public FlairBottomSheetFragment() {
@@ -76,6 +77,10 @@ public class FlairBottomSheetFragment extends BottomSheetDialogFragment {
 
         ((Infinity) mActivity.getApplication()).getAppComponent().inject(this);
 
+        if (mActivity.typeface != null) {
+            Utils.setFontToAllTextViews(rootView, mActivity.typeface);
+        }
+
         long viewPostFragmentId = getArguments().getLong(EXTRA_VIEW_POST_DETAIL_FRAGMENT_ID, -1);
         mAdapter = new FlairBottomSheetRecyclerViewAdapter(mActivity, mCustomThemeWrapper, flair -> {
             if (viewPostFragmentId <= 0) {
@@ -87,7 +92,6 @@ public class FlairBottomSheetFragment extends BottomSheetDialogFragment {
             dismiss();
         });
 
-        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         recyclerView.setAdapter(mAdapter);
 
         mAccessToken = getArguments().getString(EXTRA_ACCESS_TOKEN);
@@ -123,13 +127,21 @@ public class FlairBottomSheetFragment extends BottomSheetDialogFragment {
                 });
     }
 
-    public interface FlairSelectionCallback {
-        void flairSelected(Flair flair);
+    @Override
+    public void onStart() {
+        super.onStart();
+        View parentView = (View) requireView().getParent();
+        BottomSheetBehavior.from(parentView).setState(BottomSheetBehavior.STATE_EXPANDED);
+        BottomSheetBehavior.from(parentView).setSkipCollapsed(true);
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        mActivity = (Activity) context;
+        mActivity = (BaseActivity) context;
+    }
+
+    public interface FlairSelectionCallback {
+        void flairSelected(Flair flair);
     }
 }

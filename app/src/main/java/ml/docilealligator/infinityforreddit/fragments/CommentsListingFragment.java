@@ -19,13 +19,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.ItemTouchHelper;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -50,6 +48,7 @@ import ml.docilealligator.infinityforreddit.activities.BaseActivity;
 import ml.docilealligator.infinityforreddit.adapters.CommentsListingRecyclerViewAdapter;
 import ml.docilealligator.infinityforreddit.comment.CommentViewModel;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
+import ml.docilealligator.infinityforreddit.customviews.LinearLayoutManagerBugFixed;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 import ml.docilealligator.infinityforreddit.utils.Utils;
 import retrofit2.Retrofit;
@@ -104,8 +103,8 @@ public class CommentsListingFragment extends Fragment implements FragmentCommuni
     Executor mExecutor;
     private String mAccessToken;
     private RequestManager mGlide;
-    private AppCompatActivity mActivity;
-    private LinearLayoutManager mLinearLayoutManager;
+    private BaseActivity mActivity;
+    private LinearLayoutManagerBugFixed mLinearLayoutManager;
     private CommentsListingRecyclerViewAdapter mAdapter;
     private SortType sortType;
     private ColorDrawable backgroundSwipeRight;
@@ -255,7 +254,7 @@ public class CommentsListingFragment extends Fragment implements FragmentCommuni
 
     private void bindView(Resources resources) {
         if (mActivity != null && !mActivity.isFinishing() && !mActivity.isDestroyed()) {
-            mLinearLayoutManager = new LinearLayoutManager(mActivity);
+            mLinearLayoutManager = new LinearLayoutManagerBugFixed(mActivity);
             mCommentRecyclerView.setLayoutManager(mLinearLayoutManager);
 
             mAdapter = new CommentsListingRecyclerViewAdapter(mActivity, mOauthRetrofit, customThemeWrapper,
@@ -265,7 +264,7 @@ public class CommentsListingFragment extends Fragment implements FragmentCommuni
 
             String username = getArguments().getString(EXTRA_USERNAME);
             String sort = mSortTypeSharedPreferences.getString(SharedPreferencesUtils.SORT_TYPE_USER_COMMENT, SortType.Type.NEW.name());
-            if(sort.equals(SortType.Type.CONTROVERSIAL.name()) || sort.equals(SortType.Type.TOP.name())) {
+            if (sort.equals(SortType.Type.CONTROVERSIAL.name()) || sort.equals(SortType.Type.TOP.name())) {
                 String sortTime = mSortTypeSharedPreferences.getString(SharedPreferencesUtils.SORT_TIME_USER_COMMENT, SortType.Time.ALL.name());
                 sortType = new SortType(SortType.Type.valueOf(sort.toUpperCase()), SortType.Time.valueOf(sortTime.toUpperCase()));
             } else {
@@ -307,9 +306,7 @@ public class CommentsListingFragment extends Fragment implements FragmentCommuni
                 if (hasComment) {
                     mFetchCommentInfoLinearLayout.setVisibility(View.GONE);
                 } else {
-                    mFetchCommentInfoLinearLayout.setOnClickListener(view -> {
-                        //Do nothing
-                    });
+                    mFetchCommentInfoLinearLayout.setOnClickListener(null);
                     showErrorView(R.string.no_comments);
                 }
             });
@@ -358,7 +355,7 @@ public class CommentsListingFragment extends Fragment implements FragmentCommuni
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        this.mActivity = (AppCompatActivity) context;
+        this.mActivity = (BaseActivity) context;
     }
 
     @Override
@@ -373,6 +370,9 @@ public class CommentsListingFragment extends Fragment implements FragmentCommuni
         mSwipeRefreshLayout.setProgressBackgroundColorSchemeColor(customThemeWrapper.getCircularProgressBarBackground());
         mSwipeRefreshLayout.setColorSchemeColors(customThemeWrapper.getColorAccent());
         mFetchCommentInfoTextView.setTextColor(customThemeWrapper.getSecondaryTextColor());
+        if (mActivity.typeface != null) {
+            mFetchCommentInfoTextView.setTypeface(mActivity.typeface);
+        }
     }
 
     private void showErrorView(int stringResId) {

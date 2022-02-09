@@ -68,12 +68,12 @@
     <string name="access_denied">"Hozzáférés megtagadva"</string>
     <string name="parse_user_info_error">"Felhasználó adat elemzési hiba"</string>
     <string name="no_system_webview_error">"Hiba a rendszer WebView szolgáltatásának megnyitása közben"</string>
-    <string name="error_loading_image_tap_to_retry">"Hiba a kép megjelenítésekor. Koppints az újraprbálkozáshoz."</string>
-    <string name="load_posts_error">"Hiba a poszt megjelenítésekor. Koppints az újraprbálkozáshoz."</string>
+    <string name="error_loading_image_tap_to_retry">"Hiba a kép megjelenítésekor. Koppints az újrapróbálkozáshoz."</string>
+    <string name="load_posts_error">"Hiba a poszt megjelenítésekor. Koppints az újrapróbálkozáshoz."</string>
     <string name="load_more_posts_error">"Hiba a poszt megjelenítésekor."</string>
-    <string name="load_post_error">"Hiba a poszt megjelenítésekor. Koppints az újraprbálkozáshoz."</string>
-    <string name="search_subreddits_error">"Hiba a subredditek keresése közben. Koppints az újraprbálkozáshoz."</string>
-    <string name="search_users_error">"Hiba a felhasználók keresése közben. Koppints az újraprbálkozáshoz."</string>
+    <string name="load_post_error">"Hiba a poszt megjelenítésekor. Koppints az újrapróbálkozáshoz."</string>
+    <string name="search_subreddits_error">"Hiba a subredditek keresése közben. Koppints az újrapróbálkozáshoz."</string>
+    <string name="search_users_error">"Hiba a felhasználók keresése közben. Koppints az újrapróbálkozáshoz."</string>
     <string name="no_posts">"Nem található poszt"</string>
     <string name="no_comments">"Nem található komment"</string>
     <string name="no_subreddits">"Nem található subreddit"</string>
@@ -98,7 +98,7 @@
     <string name="profile">"Profil"</string>
     <string name="subscriptions">"Feliratkozások"</string>
     <string name="multi_reddit">"Multireddit"</string>
-    <string name="inbox">"Póstaláda"</string>
+    <string name="inbox">"Postaláda"</string>
     <string name="upvoted">"Upvoteolt"</string>
     <string name="downvoted">"Downvoteolt"</string>
     <string name="hidden">"Rejtett"</string>
@@ -146,6 +146,8 @@
     <string name="send_message_success">"Üzenet elküldve"</string>
     <string name="send_message_failed">"Nem sikerült elküldeni az üzenetet"</string>
     <string name="select_a_subreddit">"Kérlek előbb válassz egy subredditet"</string>
+
+    <!-- Fuzzy -->
     <string name="title_required">"A posztnak szüksége van egy jó címre"</string>
     <string name="link_required">"Hé! Hol a link?"</string>
     <string name="select_an_image">"Kérlek előbb válassz egy képet"</string>
@@ -223,7 +225,11 @@
     <string name="search">"Keresés"</string>
     <string name="posting_video">"Videó posztolása"</string>
     <string name="posting_image">"Kép posztolása"</string>
+
+    <!-- Fuzzy -->
     <string name="please_wait">"Kérlek várj."</string>
+
+    <!-- Fuzzy -->
     <string name="add_account">"Fiók hozzáadása"</string>
     <string name="anonymous_account">"Anoním"</string>
     <string name="log_out">"Kijelentkezés"</string>
@@ -285,7 +291,6 @@
     <string name="settings_gestures_and_buttons_title">"Gesztusok és gombok"</string>
     <string name="settings_save_front_page_scrolled_position_title">"Görgetés pozíciójának mentése a Kezdőlapon"</string>
     <string name="settings_save_front_page_scrolled_position_summary">"Böngéssz új posztokat a Kezdőlap frissítése után (Kezdőlap, rendezés típusa: Legjobb)"</string>
-    <string name="settings_open_link_in_app_title">"Nyisd meg a linket appon belül"</string>
     <string name="settigns_video_title">"Videó"</string>
     <string name="settings_video_autoplay_title">"Videó autómatikus lejátszása"</string>
     <string name="settings_mute_autoplaying_videos_title">"Autómatikusan lejátszó videók némítása"</string>
@@ -302,13 +307,14 @@
     <string name="settings_immersive_interface_ignore_nav_bar_summary">"Alsó navigációs sáv extra \"párnázásának\" meggátlása"</string>
     <string name="settings_customize_tabs_in_main_page_title">"Fülek testreszabása a főoldalon"</string>
     <string name="settings_enable_bottom_app_bar_title">"Alsó navigáció engedélyezése"</string>
-    <string name="settings_enable_bottom_app_bar_summary">"Nincse hatása anoním módban"</string>
     <string name="settings_category_post_and_comment_title">"Poszt és komment"</string>
     <string name="settings_vote_buttons_on_the_right_title">"Szavazó gombok a jobb oldalon"</string>
     <string name="settings_volume_keys_navigate_comments_title">"Hangerőgombok használata kommentek navigálására posztokban"</string>
     <string name="settings_volume_keys_navigate_posts_title">"Hangerőgombok használata posztok navigálására"</string>
     <string name="settings_mute_video_title">"Videók némítása"</string>
     <string name="settings_mute_nsfw_video_title">"NSFW videók némítása"</string>
+
+    <!-- Fuzzy -->
     <string name="settings_automatically_try_redgifs_title">"Próbálja autómatikusan elérni a Redgifeket, ha a videók Gfycat-en el vannak távolítva."</string>
     <string name="settings_video_player_ignore_nav_bar_title">"Navigációs sáv ignorálása videó lejátszóban"</string>
     <string name="settings_video_player_ignore_nav_bar_summary">"Annak megelőzése, hogy a videó kontrollernek extra szegélye legyen"</string>
@@ -407,6 +413,7 @@
     <string name="settings_tab_subreddit_name">"Subreddit néb (r/ prefix nélkül)"</string>
 
     <!-- what does /m/ refer to here? -->
+    <!-- Fuzzy -->
     <string name="settings_tab_multi_reddit_name">"Multireddit név (/felhasználó/felhasználóneved/m/temultiredditneved)"</string>
     <string name="settings_tab_username">"Felhasználónév (u/ prefix nélkül)"</string>
     <string name="no_developer_easter_egg">"Itt nincsenek fejlesztői beállítésok"</string>
@@ -479,7 +486,6 @@ https://play.google.com/store/apps/details?id=ml.docilealligator.infinityforredd
     <string name="create_multi_reddit_failed">"Nem lehet létrehozni ezt a multiredditet"</string>
     <string name="duplicate_multi_reddit">"Ez a multireddit már létezik"</string>
     <string name="edit_multi_reddit_failed">"Nem lehet szerkeszteni ezt a multiredditet"</string>
-    <string name="logged_out">"Kijelentkeztél"</string>
     <string name="delete_multi_reddit_success">"Törlés sikeres"</string>
     <string name="delete_multi_reddit_failed">"Törlés nem sikerült"</string>
     <string name="delete_multi_reddit_dialog_message">"Biztos vagy benne?"</string>
@@ -756,7 +762,6 @@ Az alap az indigó amoled téma"</string>
     <string name="action_select_user_flair">"Felhasználó flair kiválasztása"</string>
     <string name="action_give_award">"Adj kitüntetést"</string>
     <string name="posts">"Poszt"</string>
-    <string name="sidebar">"Oldalsáv"</string>
     <string name="only_for_logged_in_user">"Csak bejelentkezett felhasználóknak"</string>
     <string name="settings_number_of_columns_in_post_feed_title">"Az oszlopok száma a poszt feedben"</string>
     <string name="settings_number_of_columns_in_post_feed_portrait_title">"Portré"</string>
@@ -835,7 +840,6 @@ Videó autómatikus lejátszása le van tiltva."</string>
 Üzenet %2$s"</string>
     <string name="give_award_success">"Kitüntetés megadva"</string>
     <string name="give_award_failed">"Nem sikerült"</string>
-    <string name="recent_searches">"Utóbbi keresések"</string>
     <string name="warning">"Figyelem"</string>
     <string name="this_is_a_nsfw_subreddit">"Ez egy NSFW subreddit."</string>
     <string name="this_user_has_nsfw_content">"Ennek a felhasználónak van NSFW tartlama"</string>
@@ -959,4 +963,36 @@ Videó autómatikus lejátszása le van tiltva."</string>
     <string name="have_trouble_login_title">"Probléma a bejelentkezésnél"</string>
     <string name="have_trouble_login_message">"Megpróbálsz máshogy bejelentkezni?"</string>
     <string name="vote">"Szavazás"</string>
+    <string name="action_share_link">"Link megosztása"</string>
+    <string name="action_copy_link">"Link másolása"</string>
+    <string name="action_add_to_post_filter">"Hozzáadás poszt filterhez"</string>
+    <string name="settings_do_not_blur_nsfw_in_nsfw_subreddits_title">"Ne homályosítson el NSFW képeket NSFW subredditeken"</string>
+    <string name="settings_show_avatar_on_the_right">"Avatár megjelenítése a jobb oldalon"</string>
+    <string name="settings_backup_settings_title">"Beállítások biztonsági mentése"</string>
+    <string name="settings_restore_settings_title">"Beállítások visszaállítása"</string>
+    <string name="settings_credits_love_animation_title">"Love animáció"</string>
+    <string name="settings_navigation_drawer_title">"Navigációs fiók"</string>
+    <string name="settings_default_search_result_tab">"Alapértelmezett keresési találatok fül"</string>
+    <string name="device_default">"Eszköz alapértelmezett"</string>
+    <string name="theme_item_current_user_color">"Jelenlegi felhasználó"</string>
+    <string name="backup_settings_success">"Sikeresen exportálás a célmappába. A generált zip fájl jelszava 123321. Kérlek ne módosítsd a fájlt."</string>
+    <string name="create_zip_in_destination_directory_failed">"Nem lehet lehet létrehozni visszaállítási zip fájlt a célmappában."</string>
+    <string name="do_not_show_this_again">"Ne mutassa újra"</string>
+    <string name="continue_suicide_prevention_activity">"Folytatás"</string>
+    <string name="always_on">"Mindig be"</string>
+    <string name="never">"Soha"</string>
+    <string name="normal">"Normál"</string>
+    <string name="extra_large">"Extra nagy"</string>
+    <string name="enormously_large">"Óriási"</string>
+    <string name="default_in_array">"Alapértelmezett"</string>
+    <string name="off">"Ki"</string>
+    <string name="upvote">"Upvote"</string>
+    <string name="downvote">"Downvote"</string>
+    <string name="select">"Kiválaszt"</string>
+    <string name="save_comment">"Mentés"</string>
+    <string name="reply">"Válasz"</string>
+    <string name="bottom_sheet_post_gallery">"Galéria"</string>
+    <string name="label_reddit">"Reddit"</string>
+    <string name="about">"Az appról"</string>
+    <string name="settings_open_navigation_drawer">"Navigációs fiók megnyitása"</string>
 </resources>

@@ -51,9 +51,12 @@ public class Post implements Parcelable {
     private String videoUrl;
     private String videoDownloadUrl;
     private String gfycatId;
+    private String streamableShortCode;
+    private boolean isImgur;
     private boolean isGfycat;
     private boolean isRedgifs;
-    private boolean loadGfyOrRedgifsVideoSuccess;
+    private boolean isStreamable;
+    private boolean loadGfyOrStreamableVideoSuccess;
     private String permalink;
     private String flair;
     private String awards;
@@ -172,9 +175,12 @@ public class Post implements Parcelable {
         videoUrl = in.readString();
         videoDownloadUrl = in.readString();
         gfycatId = in.readString();
+        streamableShortCode = in.readString();
+        isImgur = in.readByte() != 0;
         isGfycat = in.readByte() != 0;
         isRedgifs = in.readByte() != 0;
-        loadGfyOrRedgifsVideoSuccess = in.readByte() != 0;
+        isStreamable = in.readByte() != 0;
+        loadGfyOrStreamableVideoSuccess = in.readByte() != 0;
         permalink = in.readString();
         flair = in.readString();
         awards = in.readString();
@@ -321,6 +327,22 @@ public class Post implements Parcelable {
         this.gfycatId = gfycatId;
     }
 
+    public String getStreamableShortCode() {
+        return streamableShortCode;
+    }
+
+    public void setStreamableShortCode(String shortCode) {
+        this.streamableShortCode = shortCode;
+    }
+
+    public void setIsImgur(boolean isImgur) {
+        this.isImgur = isImgur;
+    }
+
+    public boolean isImgur() {
+        return isImgur;
+    }
+
     public boolean isGfycat() {
         return isGfycat;
     }
@@ -337,12 +359,20 @@ public class Post implements Parcelable {
         this.isRedgifs = isRedgifs;
     }
 
-    public boolean isLoadGfyOrRedgifsVideoSuccess() {
-        return loadGfyOrRedgifsVideoSuccess;
+    public boolean isStreamable() {
+        return isStreamable;
     }
 
-    public void setLoadGfyOrRedgifsVideoSuccess(boolean loadGfyOrRedgifsVideoSuccess) {
-        this.loadGfyOrRedgifsVideoSuccess = loadGfyOrRedgifsVideoSuccess;
+    public void setIsStreamable(boolean isStreamable) {
+        this.isStreamable = isStreamable;
+    }
+
+    public boolean isLoadGfycatOrStreamableVideoSuccess() {
+        return loadGfyOrStreamableVideoSuccess;
+    }
+
+    public void setLoadGfyOrStreamableVideoSuccess(boolean loadGfyOrStreamableVideoSuccess) {
+        this.loadGfyOrStreamableVideoSuccess = loadGfyOrStreamableVideoSuccess;
     }
 
     public String getPermalink() {
@@ -532,9 +562,12 @@ public class Post implements Parcelable {
         parcel.writeString(videoUrl);
         parcel.writeString(videoDownloadUrl);
         parcel.writeString(gfycatId);
+        parcel.writeString(streamableShortCode);
+        parcel.writeByte((byte) (isImgur ? 1 : 0));
         parcel.writeByte((byte) (isGfycat ? 1 : 0));
         parcel.writeByte((byte) (isRedgifs ? 1 : 0));
-        parcel.writeByte((byte) (loadGfyOrRedgifsVideoSuccess ? 1 : 0));
+        parcel.writeByte((byte) (isStreamable ? 1 : 0));
+        parcel.writeByte((byte) (loadGfyOrStreamableVideoSuccess ? 1 : 0));
         parcel.writeString(permalink);
         parcel.writeString(flair);
         parcel.writeString(awards);
@@ -580,12 +613,17 @@ public class Post implements Parcelable {
 
         public String mimeType;
         public String url;
+        public String fallbackUrl;
+        private boolean hasFallback;
         public String fileName;
         public int mediaType;
+        public String caption;
+        public String captionUrl;
 
-        public Gallery(String mimeType, String url, String fileName) {
+        public Gallery(String mimeType, String url, String fallbackUrl, String fileName, String caption, String captionUrl) {
             this.mimeType = mimeType;
             this.url = url;
+            this.fallbackUrl = fallbackUrl;
             this.fileName = fileName;
             if (mimeType.contains("gif")) {
                 mediaType = TYPE_GIF;
@@ -594,13 +632,19 @@ public class Post implements Parcelable {
             } else {
                 mediaType = TYPE_VIDEO;
             }
+            this.caption = caption;
+            this.captionUrl = captionUrl;
         }
 
         protected Gallery(Parcel in) {
             mimeType = in.readString();
             url = in.readString();
+            fallbackUrl = in.readString();
+            hasFallback = in.readByte() != 0;
             fileName = in.readString();
             mediaType = in.readInt();
+            caption = in.readString();
+            captionUrl = in.readString();
         }
 
         public static final Creator<Gallery> CREATOR = new Creator<Gallery>() {
@@ -624,26 +668,42 @@ public class Post implements Parcelable {
         public void writeToParcel(Parcel parcel, int i) {
             parcel.writeString(mimeType);
             parcel.writeString(url);
+            parcel.writeString(fallbackUrl);
+            parcel.writeByte((byte) (hasFallback ? 1 : 0));
             parcel.writeString(fileName);
             parcel.writeInt(mediaType);
+            parcel.writeString(caption);
+            parcel.writeString(captionUrl);
         }
+
+        public void setFallbackUrl(String fallbackUrl) { this.fallbackUrl = fallbackUrl; }
+
+        public void setHasFallback(boolean hasFallback) { this.hasFallback = hasFallback; }
+
+        public boolean hasFallback() { return this.hasFallback; }
     }
 
     public static class Preview implements Parcelable {
         private String previewUrl;
         private int previewWidth;
         private int previewHeight;
+        private String previewCaption;
+        private String previewCaptionUrl;
 
-        public Preview(String previewUrl, int previewWidth, int previewHeight) {
+        public Preview(String previewUrl, int previewWidth, int previewHeight, String previewCaption, String previewCaptionUrl) {
             this.previewUrl = previewUrl;
             this.previewWidth = previewWidth;
             this.previewHeight = previewHeight;
+            this.previewCaption = previewCaption;
+            this.previewCaptionUrl = previewCaptionUrl;
         }
 
         protected Preview(Parcel in) {
             previewUrl = in.readString();
             previewWidth = in.readInt();
             previewHeight = in.readInt();
+            previewCaption = in.readString();
+            previewCaptionUrl = in.readString();
         }
 
         public static final Creator<Preview> CREATOR = new Creator<Preview>() {
@@ -682,6 +742,18 @@ public class Post implements Parcelable {
             this.previewHeight = previewHeight;
         }
 
+        public String getPreviewCaption() {
+            return previewCaption;
+        }
+
+        public void setPreviewCaption(String previewCaption) { this.previewCaption = previewCaption; }
+
+        public String getPreviewCaptionUrl() {
+            return previewCaptionUrl;
+        }
+
+        public void setPreviewCaptionUrl(String previewCaptionUrl) { this.previewCaptionUrl = previewCaptionUrl; }
+
         @Override
         public int describeContents() {
             return 0;
@@ -692,6 +764,8 @@ public class Post implements Parcelable {
             parcel.writeString(previewUrl);
             parcel.writeInt(previewWidth);
             parcel.writeInt(previewHeight);
+            parcel.writeString(previewCaption);
+            parcel.writeString(previewCaptionUrl);
         }
     }
 }

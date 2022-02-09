@@ -13,18 +13,21 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.UserFlair;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
+import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.utils.Utils;
 
 public class UserFlairRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    private BaseActivity activity;
     private CustomThemeWrapper customThemeWrapper;
     private ArrayList<UserFlair> userFlairs;
     private ItemClickListener itemClickListener;
 
-    public UserFlairRecyclerViewAdapter(CustomThemeWrapper customThemeWrapper, ArrayList<UserFlair> userFlairs,
+    public UserFlairRecyclerViewAdapter(BaseActivity activity, CustomThemeWrapper customThemeWrapper, ArrayList<UserFlair> userFlairs,
                                         ItemClickListener itemClickListener) {
+        this.activity = activity;
         this.customThemeWrapper = customThemeWrapper;
         this.userFlairs = userFlairs;
         this.itemClickListener = itemClickListener;
@@ -43,7 +46,7 @@ public class UserFlairRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         if (holder instanceof UserFlairViewHolder) {
-            UserFlair userFlair = userFlairs.get(holder.getAdapterPosition());
+            UserFlair userFlair = userFlairs.get(holder.getBindingAdapterPosition());
             if (userFlair.getHtmlText() == null || userFlair.getHtmlText().equals("")) {
                 ((UserFlairViewHolder) holder).userFlairHtmlTextView.setText(userFlair.getText());
             } else {
@@ -76,12 +79,16 @@ public class UserFlairRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerV
             userFlairHtmlTextView.setTextColor(customThemeWrapper.getPrimaryTextColor());
             editUserFlairImageView.setColorFilter(customThemeWrapper.getPrimaryTextColor(), android.graphics.PorterDuff.Mode.SRC_IN);
 
+            if (activity.typeface != null) {
+                userFlairHtmlTextView.setTypeface(activity.typeface);
+            }
+
             itemView.setOnClickListener(view -> {
-                itemClickListener.onClick(userFlairs.get(getAdapterPosition()), false);
+                itemClickListener.onClick(userFlairs.get(getBindingAdapterPosition()), false);
             });
 
             editUserFlairImageView.setOnClickListener(view -> {
-                itemClickListener.onClick(userFlairs.get(getAdapterPosition()), true);
+                itemClickListener.onClick(userFlairs.get(getBindingAdapterPosition()), true);
             });
         }
     }

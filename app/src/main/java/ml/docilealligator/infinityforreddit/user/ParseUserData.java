@@ -22,7 +22,7 @@ public class ParseUserData {
     }
 
     private static UserData parseUserDataBase(JSONObject userDataJson, boolean parseFullKarma) throws JSONException {
-        if(userDataJson == null) {
+        if (userDataJson == null) {
             return null;
         }
 
@@ -52,9 +52,10 @@ public class ParseUserData {
         boolean isFriend = userDataJson.getBoolean(JSONUtils.IS_FRIEND_KEY);
         boolean isNsfw = userDataJson.getJSONObject(JSONUtils.SUBREDDIT_KEY).getBoolean(JSONUtils.OVER_18_KEY);
         String description = userDataJson.getJSONObject(JSONUtils.SUBREDDIT_KEY).getString(JSONUtils.PUBLIC_DESCRIPTION_KEY);
+        String title = userDataJson.getJSONObject(JSONUtils.SUBREDDIT_KEY).getString(JSONUtils.TITLE_KEY);
 
         return new UserData(userName, iconImageUrl, bannerImageUrl, linkKarma, commentKarma, awarderKarma,
-                awardeeKarma, totalKarma, cakeday, isGold, isFriend, canBeFollowed, isNsfw, description);
+                awardeeKarma, totalKarma, cakeday, isGold, isFriend, canBeFollowed, isNsfw, description, title);
     }
 
     interface ParseUserDataListener {
@@ -147,7 +148,12 @@ public class ParseUserData {
                     after = jsonResponse.getJSONObject(JSONUtils.DATA_KEY).getString(JSONUtils.AFTER_KEY);
                     JSONArray children = jsonResponse.getJSONObject(JSONUtils.DATA_KEY).getJSONArray(JSONUtils.CHILDREN_KEY);
                     for (int i = 0; i < children.length(); i++) {
-                        userDataArrayList.add(parseUserDataBase(children.getJSONObject(i), false));
+                        try {
+                            UserData userData = parseUserDataBase(children.getJSONObject(i), false);
+                            userDataArrayList.add(userData);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             } catch (JSONException e) {

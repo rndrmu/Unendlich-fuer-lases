@@ -3,6 +3,7 @@ package ml.docilealligator.infinityforreddit.adapters;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Spanned;
 import android.text.util.Linkify;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
@@ -23,25 +23,58 @@ import io.noties.markwon.MarkwonConfiguration;
 import io.noties.markwon.core.MarkwonTheme;
 import io.noties.markwon.ext.strikethrough.StrikethroughPlugin;
 import io.noties.markwon.html.HtmlPlugin;
+import io.noties.markwon.html.tag.SuperScriptHandler;
+import io.noties.markwon.inlineparser.AutolinkInlineProcessor;
+import io.noties.markwon.inlineparser.BangInlineProcessor;
+import io.noties.markwon.inlineparser.HtmlInlineProcessor;
+import io.noties.markwon.inlineparser.MarkwonInlineParserPlugin;
 import io.noties.markwon.linkify.LinkifyPlugin;
 import io.noties.markwon.movement.MovementMethodPlugin;
 import me.saket.bettermovementmethod.BetterLinkMovementMethod;
 import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.Rule;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
 import ml.docilealligator.infinityforreddit.activities.LinkResolverActivity;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.UrlMenuBottomSheetFragment;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
+import ml.docilealligator.infinityforreddit.markdown.SuperscriptInlineProcessor;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
 public class RulesRecyclerViewAdapter extends RecyclerView.Adapter<RulesRecyclerViewAdapter.RuleViewHolder> {
+    private BaseActivity activity;
     private Markwon markwon;
     private ArrayList<Rule> rules;
     private int mPrimaryTextColor;
     private int mSecondaryTextColor;
 
-    public RulesRecyclerViewAdapter(AppCompatActivity activity, CustomThemeWrapper customThemeWrapper) {
+    public RulesRecyclerViewAdapter(BaseActivity activity, CustomThemeWrapper customThemeWrapper) {
+        this.activity = activity;
         markwon = Markwon.builder(activity)
-                .usePlugin(HtmlPlugin.create())
+                .usePlugin(MarkwonInlineParserPlugin.create(plugin -> {
+                    plugin.excludeInlineProcessor(AutolinkInlineProcessor.class);
+                    plugin.excludeInlineProcessor(HtmlInlineProcessor.class);
+                    plugin.excludeInlineProcessor(BangInlineProcessor.class);
+                    plugin.addInlineProcessor(new SuperscriptInlineProcessor());
+                }))
+                .usePlugin(HtmlPlugin.create(plugin -> {
+                    plugin.excludeDefaults(true).addHandler(new SuperScriptHandler());
+                }))
                 .usePlugin(new AbstractMarkwonPlugin() {
+                    @NonNull
+                    @Override
+                    public String processMarkdown(@NonNull String markdown) {
+                        return Utils.fixSuperScript(markdown);
+                    }
+
+                    @Override
+                    public void beforeSetText(@NonNull TextView textView, @NonNull Spanned markdown) {
+                        if (activity.typeface != null) {
+                            textView.setTypeface(activity.typeface);
+                        }
+
+                        textView.setTextColor(mPrimaryTextColor);
+                    }
+
                     @Override
                     public void configureConfiguration(@NonNull MarkwonConfiguration.Builder builder) {
                         builder.linkResolver((view, link) -> {
@@ -57,7 +90,7 @@ public class RulesRecyclerViewAdapter extends RecyclerView.Adapter<RulesRecycler
                         builder.linkColor(customThemeWrapper.getLinkColor());
                     }
                 })
-                .usePlugin(MovementMethodPlugin.create(BetterLinkMovementMethod.linkify(Linkify.WEB_URLS, activity).setOnLinkLongClickListener((textView, url) -> {
+                .usePlugin(MovementMethodPlugin.create(BetterLinkMovementMethod.linkify(Linkify.WEB_URLS).setOnLinkLongClickListener((textView, url) -> {
                     if (activity != null && !activity.isDestroyed() && !activity.isFinishing()) {
                         UrlMenuBottomSheetFragment urlMenuBottomSheetFragment = new UrlMenuBottomSheetFragment();
                         Bundle bundle = new Bundle();
@@ -82,11 +115,11 @@ public class RulesRecyclerViewAdapter extends RecyclerView.Adapter<RulesRecycler
 
     @Override
     public void onBindViewHolder(@NonNull RuleViewHolder holder, int position) {
-        holder.shortNameTextView.setText(rules.get(holder.getAdapterPosition()).getShortName());
-        if (rules.get(holder.getAdapterPosition()).getDescriptionHtml() == null) {
+        holder.shortNameTextView.setText(rules.get(holder.getBindingAdapterPosition()).getShortName());
+        if (rules.get(holder.getBindingAdapterPosition()).getDescriptionHtml() == null) {
             holder.descriptionMarkwonView.setVisibility(View.GONE);
         } else {
-            markwon.setMarkdown(holder.descriptionMarkwonView, rules.get(holder.getAdapterPosition()).getDescriptionHtml());
+            markwon.setMarkdown(holder.descriptionMarkwonView, rules.get(holder.getBindingAdapterPosition()).getDescriptionHtml());
         }
     }
 
@@ -117,6 +150,11 @@ public class RulesRecyclerViewAdapter extends RecyclerView.Adapter<RulesRecycler
             ButterKnife.bind(this, itemView);
             shortNameTextView.setTextColor(mPrimaryTextColor);
             descriptionMarkwonView.setTextColor(mSecondaryTextColor);
+
+            if (activity.typeface != null) {
+                shortNameTextView.setTypeface(activity.typeface);
+                descriptionMarkwonView.setTypeface(activity.typeface);
+            }
         }
     }
 }

@@ -37,6 +37,8 @@
         android:id="@+id/content_markdown_view_comment_full_markdown_activity"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

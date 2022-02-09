@@ -1,13 +1,10 @@
 package ml.docilealligator.infinityforreddit.services;
 
 import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -19,12 +16,16 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationChannelCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.bumptech.glide.Glide;
 
 import org.greenrobot.eventbus.EventBus;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -41,15 +42,19 @@ import javax.inject.Named;
 import ml.docilealligator.infinityforreddit.Flair;
 import ml.docilealligator.infinityforreddit.Infinity;
 import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.apis.RedditAPI;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.events.SubmitCrosspostEvent;
+import ml.docilealligator.infinityforreddit.events.SubmitGalleryPostEvent;
 import ml.docilealligator.infinityforreddit.events.SubmitImagePostEvent;
 import ml.docilealligator.infinityforreddit.events.SubmitTextOrLinkPostEvent;
 import ml.docilealligator.infinityforreddit.events.SubmitVideoOrGifPostEvent;
 import ml.docilealligator.infinityforreddit.post.Post;
 import ml.docilealligator.infinityforreddit.post.SubmitPost;
 import ml.docilealligator.infinityforreddit.utils.APIUtils;
+import ml.docilealligator.infinityforreddit.utils.JSONUtils;
 import ml.docilealligator.infinityforreddit.utils.NotificationUtils;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class SubmitPostService extends Service {
@@ -57,15 +62,19 @@ public class SubmitPostService extends Service {
     public static final String EXTRA_SUBREDDIT_NAME = "ESN";
     public static final String EXTRA_TITLE = "ET";
     public static final String EXTRA_CONTENT = "EC";
+    public static final String EXTRA_REDDIT_GALLERY_PAYLOAD = "ERGP";
     public static final String EXTRA_KIND = "EK";
     public static final String EXTRA_FLAIR = "EF";
     public static final String EXTRA_IS_SPOILER = "EIS";
     public static final String EXTRA_IS_NSFW = "EIN";
+    public static final String EXTRA_RECEIVE_POST_REPLY_NOTIFICATIONS = "ERPRN";
     public static final String EXTRA_POST_TYPE = "EPT";
     public static final int EXTRA_POST_TEXT_OR_LINK = 0;
     public static final int EXTRA_POST_TYPE_IMAGE = 1;
     public static final int EXTRA_POST_TYPE_VIDEO = 2;
-    public static final int EXTRA_POST_TYPE_CROSSPOST = 3;
+    public static final int EXTRA_POST_TYPE_GALLERY = 3;
+    public static final int EXTRA_POST_TYPE_CROSSPOST = 4;
+
     private static final String EXTRA_MEDIA_URI = "EU";
     @Inject
     @Named("oauth")
@@ -107,22 +116,28 @@ public class SubmitPostService extends Service {
             Flair flair = bundle.getParcelable(EXTRA_FLAIR);
             boolean isSpoiler = bundle.getBoolean(EXTRA_IS_SPOILER, false);
             boolean isNSFW = bundle.getBoolean(EXTRA_IS_NSFW, false);
+            boolean receivePostReplyNotifications = bundle.getBoolean(EXTRA_RECEIVE_POST_REPLY_NOTIFICATIONS, true);
             int postType = bundle.getInt(EXTRA_POST_TYPE, EXTRA_POST_TEXT_OR_LINK);
 
             if (postType == EXTRA_POST_TEXT_OR_LINK) {
                 String content = bundle.getString(EXTRA_CONTENT);
                 String kind = bundle.getString(EXTRA_KIND);
-                submitTextOrLinkPost(accessToken, subredditName, title, content, flair, isSpoiler, isNSFW, kind);
+                submitTextOrLinkPost(accessToken, subredditName, title, content, flair, isSpoiler, isNSFW,
+                        receivePostReplyNotifications, kind);
             } else if (postType == EXTRA_POST_TYPE_CROSSPOST) {
                 String content = bundle.getString(EXTRA_CONTENT);
                 submitCrosspost(mExecutor, handler, accessToken, subredditName, title, content,
-                        flair, isSpoiler, isNSFW);
+                        flair, isSpoiler, isNSFW, receivePostReplyNotifications);
             } else if (postType == EXTRA_POST_TYPE_IMAGE) {
                 Uri mediaUri = Uri.parse(bundle.getString(EXTRA_MEDIA_URI));
-                submitImagePost(accessToken, mediaUri, subredditName, title, flair, isSpoiler, isNSFW);
-            } else {
+                submitImagePost(accessToken, mediaUri, subredditName, title, flair, isSpoiler, isNSFW,
+                        receivePostReplyNotifications);
+            } else if (postType == EXTRA_POST_TYPE_VIDEO) {
                 Uri mediaUri = Uri.parse(bundle.getString(EXTRA_MEDIA_URI));
-                submitVideoPost(accessToken, mediaUri, subredditName, title, flair, isSpoiler, isNSFW);
+                submitVideoPost(accessToken, mediaUri, subredditName, title, flair, isSpoiler, isNSFW,
+                        receivePostReplyNotifications);
+            } else {
+                submitGalleryPost(accessToken, bundle.getString(EXTRA_REDDIT_GALLERY_PAYLOAD));
             }
         }
     }
@@ -147,16 +162,15 @@ public class SubmitPostService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         ((Infinity) getApplication()).getAppComponent().inject(this);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel serviceChannel = new NotificationChannel(
-                    NotificationUtils.CHANNEL_SUBMIT_POST,
-                    NotificationUtils.CHANNEL_SUBMIT_POST,
-                    NotificationManager.IMPORTANCE_LOW
-            );
+        NotificationChannelCompat serviceChannel =
+                new NotificationChannelCompat.Builder(
+                        NotificationUtils.CHANNEL_SUBMIT_POST,
+                        NotificationManagerCompat.IMPORTANCE_LOW)
+                .setName(NotificationUtils.CHANNEL_SUBMIT_POST)
+                .build();
 
-            NotificationManagerCompat manager = NotificationManagerCompat.from(this);
-            manager.createNotificationChannel(serviceChannel);
-        }
+        NotificationManagerCompat manager = NotificationManagerCompat.from(this);
+        manager.createNotificationChannel(serviceChannel);
 
         int randomNotificationIdOffset = new Random().nextInt(10000);
         int postType = intent.getIntExtra(EXTRA_POST_TYPE, EXTRA_POST_TEXT_OR_LINK);
@@ -169,9 +183,11 @@ public class SubmitPostService extends Service {
         } else if (postType == EXTRA_POST_TYPE_IMAGE) {
             bundle.putString(EXTRA_MEDIA_URI, intent.getData().toString());
             startForeground(NotificationUtils.SUBMIT_POST_SERVICE_NOTIFICATION_ID + randomNotificationIdOffset, createNotification(R.string.posting_image));
-        } else {
+        } else if (postType == EXTRA_POST_TYPE_VIDEO) {
             bundle.putString(EXTRA_MEDIA_URI, intent.getData().toString());
             startForeground(NotificationUtils.SUBMIT_POST_SERVICE_NOTIFICATION_ID + randomNotificationIdOffset, createNotification(R.string.posting_video));
+        } else {
+            startForeground(NotificationUtils.SUBMIT_POST_SERVICE_NOTIFICATION_ID + randomNotificationIdOffset, createNotification(R.string.posting_gallery));
         }
 
         Message msg = serviceHandler.obtainMessage();
@@ -190,10 +206,12 @@ public class SubmitPostService extends Service {
                 .build();
     }
 
-    private void submitTextOrLinkPost(String accessToken, String subredditName, String title, String content, Flair flair, boolean isSpoiler, boolean isNSFW, String kind) {
+    private void submitTextOrLinkPost(String accessToken, String subredditName, String title, String content,
+                                      Flair flair, boolean isSpoiler, boolean isNSFW, boolean receivePostReplyNotifications,
+                                      String kind) {
         SubmitPost.submitTextOrLinkPost(mExecutor, handler, mOauthRetrofit, accessToken,
-                getResources().getConfiguration().locale, subredditName, title, content, flair, isSpoiler,
-                isNSFW, kind, new SubmitPost.SubmitPostListener() {
+                subredditName, title, content, flair, isSpoiler,
+                isNSFW, receivePostReplyNotifications, kind, new SubmitPost.SubmitPostListener() {
                     @Override
                     public void submitSuccessful(Post post) {
                         handler.post(() -> EventBus.getDefault().post(new SubmitTextOrLinkPostEvent(true, post, null)));
@@ -211,9 +229,11 @@ public class SubmitPostService extends Service {
     }
 
     private void submitCrosspost(Executor executor, Handler handler, String accessToken, String subredditName,
-                                 String title, String content, Flair flair, boolean isSpoiler, boolean isNSFW) {
+                                 String title, String content, Flair flair, boolean isSpoiler, boolean isNSFW,
+                                 boolean receivePostReplyNotifications) {
         SubmitPost.submitCrosspost(executor, handler, mOauthRetrofit, accessToken, subredditName, title,
-                content, flair, isSpoiler, isNSFW, APIUtils.KIND_CROSSPOST, new SubmitPost.SubmitPostListener() {
+                content, flair, isSpoiler, isNSFW, receivePostReplyNotifications, APIUtils.KIND_CROSSPOST,
+                new SubmitPost.SubmitPostListener() {
                     @Override
                     public void submitSuccessful(Post post) {
                         handler.post(() -> EventBus.getDefault().post(new SubmitCrosspostEvent(true, post, null)));
@@ -230,11 +250,12 @@ public class SubmitPostService extends Service {
                 });
     }
 
-    private void submitImagePost(String accessToken, Uri mediaUri, String subredditName, String title, Flair flair, boolean isSpoiler, boolean isNSFW) {
+    private void submitImagePost(String accessToken, Uri mediaUri, String subredditName, String title,
+                                 Flair flair, boolean isSpoiler, boolean isNSFW, boolean receivePostReplyNotifications) {
         try {
             Bitmap resource = Glide.with(this).asBitmap().load(mediaUri).submit().get();
             SubmitPost.submitImagePost(mExecutor, handler, mOauthRetrofit, mUploadMediaRetrofit,
-                    accessToken, subredditName, title, resource, flair, isSpoiler, isNSFW,
+                    accessToken, subredditName, title, resource, flair, isSpoiler, isNSFW, receivePostReplyNotifications,
                     new SubmitPost.SubmitPostListener() {
                         @Override
                         public void submitSuccessful(Post post) {
@@ -261,7 +282,7 @@ public class SubmitPostService extends Service {
     }
 
     private void submitVideoPost(String accessToken, Uri mediaUri, String subredditName, String title,
-                                 Flair flair, boolean isSpoiler, boolean isNSFW) {
+                                 Flair flair, boolean isSpoiler, boolean isNSFW, boolean receivePostReplyNotifications) {
         try {
             InputStream in = getContentResolver().openInputStream(mediaUri);
             String type = getContentResolver().getType(mediaUri);
@@ -279,7 +300,8 @@ public class SubmitPostService extends Service {
             if (type != null) {
                 SubmitPost.submitVideoPost(mExecutor, handler, mOauthRetrofit, mUploadMediaRetrofit,
                         mUploadVideoRetrofit, accessToken, subredditName, title, new File(cacheFilePath),
-                        type, resource, flair, isSpoiler, isNSFW, new SubmitPost.SubmitPostListener() {
+                        type, resource, flair, isSpoiler, isNSFW, receivePostReplyNotifications,
+                        new SubmitPost.SubmitPostListener() {
                             @Override
                             public void submitSuccessful(Post post) {
                                 handler.post(() -> {
@@ -311,6 +333,42 @@ public class SubmitPostService extends Service {
             e.printStackTrace();
             handler.post(() -> EventBus.getDefault().post(new SubmitVideoOrGifPostEvent(false, true, null)));
 
+            stopService();
+        }
+    }
+
+    private void submitGalleryPost(String accessToken, String payload) {
+        try {
+            Response<String> response = mOauthRetrofit.create(RedditAPI.class).submitGalleryPost(APIUtils.getOAuthHeader(accessToken), payload).execute();
+            if (response.isSuccessful()) {
+                JSONObject responseObject = new JSONObject(response.body()).getJSONObject(JSONUtils.JSON_KEY);
+                if (responseObject.getJSONArray(JSONUtils.ERRORS_KEY).length() != 0) {
+                    JSONArray error = responseObject.getJSONArray(JSONUtils.ERRORS_KEY)
+                            .getJSONArray(responseObject.getJSONArray(JSONUtils.ERRORS_KEY).length() - 1);
+                    if (error.length() != 0) {
+                        String errorMessage;
+                        if (error.length() >= 2) {
+                            errorMessage = error.getString(1);
+                        } else {
+                            errorMessage = error.getString(0);
+                        }
+                        handler.post(() -> EventBus.getDefault().post(new SubmitGalleryPostEvent(false, null, errorMessage)));
+                    } else {
+                        handler.post(() -> EventBus.getDefault().post(new SubmitGalleryPostEvent(false, null, null)));
+                    }
+                } else {
+                    String postUrl = responseObject.getJSONObject(JSONUtils.DATA_KEY).getString(JSONUtils.URL_KEY);
+                    handler.post(() -> {
+                        EventBus.getDefault().post(new SubmitGalleryPostEvent(true, postUrl, null));
+                    });
+                }
+            } else {
+                handler.post(() -> EventBus.getDefault().post(new SubmitGalleryPostEvent(false, null, response.message())));
+            }
+        } catch (IOException | JSONException e) {
+            e.printStackTrace();
+            handler.post(() -> EventBus.getDefault().post(new SubmitGalleryPostEvent(false, null, e.getMessage())));
+        } finally {
             stopService();
         }
     }

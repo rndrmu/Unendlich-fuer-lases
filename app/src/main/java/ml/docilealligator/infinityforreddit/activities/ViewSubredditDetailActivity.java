@@ -4,14 +4,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
+import android.graphics.PorterDuff;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.text.util.Linkify;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
@@ -23,12 +29,12 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -37,6 +43,7 @@ import com.bumptech.glide.RequestManager;
 import com.bumptech.glide.request.RequestOptions;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.appbar.CollapsingToolbarLayout;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -52,6 +59,7 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.Executor;
 
@@ -60,10 +68,20 @@ import javax.inject.Named;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.noties.markwon.AbstractMarkwonPlugin;
+import io.noties.markwon.Markwon;
+import io.noties.markwon.MarkwonConfiguration;
+import io.noties.markwon.core.MarkwonTheme;
+import io.noties.markwon.inlineparser.AutolinkInlineProcessor;
+import io.noties.markwon.inlineparser.BangInlineProcessor;
+import io.noties.markwon.inlineparser.HtmlInlineProcessor;
+import io.noties.markwon.inlineparser.MarkwonInlineParserPlugin;
+import io.noties.markwon.linkify.LinkifyPlugin;
+import io.noties.markwon.movement.MovementMethodPlugin;
 import jp.wasabeef.glide.transformations.RoundedCornersTransformation;
+import me.saket.bettermovementmethod.BetterLinkMovementMethod;
 import ml.docilealligator.infinityforreddit.ActivityToolbarInterface;
 import ml.docilealligator.infinityforreddit.AppBarStateChangeListener;
-import ml.docilealligator.infinityforreddit.FragmentCommunicator;
 import ml.docilealligator.infinityforreddit.Infinity;
 import ml.docilealligator.infinityforreddit.MarkPostAsReadInterface;
 import ml.docilealligator.infinityforreddit.R;
@@ -71,16 +89,20 @@ import ml.docilealligator.infinityforreddit.RecyclerViewContentScrollingInterfac
 import ml.docilealligator.infinityforreddit.RedditDataRoomDatabase;
 import ml.docilealligator.infinityforreddit.SortType;
 import ml.docilealligator.infinityforreddit.SortTypeSelectionCallback;
+import ml.docilealligator.infinityforreddit.adapters.SubredditAutocompleteRecyclerViewAdapter;
+import ml.docilealligator.infinityforreddit.apis.RedditAPI;
 import ml.docilealligator.infinityforreddit.asynctasks.AddSubredditOrUserToMultiReddit;
 import ml.docilealligator.infinityforreddit.asynctasks.CheckIsSubscribedToSubreddit;
 import ml.docilealligator.infinityforreddit.asynctasks.InsertSubredditData;
 import ml.docilealligator.infinityforreddit.asynctasks.SwitchAccount;
+import ml.docilealligator.infinityforreddit.bottomsheetfragments.CopyTextBottomSheetFragment;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.FABMoreOptionsBottomSheetFragment;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.PostLayoutBottomSheetFragment;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.PostTypeBottomSheetFragment;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.RandomBottomSheetFragment;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.SortTimeBottomSheetFragment;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.SortTypeBottomSheetFragment;
+import ml.docilealligator.infinityforreddit.bottomsheetfragments.UrlMenuBottomSheetFragment;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.events.ChangeNSFWEvent;
 import ml.docilealligator.infinityforreddit.events.GoBackToMainPageEvent;
@@ -90,15 +112,20 @@ import ml.docilealligator.infinityforreddit.fragments.SidebarFragment;
 import ml.docilealligator.infinityforreddit.message.ReadMessage;
 import ml.docilealligator.infinityforreddit.multireddit.MultiReddit;
 import ml.docilealligator.infinityforreddit.post.Post;
-import ml.docilealligator.infinityforreddit.post.PostDataSource;
+import ml.docilealligator.infinityforreddit.post.PostPagingSource;
 import ml.docilealligator.infinityforreddit.readpost.InsertReadPost;
 import ml.docilealligator.infinityforreddit.subreddit.FetchSubredditData;
+import ml.docilealligator.infinityforreddit.subreddit.ParseSubredditData;
 import ml.docilealligator.infinityforreddit.subreddit.SubredditData;
 import ml.docilealligator.infinityforreddit.subreddit.SubredditSubscription;
 import ml.docilealligator.infinityforreddit.subreddit.SubredditViewModel;
+import ml.docilealligator.infinityforreddit.utils.APIUtils;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 import ml.docilealligator.infinityforreddit.utils.Utils;
 import pl.droidsonroids.gif.GifImageView;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class ViewSubredditDetailActivity extends BaseActivity implements SortTypeSelectionCallback,
@@ -113,11 +140,10 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
 
     private static final String FETCH_SUBREDDIT_INFO_STATE = "FSIS";
     private static final String CURRENT_ONLINE_SUBSCRIBERS_STATE = "COSS";
-    private static final String IS_IN_LAZY_MODE_STATE = "IILMS";
     private static final String MESSAGE_FULLNAME_STATE = "MFS";
     private static final String NEW_ACCOUNT_NAME_STATE = "NANS";
     private static final int ADD_TO_MULTIREDDIT_REQUEST_CODE = 1;
-
+    public SubredditViewModel mSubredditViewModel;
     @BindView(R.id.coordinator_layout_view_subreddit_detail_activity)
     CoordinatorLayout coordinatorLayout;
     @BindView(R.id.view_pager_view_subreddit_detail_activity)
@@ -129,7 +155,7 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
     @BindView(R.id.toolbar_linear_layout_view_subreddit_detail_activity)
     LinearLayout linearLayout;
     @BindView(R.id.toolbar)
-    Toolbar toolbar;
+    MaterialToolbar toolbar;
     @BindView(R.id.tab_layout_view_subreddit_detail_activity)
     TabLayout tabLayout;
     @BindView(R.id.banner_image_view_view_subreddit_detail_activity)
@@ -194,25 +220,23 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
     CustomThemeWrapper mCustomThemeWrapper;
     @Inject
     Executor mExecutor;
-    public SubredditViewModel mSubredditViewModel;
     private FragmentManager fragmentManager;
     private SectionsPagerAdapter sectionsPagerAdapter;
+    private Call<String> subredditAutocompleteCall;
     private String mAccessToken;
     private String mAccountName;
     private String subredditName;
+    private String description;
     private boolean mFetchSubredditInfoSuccess = false;
     private int mNCurrentOnlineSubscribers = 0;
     private boolean isNsfwSubreddit = false;
     private boolean subscriptionReady = false;
-    private boolean isInLazyMode = false;
     private boolean showToast = false;
     private boolean showBottomAppBar;
     private boolean lockBottomAppBar;
     private String mMessageFullname;
     private String mNewAccountName;
     private RequestManager glide;
-    private Menu mMenu;
-    private AppBarLayout.LayoutParams params;
     private int expandedTabTextColor;
     private int expandedTabBackgroundColor;
     private int expandedTabIndicatorColor;
@@ -224,6 +248,7 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
     private int fabOption;
     private SlidrInterface mSlidrInterface;
     private MaterialAlertDialogBuilder nsfwWarningBuilder;
+    private boolean isOnCreateActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -249,9 +274,10 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
             if (isImmersiveInterface()) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-                    coordinatorLayout.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                    /*coordinatorLayout.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
                             View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
-                            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+                            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);*/
+                    getWindow().setDecorFitsSystemWindows(false);
                 } else {
                     window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
                 }
@@ -318,7 +344,7 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
             });
         }
 
-        showBottomAppBar = mSharedPreferences.getBoolean(SharedPreferencesUtils.BOTTOM_APP_BAR_KEY, true);
+        showBottomAppBar = mSharedPreferences.getBoolean(SharedPreferencesUtils.BOTTOM_APP_BAR_KEY, false);
         lockBottomAppBar = mSharedPreferences.getBoolean(SharedPreferencesUtils.LOCK_BOTTOM_APP_BAR, false);
         boolean hideSubredditDescription = mSharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_SUBREDDIT_DESCRIPTION, false);
 
@@ -335,7 +361,6 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
         } else {
             mFetchSubredditInfoSuccess = savedInstanceState.getBoolean(FETCH_SUBREDDIT_INFO_STATE);
             mNCurrentOnlineSubscribers = savedInstanceState.getInt(CURRENT_ONLINE_SUBSCRIBERS_STATE);
-            isInLazyMode = savedInstanceState.getBoolean(IS_IN_LAZY_MODE_STATE);
             mMessageFullname = savedInstanceState.getString(MESSAGE_FULLNAME_STATE);
             mNewAccountName = savedInstanceState.getString(NEW_ACCOUNT_NAME_STATE);
 
@@ -346,9 +371,8 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
 
         checkNewAccountAndBindView();
 
+        isOnCreateActivity = true;
         fetchSubredditData();
-
-        params = (AppBarLayout.LayoutParams) collapsingToolbarLayout.getLayoutParams();
 
         String title = "r/" + subredditName;
         subredditNameTextView.setText(title);
@@ -360,6 +384,49 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
 
         glide = Glide.with(this);
         Locale locale = getResources().getConfiguration().locale;
+
+        Markwon markwon = Markwon.builder(this)
+                .usePlugin(MarkwonInlineParserPlugin.create(plugin -> {
+                    plugin.excludeInlineProcessor(AutolinkInlineProcessor.class);
+                    plugin.excludeInlineProcessor(HtmlInlineProcessor.class);
+                    plugin.excludeInlineProcessor(BangInlineProcessor.class);
+                }))
+                .usePlugin(new AbstractMarkwonPlugin() {
+                    @Override
+                    public void configureConfiguration(@NonNull MarkwonConfiguration.Builder builder) {
+                        builder.linkResolver((view, link) -> {
+                            Intent intent = new Intent(ViewSubredditDetailActivity.this, LinkResolverActivity.class);
+                            Uri uri = Uri.parse(link);
+                            intent.setData(uri);
+                            startActivity(intent);
+                        });
+                    }
+
+                    @Override
+                    public void configureTheme(@NonNull MarkwonTheme.Builder builder) {
+                        builder.linkColor(mCustomThemeWrapper.getLinkColor());
+                    }
+                })
+                .usePlugin(MovementMethodPlugin.create(BetterLinkMovementMethod.linkify(Linkify.WEB_URLS).setOnLinkLongClickListener((textView, url) -> {
+                    UrlMenuBottomSheetFragment urlMenuBottomSheetFragment = new UrlMenuBottomSheetFragment();
+                    Bundle bundle = new Bundle();
+                    bundle.putString(UrlMenuBottomSheetFragment.EXTRA_URL, url);
+                    urlMenuBottomSheetFragment.setArguments(bundle);
+                    urlMenuBottomSheetFragment.show(getSupportFragmentManager(), urlMenuBottomSheetFragment.getTag());
+                    return true;
+                })))
+                .usePlugin(LinkifyPlugin.create(Linkify.WEB_URLS)).build();
+
+        descriptionTextView.setOnLongClickListener(view -> {
+            if (description != null && !description.equals("") && descriptionTextView.getSelectionStart() == -1 && descriptionTextView.getSelectionEnd() == -1) {
+                Bundle bundle = new Bundle();
+                bundle.putString(CopyTextBottomSheetFragment.EXTRA_RAW_TEXT, description);
+                CopyTextBottomSheetFragment copyTextBottomSheetFragment = new CopyTextBottomSheetFragment();
+                copyTextBottomSheetFragment.setArguments(bundle);
+                copyTextBottomSheetFragment.show(getSupportFragmentManager(), copyTextBottomSheetFragment.getTag());
+            }
+            return true;
+        });
 
         mSubredditViewModel = new ViewModelProvider(this,
                 new SubredditViewModel.Factory(getApplication(), mRedditDataRoomDatabase, subredditName))
@@ -412,11 +479,12 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
                 nSubscribersTextView.setText(nSubscribers);
                 creationTimeTextView.setText(new SimpleDateFormat("MMM d, yyyy",
                         locale).format(subredditData.getCreatedUTC()));
-                if (hideSubredditDescription || subredditData.getDescription().equals("")) {
+                description = subredditData.getDescription();
+                if (hideSubredditDescription || description.equals("")) {
                     descriptionTextView.setVisibility(View.GONE);
                 } else {
                     descriptionTextView.setVisibility(View.VISIBLE);
-                    descriptionTextView.setText(subredditData.getDescription());
+                    markwon.setMarkdown(descriptionTextView, description);
                 }
 
                 if (subredditData.isNSFW()) {
@@ -459,8 +527,14 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
     @Override
     protected void applyCustomTheme() {
         coordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        collapsingToolbarLayout.setContentScrimColor(mCustomThemeWrapper.getColorPrimary());
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        appBarLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                appBarLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                collapsingToolbarLayout.setScrimVisibleHeightTrigger(toolbar.getHeight() + tabLayout.getHeight() + getStatusBarHeight() * 2);
+            }
+        });
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, collapsingToolbarLayout, toolbar, false);
         expandedTabTextColor = mCustomThemeWrapper.getTabLayoutWithExpandedCollapsingToolbarTextColor();
         expandedTabIndicatorColor = mCustomThemeWrapper.getTabLayoutWithExpandedCollapsingToolbarTabIndicator();
         expandedTabBackgroundColor = mCustomThemeWrapper.getTabLayoutWithExpandedCollapsingToolbarTabBackground();
@@ -478,12 +552,21 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
         descriptionTextView.setTextColor(primaryTextColor);
         bottomNavigationView.setBackgroundTint(ColorStateList.valueOf(mCustomThemeWrapper.getBottomAppBarBackgroundColor()));
         int bottomAppBarIconColor = mCustomThemeWrapper.getBottomAppBarIconColor();
-        option2BottomAppBar.setColorFilter(bottomAppBarIconColor, android.graphics.PorterDuff.Mode.SRC_IN);
-        option1BottomAppBar.setColorFilter(bottomAppBarIconColor, android.graphics.PorterDuff.Mode.SRC_IN);
-        option3BottomAppBar.setColorFilter(bottomAppBarIconColor, android.graphics.PorterDuff.Mode.SRC_IN);
-        option4BottomAppBar.setColorFilter(bottomAppBarIconColor, android.graphics.PorterDuff.Mode.SRC_IN);
+        option2BottomAppBar.setColorFilter(bottomAppBarIconColor, PorterDuff.Mode.SRC_IN);
+        option1BottomAppBar.setColorFilter(bottomAppBarIconColor, PorterDuff.Mode.SRC_IN);
+        option3BottomAppBar.setColorFilter(bottomAppBarIconColor, PorterDuff.Mode.SRC_IN);
+        option4BottomAppBar.setColorFilter(bottomAppBarIconColor, PorterDuff.Mode.SRC_IN);
         applyTabLayoutTheme(tabLayout);
         applyFABTheme(fab);
+        if (typeface != null) {
+            subredditNameTextView.setTypeface(typeface);
+            subscribeSubredditChip.setTypeface(typeface);
+            nSubscribersTextView.setTypeface(typeface);
+            nOnlineSubscribersTextView.setTypeface(typeface);
+            sinceTextView.setTypeface(typeface);
+            creationTimeTextView.setTypeface(typeface);
+            descriptionTextView.setTypeface(typeface);
+        }
         unsubscribedColor = mCustomThemeWrapper.getUnsubscribed();
         subscribedColor = mCustomThemeWrapper.getSubscribed();
     }
@@ -514,13 +597,18 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
 
     private void fetchSubredditData() {
         if (!mFetchSubredditInfoSuccess) {
-            FetchSubredditData.fetchSubredditData(mRetrofit, subredditName, new FetchSubredditData.FetchSubredditDataListener() {
+            FetchSubredditData.fetchSubredditData(mOauthRetrofit, mRetrofit, subredditName, mAccessToken, new FetchSubredditData.FetchSubredditDataListener() {
                 @Override
                 public void onFetchSubredditDataSuccess(SubredditData subredditData, int nCurrentOnlineSubscribers) {
                     mNCurrentOnlineSubscribers = nCurrentOnlineSubscribers;
                     nOnlineSubscribersTextView.setText(getString(R.string.online_subscribers_number_detail, nCurrentOnlineSubscribers));
-                    InsertSubredditData.insertSubredditData(mExecutor, new Handler(), mRedditDataRoomDatabase,
-                            subredditData, () -> mFetchSubredditInfoSuccess = true);
+                    if (isOnCreateActivity) {
+                        mFetchSubredditInfoSuccess = true;
+                        isOnCreateActivity = false;
+                    } else {
+                        InsertSubredditData.insertSubredditData(mExecutor, new Handler(), mRedditDataRoomDatabase,
+                                subredditData, () -> mFetchSubredditInfoSuccess = true);
+                    }
                 }
 
                 @Override
@@ -562,7 +650,7 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
             }
             case SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_REFRESH: {
                 if (sectionsPagerAdapter != null) {
-                    sectionsPagerAdapter.refresh();
+                    sectionsPagerAdapter.refresh(false);
                 }
                 break;
             }
@@ -602,37 +690,38 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
                 break;
             case SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_UPVOTED: {
                 Intent intent = new Intent(this, AccountPostsActivity.class);
-                intent = new Intent(this, AccountPostsActivity.class);
-                intent.putExtra(AccountPostsActivity.EXTRA_USER_WHERE, PostDataSource.USER_WHERE_UPVOTED);
+                intent.putExtra(AccountPostsActivity.EXTRA_USER_WHERE, PostPagingSource.USER_WHERE_UPVOTED);
                 startActivity(intent);
                 break;
             }
             case SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_DOWNVOTED: {
                 Intent intent = new Intent(this, AccountPostsActivity.class);
-                intent = new Intent(this, AccountPostsActivity.class);
-                intent.putExtra(AccountPostsActivity.EXTRA_USER_WHERE, PostDataSource.USER_WHERE_DOWNVOTED);
+                intent.putExtra(AccountPostsActivity.EXTRA_USER_WHERE, PostPagingSource.USER_WHERE_DOWNVOTED);
                 startActivity(intent);
                 break;
             }
             case SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_HIDDEN: {
                 Intent intent = new Intent(this, AccountPostsActivity.class);
-                intent = new Intent(this, AccountPostsActivity.class);
-                intent.putExtra(AccountPostsActivity.EXTRA_USER_WHERE, PostDataSource.USER_WHERE_HIDDEN);
+                intent.putExtra(AccountPostsActivity.EXTRA_USER_WHERE, PostPagingSource.USER_WHERE_HIDDEN);
                 startActivity(intent);
                 break;
             }
             case SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_SAVED: {
                 Intent intent = new Intent(this, AccountPostsActivity.class);
-                intent = new Intent(this, AccountPostsActivity.class);
-                intent.putExtra(AccountPostsActivity.EXTRA_USER_WHERE, PostDataSource.USER_WHERE_SAVED);
+                intent.putExtra(AccountPostsActivity.EXTRA_USER_WHERE, PostPagingSource.USER_WHERE_SAVED);
                 startActivity(intent);
                 break;
             }
             case SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_GILDED: {
                 Intent intent = new Intent(this, AccountPostsActivity.class);
-                intent = new Intent(this, AccountPostsActivity.class);
-                intent.putExtra(AccountPostsActivity.EXTRA_USER_WHERE, PostDataSource.USER_WHERE_GILDED);
+                intent.putExtra(AccountPostsActivity.EXTRA_USER_WHERE, PostPagingSource.USER_WHERE_GILDED);
                 startActivity(intent);
+                break;
+            }
+            case SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_GO_TO_TOP: {
+                if (sectionsPagerAdapter != null) {
+                    sectionsPagerAdapter.goBackToTop();
+                }
                 break;
             }
             default:
@@ -682,88 +771,84 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
                 return R.drawable.ic_outline_bookmarks_24dp;
             case SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_GILDED:
                 return R.drawable.ic_star_border_24dp;
+            case SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_GO_TO_TOP:
+                return R.drawable.ic_keyboard_double_arrow_up_24;
             default:
                 return R.drawable.ic_account_circle_24dp;
         }
     }
 
     private void bindView() {
-        if (mAccessToken != null) {
-            if (mMessageFullname != null) {
-                ReadMessage.readMessage(mOauthRetrofit, mAccessToken, mMessageFullname, new ReadMessage.ReadMessageListener() {
-                    @Override
-                    public void readSuccess() {
-                        mMessageFullname = null;
-                    }
-
-                    @Override
-                    public void readFailed() {
-
-                    }
-                });
-            }
-
-            if (showBottomAppBar) {
-                int optionCount = mBottomAppBarSharedPreference.getInt(SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_COUNT, 4);
-                int option1 = mBottomAppBarSharedPreference.getInt(SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_1, SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_HOME);
-                int option2 = mBottomAppBarSharedPreference.getInt(SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_2, SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_SUBSCRIPTIONS);
-
-                bottomNavigationView.setVisibility(View.VISIBLE);
-
-                if (optionCount == 2) {
-                    linearLayoutBottomAppBar.setWeightSum(3);
-                    option1BottomAppBar.setVisibility(View.GONE);
-                    option3BottomAppBar.setVisibility(View.GONE);
-
-                    option2BottomAppBar.setImageResource(getBottomAppBarOptionDrawableResource(option1));
-                    option4BottomAppBar.setImageResource(getBottomAppBarOptionDrawableResource(option2));
-
-                    option2BottomAppBar.setOnClickListener(view -> {
-                        bottomAppBarOptionAction(option1);
-                    });
-
-                    option4BottomAppBar.setOnClickListener(view -> {
-                        bottomAppBarOptionAction(option2);
-                    });
-                } else {
-                    int option3 = mBottomAppBarSharedPreference.getInt(SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_3, SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_INBOX);
-                    int option4 = mBottomAppBarSharedPreference.getInt(SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_4, SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_PROFILE);
-
-                    option1BottomAppBar.setImageResource(getBottomAppBarOptionDrawableResource(option1));
-                    option2BottomAppBar.setImageResource(getBottomAppBarOptionDrawableResource(option2));
-                    option3BottomAppBar.setImageResource(getBottomAppBarOptionDrawableResource(option3));
-                    option4BottomAppBar.setImageResource(getBottomAppBarOptionDrawableResource(option4));
-
-                    option1BottomAppBar.setOnClickListener(view -> {
-                        bottomAppBarOptionAction(option1);
-                    });
-
-                    option2BottomAppBar.setOnClickListener(view -> {
-                        bottomAppBarOptionAction(option2);
-                    });
-
-                    option3BottomAppBar.setOnClickListener(view -> {
-                        bottomAppBarOptionAction(option3);
-                    });
-
-                    option4BottomAppBar.setOnClickListener(view -> {
-                        bottomAppBarOptionAction(option4);
-                    });
+        if (mMessageFullname != null) {
+            ReadMessage.readMessage(mOauthRetrofit, mAccessToken, mMessageFullname, new ReadMessage.ReadMessageListener() {
+                @Override
+                public void readSuccess() {
+                    mMessageFullname = null;
                 }
+
+                @Override
+                public void readFailed() {
+
+                }
+            });
+        }
+
+        if (showBottomAppBar) {
+            int optionCount = mBottomAppBarSharedPreference.getInt((mAccessToken == null ? "-" : "") + SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_COUNT, 4);
+            int option1 = mBottomAppBarSharedPreference.getInt((mAccessToken == null ? "-" : "") + SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_1, SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_HOME);
+            int option2 = mBottomAppBarSharedPreference.getInt((mAccessToken == null ? "-" : "") + SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_2, SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_SUBSCRIPTIONS);
+
+            bottomNavigationView.setVisibility(View.VISIBLE);
+
+            if (optionCount == 2) {
+                linearLayoutBottomAppBar.setWeightSum(3);
+                option1BottomAppBar.setVisibility(View.GONE);
+                option3BottomAppBar.setVisibility(View.GONE);
+
+                option2BottomAppBar.setImageResource(getBottomAppBarOptionDrawableResource(option1));
+                option4BottomAppBar.setImageResource(getBottomAppBarOptionDrawableResource(option2));
+
+                option2BottomAppBar.setOnClickListener(view -> {
+                    bottomAppBarOptionAction(option1);
+                });
+
+                option4BottomAppBar.setOnClickListener(view -> {
+                    bottomAppBarOptionAction(option2);
+                });
             } else {
-                CoordinatorLayout.LayoutParams lp = (CoordinatorLayout.LayoutParams) fab.getLayoutParams();
-                lp.setAnchorId(View.NO_ID);
-                lp.gravity = Gravity.END | Gravity.BOTTOM;
-                fab.setLayoutParams(lp);
+                int option3 = mBottomAppBarSharedPreference.getInt((mAccessToken == null ? "-" : "") + SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_3, mAccessToken == null ? SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_MULTIREDDITS : SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_INBOX);
+                int option4 = mBottomAppBarSharedPreference.getInt((mAccessToken == null ? "-" : "") + SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_4, mAccessToken == null ? SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_REFRESH : SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_OPTION_PROFILE);
+
+                option1BottomAppBar.setImageResource(getBottomAppBarOptionDrawableResource(option1));
+                option2BottomAppBar.setImageResource(getBottomAppBarOptionDrawableResource(option2));
+                option3BottomAppBar.setImageResource(getBottomAppBarOptionDrawableResource(option3));
+                option4BottomAppBar.setImageResource(getBottomAppBarOptionDrawableResource(option4));
+
+                option1BottomAppBar.setOnClickListener(view -> {
+                    bottomAppBarOptionAction(option1);
+                    //Toast.makeText(this, "s " + collapsingToolbarLayout.getScrimVisibleHeightTrigger(), Toast.LENGTH_SHORT).show();
+                });
+
+                option2BottomAppBar.setOnClickListener(view -> {
+                    bottomAppBarOptionAction(option2);
+                });
+
+                option3BottomAppBar.setOnClickListener(view -> {
+                    bottomAppBarOptionAction(option3);
+                });
+
+                option4BottomAppBar.setOnClickListener(view -> {
+                    bottomAppBarOptionAction(option4);
+                });
             }
         } else {
             CoordinatorLayout.LayoutParams lp = (CoordinatorLayout.LayoutParams) fab.getLayoutParams();
             lp.setAnchorId(View.NO_ID);
             lp.gravity = Gravity.END | Gravity.BOTTOM;
             fab.setLayoutParams(lp);
-            bottomNavigationView.setVisibility(View.GONE);
         }
-        fabOption = mBottomAppBarSharedPreference.getInt(SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_FAB, SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_FAB_SUBMIT_POSTS);
+
+        fabOption = mBottomAppBarSharedPreference.getInt((mAccessToken == null ? "-" : "") + SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_FAB, SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_FAB_SUBMIT_POSTS);
         switch (fabOption) {
             case SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_FAB_REFRESH:
                 fab.setImageResource(R.drawable.ic_refresh_24dp);
@@ -810,7 +895,7 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
             switch (fabOption) {
                 case SharedPreferencesUtils.OTHER_ACTIVITIES_BOTTOM_APP_BAR_FAB_REFRESH: {
                     if (sectionsPagerAdapter != null) {
-                        sectionsPagerAdapter.refresh();
+                        sectionsPagerAdapter.refresh(false);
                     }
                     break;
                 }
@@ -978,10 +1063,8 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
                     lockSwipeRightToGoBack();
                 }
 
-                if (mAccessToken != null) {
-                    if (showBottomAppBar) {
-                        bottomNavigationView.performShow();
-                    }
+                if (showBottomAppBar) {
+                    bottomNavigationView.performShow();
                 }
                 fab.show();
 
@@ -997,7 +1080,7 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
                     tab.setText(R.string.posts);
                     break;
                 case 1:
-                    tab.setText(R.string.sidebar);
+                    tab.setText(R.string.about);
             }
         }).attach();
         fixViewPager2Sensitivity(viewPager2);
@@ -1020,18 +1103,6 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.view_subreddit_detail_activity, menu);
         applyMenuItemTheme(menu);
-        mMenu = menu;
-        MenuItem lazyModeItem = mMenu.findItem(R.id.action_lazy_mode_view_subreddit_detail_activity);
-        if (isInLazyMode) {
-            lazyModeItem.setTitle(R.string.action_stop_lazy_mode);
-            params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED);
-            collapsingToolbarLayout.setLayoutParams(params);
-        } else {
-            lazyModeItem.setTitle(R.string.action_start_lazy_mode);
-            params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS |
-                    AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS_COLLAPSED);
-            collapsingToolbarLayout.setLayoutParams(params);
-        }
         return true;
     }
 
@@ -1050,36 +1121,8 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
             startActivity(intent);
             return true;
         } else if (itemId == R.id.action_refresh_view_subreddit_detail_activity) {
-            if (mMenu != null) {
-                mMenu.findItem(R.id.action_lazy_mode_view_subreddit_detail_activity).setTitle(R.string.action_start_lazy_mode);
-            }
             if (sectionsPagerAdapter != null) {
-                sectionsPagerAdapter.refresh();
-                mFetchSubredditInfoSuccess = false;
-                fetchSubredditData();
-            }
-            return true;
-        } else if (itemId == R.id.action_lazy_mode_view_subreddit_detail_activity) {
-            if (sectionsPagerAdapter != null) {
-                MenuItem lazyModeItem = mMenu.findItem(R.id.action_lazy_mode_view_subreddit_detail_activity);
-                if (isInLazyMode) {
-                    isInLazyMode = false;
-                    sectionsPagerAdapter.stopLazyMode();
-                    lazyModeItem.setTitle(R.string.action_start_lazy_mode);
-                    params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS |
-                            AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS_COLLAPSED);
-                    collapsingToolbarLayout.setLayoutParams(params);
-                } else {
-                    isInLazyMode = true;
-                    if (sectionsPagerAdapter.startLazyMode()) {
-                        lazyModeItem.setTitle(R.string.action_stop_lazy_mode);
-                        appBarLayout.setExpanded(false);
-                        params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_EXIT_UNTIL_COLLAPSED);
-                        collapsingToolbarLayout.setLayoutParams(params);
-                    } else {
-                        isInLazyMode = false;
-                    }
-                }
+                sectionsPagerAdapter.refresh(true);
             }
             return true;
         } else if (itemId == R.id.action_change_post_layout_view_subreddit_detail_activity) {
@@ -1102,6 +1145,11 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
             }
             Intent intent = new Intent(this, MultiredditSelectionActivity.class);
             startActivityForResult(intent, ADD_TO_MULTIREDDIT_REQUEST_CODE);
+        } else if (itemId == R.id.action_add_to_post_filter_view_subreddit_detail_activity) {
+            Intent intent = new Intent(this, PostFilterPreferenceActivity.class);
+            intent.putExtra(PostFilterPreferenceActivity.EXTRA_SUBREDDIT_NAME, subredditName);
+            startActivity(intent);
+            return true;
         } else if (itemId == R.id.action_share_view_subreddit_detail_activity) {
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
             shareIntent.setType("text/plain");
@@ -1111,6 +1159,17 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
             } else {
                 Toast.makeText(this, R.string.no_app, Toast.LENGTH_SHORT).show();
             }
+            return true;
+        } else if (itemId == R.id.action_go_to_wiki_view_subreddit_detail_activity) {
+            Intent wikiIntent = new Intent(this, WikiActivity.class);
+            wikiIntent.putExtra(WikiActivity.EXTRA_SUBREDDIT_NAME, subredditName);
+            wikiIntent.putExtra(WikiActivity.EXTRA_WIKI_PATH, "index");
+            startActivity(wikiIntent);
+            return true;
+        } else if (itemId == R.id.action_contact_mods_view_subreddit_detail_activity) {
+            Intent intent = new Intent(this, SendPrivateMessageActivity.class);
+            intent.putExtra(SendPrivateMessageActivity.EXTRA_RECIPIENT_USERNAME, "r/" + subredditName);
+            startActivity(intent);
             return true;
         }
         return false;
@@ -1149,7 +1208,6 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
         super.onSaveInstanceState(outState);
         outState.putBoolean(FETCH_SUBREDDIT_INFO_STATE, mFetchSubredditInfoSuccess);
         outState.putInt(CURRENT_ONLINE_SUBSCRIBERS_STATE, mNCurrentOnlineSubscribers);
-        outState.putBoolean(IS_IN_LAZY_MODE_STATE, isInLazyMode);
         outState.putString(MESSAGE_FULLNAME_STATE, mMessageFullname);
         outState.putString(NEW_ACCOUNT_NAME_STATE, mNewAccountName);
     }
@@ -1216,6 +1274,11 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
                 intent = new Intent(this, PostVideoActivity.class);
                 intent.putExtra(PostVideoActivity.EXTRA_SUBREDDIT_NAME, subredditName);
                 startActivity(intent);
+                break;
+            case PostTypeBottomSheetFragment.TYPE_GALLERY:
+                intent = new Intent(this, PostGalleryActivity.class);
+                intent.putExtra(PostVideoActivity.EXTRA_SUBREDDIT_NAME, subredditName);
+                startActivity(intent);
         }
     }
 
@@ -1227,25 +1290,21 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
 
     @Override
     public void contentScrollUp() {
-        if (mAccessToken != null) {
-            if (showBottomAppBar && !lockBottomAppBar) {
-                bottomNavigationView.performShow();
-            }
-            if (!(showBottomAppBar && lockBottomAppBar)) {
-                fab.show();
-            }
+        if (showBottomAppBar && !lockBottomAppBar) {
+            bottomNavigationView.performShow();
+        }
+        if (!(showBottomAppBar && lockBottomAppBar)) {
+            fab.show();
         }
     }
 
     @Override
     public void contentScrollDown() {
-        if (mAccessToken != null) {
-            if (!(showBottomAppBar && lockBottomAppBar)) {
-                fab.hide();
-            }
-            if (showBottomAppBar && !lockBottomAppBar) {
-                bottomNavigationView.performHide();
-            }
+        if (!(showBottomAppBar && lockBottomAppBar)) {
+            fab.hide();
+        }
+        if (showBottomAppBar && !lockBottomAppBar) {
+            bottomNavigationView.performHide();
         }
     }
 
@@ -1289,7 +1348,7 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
                 break;
             case FABMoreOptionsBottomSheetFragment.FAB_OPTION_REFRESH:
                 if (sectionsPagerAdapter != null) {
-                    sectionsPagerAdapter.refresh();
+                    sectionsPagerAdapter.refresh(false);
                 }
                 break;
             case FABMoreOptionsBottomSheetFragment.FAB_OPTION_CHANGE_SORT_TYPE:
@@ -1334,8 +1393,19 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
     private void goToSubreddit() {
         View rootView = getLayoutInflater().inflate(R.layout.dialog_go_to_thing_edit_text, coordinatorLayout, false);
         TextInputEditText thingEditText = rootView.findViewById(R.id.text_input_edit_text_go_to_thing_edit_text);
+        RecyclerView recyclerView = rootView.findViewById(R.id.recycler_view_go_to_thing_edit_text);
         thingEditText.requestFocus();
         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        SubredditAutocompleteRecyclerViewAdapter adapter = new SubredditAutocompleteRecyclerViewAdapter(
+                this, mCustomThemeWrapper, subredditData -> {
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(thingEditText.getWindowToken(), 0);
+            }
+            Intent intent = new Intent(ViewSubredditDetailActivity.this, ViewSubredditDetailActivity.class);
+            intent.putExtra(ViewSubredditDetailActivity.EXTRA_SUBREDDIT_NAME_KEY, subredditData.getName());
+            startActivity(intent);
+        });
+        recyclerView.setAdapter(adapter);
         if (imm != null) {
             imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
         }
@@ -1351,6 +1421,51 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
             }
             return false;
         });
+
+        boolean nsfw = mNsfwAndSpoilerSharedPreferences.getBoolean((mAccountName == null ? "" : mAccountName) + SharedPreferencesUtils.NSFW_BASE, false);
+        thingEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if (subredditAutocompleteCall != null) {
+                    subredditAutocompleteCall.cancel();
+                }
+                subredditAutocompleteCall = mOauthRetrofit.create(RedditAPI.class).subredditAutocomplete(APIUtils.getOAuthHeader(mAccessToken),
+                        editable.toString(), nsfw);
+                subredditAutocompleteCall.enqueue(new Callback<String>() {
+                    @Override
+                    public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
+                        if (response.isSuccessful()) {
+                            ParseSubredditData.parseSubredditListingData(response.body(), nsfw, new ParseSubredditData.ParseSubredditListingDataListener() {
+                                @Override
+                                public void onParseSubredditListingDataSuccess(ArrayList<SubredditData> subredditData, String after) {
+                                    adapter.setSubreddits(subredditData);
+                                }
+
+                                @Override
+                                public void onParseSubredditListingDataFail() {
+
+                                }
+                            });
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+
+                    }
+                });
+            }
+        });
         new MaterialAlertDialogBuilder(this, R.style.MaterialAlertDialogTheme)
                 .setTitle(R.string.go_to_subreddit)
                 .setView(rootView)
@@ -1363,7 +1478,11 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
                     subredditIntent.putExtra(ViewSubredditDetailActivity.EXTRA_SUBREDDIT_NAME_KEY, thingEditText.getText().toString());
                     startActivity(subredditIntent);
                 })
-                .setNegativeButton(R.string.cancel, null)
+                .setNegativeButton(R.string.cancel, (dialogInterface, i) -> {
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(thingEditText.getWindowToken(), 0);
+                    }
+                })
                 .setOnDismissListener(dialogInterface -> {
                     if (imm != null) {
                         imm.hideSoftInputFromWindow(thingEditText.getWindowToken(), 0);
@@ -1404,7 +1523,11 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
                     userIntent.putExtra(ViewUserDetailActivity.EXTRA_USER_NAME_KEY, thingEditText.getText().toString());
                     startActivity(userIntent);
                 })
-                .setNegativeButton(R.string.cancel, null)
+                .setNegativeButton(R.string.cancel, (dialogInterface, i) -> {
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(thingEditText.getWindowToken(), 0);
+                    }
+                })
                 .setOnDismissListener(dialogInterface -> {
                     if (imm != null) {
                         imm.hideSoftInputFromWindow(thingEditText.getWindowToken(), 0);
@@ -1433,6 +1556,18 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
         InsertReadPost.insertReadPost(mRedditDataRoomDatabase, mExecutor, mAccountName, post.getId());
     }
 
+    private void lockSwipeRightToGoBack() {
+        if (mSlidrInterface != null) {
+            mSlidrInterface.lock();
+        }
+    }
+
+    private void unlockSwipeRightToGoBack() {
+        if (mSlidrInterface != null) {
+            mSlidrInterface.unlock();
+        }
+    }
+
     private class SectionsPagerAdapter extends FragmentStateAdapter {
 
         SectionsPagerAdapter(FragmentActivity fa) {
@@ -1446,7 +1581,7 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
                 PostFragment fragment = new PostFragment();
                 Bundle bundle = new Bundle();
                 bundle.putString(PostFragment.EXTRA_NAME, subredditName);
-                bundle.putInt(PostFragment.EXTRA_POST_TYPE, PostDataSource.TYPE_SUBREDDIT);
+                bundle.putInt(PostFragment.EXTRA_POST_TYPE, PostPagingSource.TYPE_SUBREDDIT);
                 bundle.putString(PostFragment.EXTRA_ACCESS_TOKEN, mAccessToken);
                 bundle.putString(PostFragment.EXTRA_ACCOUNT_NAME, mAccountName);
                 fragment.setArguments(bundle);
@@ -1454,6 +1589,7 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
             }
             SidebarFragment fragment = new SidebarFragment();
             Bundle bundle = new Bundle();
+            bundle.putString(SidebarFragment.EXTRA_ACCESS_TOKEN, mAccessToken);
             bundle.putString(SidebarFragment.EXTRA_SUBREDDIT_NAME, subredditName);
             fragment.setArguments(bundle);
             return fragment;
@@ -1477,27 +1613,16 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
             return false;
         }
 
-        public void refresh() {
+        public void refresh(boolean refreshSubredditData) {
             Fragment fragment = getCurrentFragment();
             if (fragment instanceof PostFragment) {
                 ((PostFragment) fragment).refresh();
+                if (refreshSubredditData) {
+                    mFetchSubredditInfoSuccess = false;
+                    fetchSubredditData();
+                }
             } else if (fragment instanceof SidebarFragment) {
                 ((SidebarFragment) fragment).fetchSubredditData();
-            }
-        }
-
-        boolean startLazyMode() {
-            Fragment fragment = getCurrentFragment();
-            if (fragment instanceof FragmentCommunicator) {
-                return ((FragmentCommunicator) fragment).startLazyMode();
-            }
-            return false;
-        }
-
-        void stopLazyMode() {
-            Fragment fragment = getCurrentFragment();
-            if (fragment instanceof FragmentCommunicator) {
-                ((FragmentCommunicator) fragment).stopLazyMode();
             }
         }
 
@@ -1563,18 +1688,6 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
         @Override
         public int getItemCount() {
             return 2;
-        }
-    }
-
-    private void lockSwipeRightToGoBack() {
-        if (mSlidrInterface != null) {
-            mSlidrInterface.lock();
-        }
-    }
-
-    private void unlockSwipeRightToGoBack() {
-        if (mSlidrInterface != null) {
-            mSlidrInterface.unlock();
         }
     }
 }

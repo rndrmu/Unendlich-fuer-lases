@@ -1,8 +1,6 @@
 package ml.docilealligator.infinityforreddit.services;
 
 import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentResolver;
@@ -22,6 +20,7 @@ import android.os.Message;
 import android.os.Process;
 import android.provider.MediaStore;
 
+import androidx.core.app.NotificationChannelCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.documentfile.provider.DocumentFile;
@@ -58,6 +57,7 @@ public class DownloadMediaService extends Service {
     public static final String EXTRA_FILE_NAME = "EFN";
     public static final String EXTRA_SUBREDDIT_NAME = "ESN";
     public static final String EXTRA_MEDIA_TYPE = "EIG";
+    public static final String EXTRA_IS_NSFW = "EIN";
     public static final int EXTRA_MEDIA_TYPE_IMAGE = 0;
     public static final int EXTRA_MEDIA_TYPE_GIF = 1;
     public static final int EXTRA_MEDIA_TYPE_VIDEO = 2;
@@ -102,6 +102,7 @@ public class DownloadMediaService extends Service {
             String fileName = intent.getString(EXTRA_FILE_NAME);
             String subredditName = intent.getString(EXTRA_SUBREDDIT_NAME);
             int mediaType = intent.getInt(EXTRA_MEDIA_TYPE, EXTRA_MEDIA_TYPE_IMAGE);
+            boolean isNsfw = intent.getBoolean(EXTRA_IS_NSFW, false);
             String mimeType = mediaType == EXTRA_MEDIA_TYPE_VIDEO ? "video/*" : "image/*";
 
             final DownloadProgressResponseBody.ProgressListener progressListener = new DownloadProgressResponseBody.ProgressListener() {
@@ -140,7 +141,7 @@ public class DownloadMediaService extends Service {
             try {
                 response = retrofit.create(DownloadFile.class).downloadFile(fileUrl).execute();
                 if (response.isSuccessful() && response.body() != null) {
-                    String destinationFileDirectory = getDownloadLocation(mediaType);
+                    String destinationFileDirectory = getDownloadLocation(mediaType, isNsfw);
                     if (destinationFileDirectory.equals("")) {
                         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                             File directory = getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
@@ -263,7 +264,7 @@ public class DownloadMediaService extends Service {
                     contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, destinationFileUriString);
                     contentValues.put(mediaType == EXTRA_MEDIA_TYPE_VIDEO ? MediaStore.Video.Media.IS_PENDING : MediaStore.Images.Media.IS_PENDING, 1);
 
-                    final Uri contentUri = mediaType == EXTRA_MEDIA_TYPE_VIDEO ? MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL) : MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
+                    final Uri contentUri = mediaType == EXTRA_MEDIA_TYPE_VIDEO ? MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY) : MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
                     Uri uri = contentResolver.insert(contentUri, contentValues);
 
                     if (uri == null) {
@@ -367,16 +368,13 @@ public class DownloadMediaService extends Service {
         int mediaType = intent.getIntExtra(EXTRA_MEDIA_TYPE, EXTRA_MEDIA_TYPE_IMAGE);
         builder = new NotificationCompat.Builder(this, getNotificationChannelId(mediaType));
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel serviceChannel;
-            serviceChannel = new NotificationChannel(
-                    getNotificationChannelId(mediaType),
-                    getNotificationChannel(mediaType),
-                    NotificationManager.IMPORTANCE_LOW
-            );
-
-            notificationManager.createNotificationChannel(serviceChannel);
-        }
+        NotificationChannelCompat serviceChannel =
+                new NotificationChannelCompat.Builder(
+                        getNotificationChannelId(mediaType),
+                        NotificationManagerCompat.IMPORTANCE_LOW)
+                        .setName(getNotificationChannel(mediaType))
+                        .build();
+        notificationManager.createNotificationChannel(serviceChannel);
 
         int randomNotificationIdOffset = new Random().nextInt(10000);
         switch (intent.getIntExtra(EXTRA_MEDIA_TYPE, EXTRA_MEDIA_TYPE_IMAGE)) {
@@ -466,7 +464,10 @@ public class DownloadMediaService extends Service {
         }
     }
 
-    private String getDownloadLocation(int mediaType) {
+    private String getDownloadLocation(int mediaType, boolean isNsfw) {
+        if (isNsfw && mSharedPreferences.getBoolean(SharedPreferencesUtils.SAVE_NSFW_MEDIA_IN_DIFFERENT_FOLDER, false)) {
+            return mSharedPreferences.getString(SharedPreferencesUtils.NSFW_DOWNLOAD_LOCATION, "");
+        }
         switch (mediaType) {
             case EXTRA_MEDIA_TYPE_GIF:
                 return mSharedPreferences.getString(SharedPreferencesUtils.GIF_DOWNLOAD_LOCATION, "");

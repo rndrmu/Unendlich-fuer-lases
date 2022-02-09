@@ -1,7 +1,6 @@
 package ml.docilealligator.infinityforreddit.bottomsheetfragments;
 
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Build;
@@ -14,26 +13,27 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.deishelon.roundedbottomsheet.RoundedBottomSheetDialogFragment;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.SortType;
 import ml.docilealligator.infinityforreddit.SortTypeSelectionCallback;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
+import ml.docilealligator.infinityforreddit.customviews.LandscapeExpandedRoundedBottomSheetDialogFragment;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class SearchUserAndSubredditSortTypeBottomSheetFragment extends RoundedBottomSheetDialogFragment {
+public class SearchUserAndSubredditSortTypeBottomSheetFragment extends LandscapeExpandedRoundedBottomSheetDialogFragment {
 
     public static final String EXTRA_FRAGMENT_POSITION = "EFP";
     @BindView(R.id.relevance_type_text_view_search_user_and_subreddit_sort_type_bottom_sheet_fragment)
     TextView relevanceTypeTextView;
     @BindView(R.id.activity_type_text_view_search_user_and_subreddit_sort_type_bottom_sheet_fragment)
     TextView activityTypeTextView;
-    private Activity activity;
+    private BaseActivity activity;
     public SearchUserAndSubredditSortTypeBottomSheetFragment() {
         // Required empty public constructor
     }
@@ -65,12 +65,16 @@ public class SearchUserAndSubredditSortTypeBottomSheetFragment extends RoundedBo
             dismiss();
         });
 
+        if (activity.typeface != null) {
+            Utils.setFontToAllTextViews(rootView, activity.typeface);
+        }
+
         return rootView;
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        this.activity = (Activity) context;
+        this.activity = (BaseActivity) context;
     }
 }

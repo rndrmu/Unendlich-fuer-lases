@@ -18,6 +18,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.r0adkll.slidr.Slidr;
 
 import org.greenrobot.eventbus.EventBus;
@@ -46,7 +47,7 @@ import retrofit2.Retrofit;
 
 public class MultiredditSelectionActivity extends BaseActivity implements ActivityToolbarInterface {
 
-    static final String EXTRA_RETURN_MULTIREDDIT = "ERM";
+    public static final String EXTRA_RETURN_MULTIREDDIT = "ERM";
 
     private static final String INSERT_SUBSCRIBED_MULTIREDDIT_STATE = "ISSS";
     private static final String FRAGMENT_OUT_STATE = "FOS";
@@ -55,6 +56,8 @@ public class MultiredditSelectionActivity extends BaseActivity implements Activi
     CoordinatorLayout coordinatorLayout;
     @BindView(R.id.appbar_layout_multireddit_selection_activity)
     AppBarLayout appBarLayout;
+    @BindView(R.id.collapsing_toolbar_layout_multireddit_selection_activity)
+    CollapsingToolbarLayout collapsingToolbarLayout;
     @BindView(R.id.toolbar_multireddit_selection_activity)
     Toolbar toolbar;
     @Inject
@@ -142,7 +145,7 @@ public class MultiredditSelectionActivity extends BaseActivity implements Activi
     @Override
     protected void applyCustomTheme() {
         coordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, collapsingToolbarLayout, toolbar);
     }
 
     private void bindView(boolean initializeFragment) {
@@ -150,7 +153,9 @@ public class MultiredditSelectionActivity extends BaseActivity implements Activi
             return;
         }
 
-        loadMultiReddits();
+        if (mAccessToken != null) {
+            loadMultiReddits();
+        }
 
         if (initializeFragment) {
             mFragment = new MultiRedditListingFragment();
@@ -168,7 +173,7 @@ public class MultiredditSelectionActivity extends BaseActivity implements Activi
             FetchMyMultiReddits.fetchMyMultiReddits(mOauthRetrofit, mAccessToken, new FetchMyMultiReddits.FetchMyMultiRedditsListener() {
                 @Override
                 public void success(ArrayList<MultiReddit> multiReddits) {
-                    InsertMultireddit.insertMultireddit(mExecutor, new Handler(), mRedditDataRoomDatabase,
+                    InsertMultireddit.insertMultireddits(mExecutor, new Handler(), mRedditDataRoomDatabase,
                             multiReddits, mAccountName, () -> {
                         mInsertSuccess = true;
                         ((MultiRedditListingFragment) mFragment).stopRefreshProgressbar();

@@ -14,18 +14,21 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.ReportReason;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
+import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 
 public class ReportReasonRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
+    private BaseActivity activity;
     private ArrayList<ReportReason> generalReasons;
     private ArrayList<ReportReason> rules;
     private int primaryTextColor;
     private int colorAccent;
 
-    public ReportReasonRecyclerViewAdapter(CustomThemeWrapper customThemeWrapper, ArrayList<ReportReason> generalReasons) {
+    public ReportReasonRecyclerViewAdapter(BaseActivity activity, CustomThemeWrapper customThemeWrapper, ArrayList<ReportReason> generalReasons) {
+        this.activity = activity;
         this.generalReasons = generalReasons;
         primaryTextColor = customThemeWrapper.getPrimaryTextColor();
         colorAccent = customThemeWrapper.getColorAccent();
@@ -42,9 +45,9 @@ public class ReportReasonRecyclerViewAdapter extends RecyclerView.Adapter<Recycl
         if (holder instanceof ReasonViewHolder) {
             ReportReason reportReason;
             if (position >= generalReasons.size()) {
-                reportReason = rules.get(holder.getAdapterPosition() - generalReasons.size());
+                reportReason = rules.get(holder.getBindingAdapterPosition() - generalReasons.size());
             } else {
-                reportReason = generalReasons.get(holder.getAdapterPosition());
+                reportReason = generalReasons.get(holder.getBindingAdapterPosition());
             }
             ((ReasonViewHolder) holder).reasonTextView.setText(reportReason.getReportReason());
             ((ReasonViewHolder) holder).checkBox.setChecked(reportReason.isSelected());
@@ -101,6 +104,10 @@ public class ReportReasonRecyclerViewAdapter extends RecyclerView.Adapter<Recycl
             reasonTextView.setTextColor(primaryTextColor);
             checkBox.setButtonTintList(ColorStateList.valueOf(colorAccent));
 
+            if (activity.typeface != null) {
+                reasonTextView.setTypeface(activity.typeface);
+            }
+
             checkBox.setOnClickListener(view -> {
                 for (int i = 0; i < generalReasons.size(); i++) {
                     if (generalReasons.get(i).isSelected()) {
@@ -119,10 +126,10 @@ public class ReportReasonRecyclerViewAdapter extends RecyclerView.Adapter<Recycl
                     }
                 }
 
-                if (getAdapterPosition() >= generalReasons.size()) {
-                    rules.get(getAdapterPosition() - generalReasons.size()).setSelected(checkBox.isChecked());
+                if (getBindingAdapterPosition() >= generalReasons.size()) {
+                    rules.get(getBindingAdapterPosition() - generalReasons.size()).setSelected(checkBox.isChecked());
                 } else {
-                    generalReasons.get(getAdapterPosition()).setSelected(checkBox.isChecked());
+                    generalReasons.get(getBindingAdapterPosition()).setSelected(checkBox.isChecked());
                 }
             });
 

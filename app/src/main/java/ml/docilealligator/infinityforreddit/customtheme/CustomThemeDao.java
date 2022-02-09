@@ -13,8 +13,14 @@ public interface CustomThemeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(CustomTheme customTheme);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<CustomTheme> customThemes);
+
     @Query("SELECT * FROM custom_themes")
     LiveData<List<CustomTheme>> getAllCustomThemes();
+
+    @Query("SELECT * FROM custom_themes")
+    List<CustomTheme> getAllCustomThemesList();
 
     @Query("SELECT * FROM custom_themes WHERE is_light_theme = 1 LIMIT 1")
     CustomTheme getLightCustomTheme();

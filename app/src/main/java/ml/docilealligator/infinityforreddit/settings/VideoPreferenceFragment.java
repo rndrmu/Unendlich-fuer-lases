@@ -1,16 +1,11 @@
 package ml.docilealligator.infinityforreddit.settings;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
-import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SeekBarPreference;
 import androidx.preference.SwitchPreference;
 
@@ -19,18 +14,19 @@ import org.greenrobot.eventbus.EventBus;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import ml.docilealligator.infinityforreddit.Infinity;
+import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.customviews.CustomFontPreferenceFragmentCompat;
 import ml.docilealligator.infinityforreddit.events.ChangeAutoplayNsfwVideosEvent;
 import ml.docilealligator.infinityforreddit.events.ChangeMuteAutoplayingVideosEvent;
 import ml.docilealligator.infinityforreddit.events.ChangeMuteNSFWVideoEvent;
+import ml.docilealligator.infinityforreddit.events.ChangeRememberMutingOptionInPostFeedEvent;
 import ml.docilealligator.infinityforreddit.events.ChangeStartAutoplayVisibleAreaOffsetEvent;
 import ml.docilealligator.infinityforreddit.events.ChangeVideoAutoplayEvent;
-import ml.docilealligator.infinityforreddit.Infinity;
-import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 
-public class VideoPreferenceFragment extends PreferenceFragmentCompat {
+public class VideoPreferenceFragment extends CustomFontPreferenceFragmentCompat {
 
-    private Activity activity;
     @Inject
     @Named("default")
     SharedPreferences sharedPreferences;
@@ -41,8 +37,13 @@ public class VideoPreferenceFragment extends PreferenceFragmentCompat {
 
         ((Infinity) activity.getApplication()).getAppComponent().inject(this);
 
+        if (activity.typeface != null) {
+            setFont(activity.typeface);
+        }
+
         ListPreference videoAutoplayListPreference = findPreference(SharedPreferencesUtils.VIDEO_AUTOPLAY);
         SwitchPreference muteAutoplayingVideosSwitchPreference = findPreference(SharedPreferencesUtils.MUTE_AUTOPLAYING_VIDEOS);
+        SwitchPreference rememberMutingOptionInPostFeedSwitchPreference = findPreference(SharedPreferencesUtils.REMEMBER_MUTING_OPTION_IN_POST_FEED);
         SwitchPreference muteNSFWVideosSwitchPreference = findPreference(SharedPreferencesUtils.MUTE_NSFW_VIDEO);
         SwitchPreference autoplayNsfwVideosSwitchPreference = findPreference(SharedPreferencesUtils.AUTOPLAY_NSFW_VIDEOS);
         SeekBarPreference startAutoplayVisibleAreaOffsetPortrait = findPreference(SharedPreferencesUtils.START_AUTOPLAY_VISIBLE_AREA_OFFSET_PORTRAIT);
@@ -70,6 +71,13 @@ public class VideoPreferenceFragment extends PreferenceFragmentCompat {
         if (muteAutoplayingVideosSwitchPreference != null) {
             muteAutoplayingVideosSwitchPreference.setOnPreferenceChangeListener((preference, newValue) -> {
                 EventBus.getDefault().post(new ChangeMuteAutoplayingVideosEvent((Boolean) newValue));
+                return true;
+            });
+        }
+
+        if (rememberMutingOptionInPostFeedSwitchPreference != null) {
+            rememberMutingOptionInPostFeedSwitchPreference.setOnPreferenceChangeListener((preference, newValue) -> {
+                EventBus.getDefault().post(new ChangeRememberMutingOptionInPostFeedEvent((Boolean) newValue));
                 return true;
             });
         }
@@ -103,11 +111,5 @@ public class VideoPreferenceFragment extends PreferenceFragmentCompat {
                 return true;
             });
         }
-    }
-
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        this.activity = (AppCompatActivity) context;
     }
 }

@@ -1,8 +1,6 @@
 package ml.docilealligator.infinityforreddit.services;
 
 import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentResolver;
@@ -25,8 +23,8 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
 import android.provider.MediaStore;
-import android.util.Log;
 
+import androidx.core.app.NotificationChannelCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.documentfile.provider.DocumentFile;
@@ -65,6 +63,7 @@ public class DownloadRedditVideoService extends Service {
     public static final String EXTRA_VIDEO_URL = "EVU";
     public static final String EXTRA_SUBREDDIT = "ES";
     public static final String EXTRA_POST_ID = "EPI";
+    public static final String EXTRA_IS_NSFW = "EIN";
 
     private static final int NO_ERROR = -1;
     private static final int ERROR_CANNOT_GET_CACHE_DIRECTORY = 0;
@@ -101,6 +100,7 @@ public class DownloadRedditVideoService extends Service {
             String audioUrl = videoUrl.substring(0, videoUrl.lastIndexOf('/')) + "/DASH_audio.mp4";
             String subredditName = intent.getString(EXTRA_SUBREDDIT);
             String fileNameWithoutExtension = subredditName + "-" + intent.getString(EXTRA_POST_ID);
+            boolean isNsfw = intent.getBoolean(EXTRA_IS_NSFW, false);
             int randomNotificationIdOffset = msg.arg1;
 
             final DownloadProgressResponseBody.ProgressListener progressListener = new DownloadProgressResponseBody.ProgressListener() {
@@ -143,7 +143,12 @@ public class DownloadRedditVideoService extends Service {
                     Response<ResponseBody> videoResponse = downloadFile.downloadFile(videoUrl).execute();
                     if (videoResponse.isSuccessful() && videoResponse.body() != null) {
                         String externalCacheDirectoryPath = externalCacheDirectory.getAbsolutePath() + "/";
-                        String destinationFileDirectory = sharedPreferences.getString(SharedPreferencesUtils.VIDEO_DOWNLOAD_LOCATION, "");
+                        String destinationFileDirectory;
+                        if (isNsfw && sharedPreferences.getBoolean(SharedPreferencesUtils.SAVE_NSFW_MEDIA_IN_DIFFERENT_FOLDER, false)) {
+                            destinationFileDirectory = sharedPreferences.getString(SharedPreferencesUtils.NSFW_DOWNLOAD_LOCATION, "");
+                        } else {
+                            destinationFileDirectory = sharedPreferences.getString(SharedPreferencesUtils.VIDEO_DOWNLOAD_LOCATION, "");
+                        }
                         String destinationFileUriString;
                         boolean isDefaultDestination;
                         if (destinationFileDirectory.equals("")) {
@@ -417,7 +422,7 @@ public class DownloadRedditVideoService extends Service {
                     Uri uri = null;
 
                     try {
-                        final Uri contentUri = MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL);
+                        final Uri contentUri = MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY);
                         uri = contentResolver.insert(contentUri, contentValues);
 
                         if (uri == null) {
@@ -502,16 +507,13 @@ public class DownloadRedditVideoService extends Service {
         String subredditName = intent.getStringExtra(EXTRA_SUBREDDIT);
         String fileNameWithoutExtension = subredditName + "-" + intent.getStringExtra(EXTRA_POST_ID);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel serviceChannel;
-            serviceChannel = new NotificationChannel(
-                    NotificationUtils.CHANNEL_ID_DOWNLOAD_REDDIT_VIDEO,
-                    NotificationUtils.CHANNEL_DOWNLOAD_REDDIT_VIDEO,
-                    NotificationManager.IMPORTANCE_LOW
-            );
-
-            notificationManager.createNotificationChannel(serviceChannel);
-        }
+        NotificationChannelCompat serviceChannel =
+                new NotificationChannelCompat.Builder(
+                NotificationUtils.CHANNEL_ID_DOWNLOAD_REDDIT_VIDEO,
+                NotificationManagerCompat.IMPORTANCE_LOW)
+                        .setName(NotificationUtils.CHANNEL_DOWNLOAD_REDDIT_VIDEO)
+                        .build();
+        notificationManager.createNotificationChannel(serviceChannel);
 
         int randomNotificationIdOffset = new Random().nextInt(10000);
         startForeground(

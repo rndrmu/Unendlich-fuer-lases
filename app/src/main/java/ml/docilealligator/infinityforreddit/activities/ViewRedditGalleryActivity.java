@@ -1,24 +1,32 @@
 package ml.docilealligator.infinityforreddit.activities;
 
+import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY;
+import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
+import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO;
+import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES;
+
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.Html;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.viewpager.widget.ViewPager;
-
-import com.thefuntasty.hauler.DragDirection;
-import com.thefuntasty.hauler.HaulerView;
 
 import java.util.ArrayList;
 import java.util.concurrent.Executor;
@@ -26,8 +34,16 @@ import java.util.concurrent.Executor;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import app.futured.hauler.DragDirection;
+import app.futured.hauler.HaulerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import ml.docilealligator.infinityforreddit.CustomFontReceiver;
+import ml.docilealligator.infinityforreddit.Infinity;
+import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.SetAsWallpaperCallback;
+import ml.docilealligator.infinityforreddit.WallpaperSetter;
+import ml.docilealligator.infinityforreddit.customviews.ViewPagerBugFixed;
 import ml.docilealligator.infinityforreddit.font.ContentFontFamily;
 import ml.docilealligator.infinityforreddit.font.ContentFontStyle;
 import ml.docilealligator.infinityforreddit.font.FontFamily;
@@ -36,30 +52,31 @@ import ml.docilealligator.infinityforreddit.font.TitleFontFamily;
 import ml.docilealligator.infinityforreddit.font.TitleFontStyle;
 import ml.docilealligator.infinityforreddit.fragments.ViewRedditGalleryImageOrGifFragment;
 import ml.docilealligator.infinityforreddit.fragments.ViewRedditGalleryVideoFragment;
-import ml.docilealligator.infinityforreddit.Infinity;
 import ml.docilealligator.infinityforreddit.post.Post;
-import ml.docilealligator.infinityforreddit.R;
-import ml.docilealligator.infinityforreddit.SetAsWallpaperCallback;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
-import ml.docilealligator.infinityforreddit.WallpaperSetter;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
-public class ViewRedditGalleryActivity extends AppCompatActivity implements SetAsWallpaperCallback {
+public class ViewRedditGalleryActivity extends AppCompatActivity implements SetAsWallpaperCallback, CustomFontReceiver {
 
     public static final String EXTRA_REDDIT_GALLERY = "ERG";
     public static final String EXTRA_SUBREDDIT_NAME = "ESN";
+    public static final String EXTRA_IS_NSFW = "EIN";
 
     @BindView(R.id.hauler_view_view_reddit_gallery_activity)
     HaulerView haulerView;
     @BindView(R.id.view_pager_view_reddit_gallery_activity)
-    ViewPager viewPager;
-    private SectionsPagerAdapter sectionsPagerAdapter;
-    private ArrayList<Post.Gallery> gallery;
-    private String subredditName;
+    ViewPagerBugFixed viewPager;
     @Inject
     @Named("default")
     SharedPreferences sharedPreferences;
     @Inject
     Executor executor;
+    public Typeface typeface;
+    private SectionsPagerAdapter sectionsPagerAdapter;
+    private ArrayList<Post.Gallery> gallery;
+    private String subredditName;
+    private boolean isNsfw;
+    private boolean useBottomAppBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +84,37 @@ public class ViewRedditGalleryActivity extends AppCompatActivity implements SetA
 
         ((Infinity) getApplication()).getAppComponent().inject(this);
 
-        getTheme().applyStyle(R.style.Theme_Normal, true);
+        boolean systemDefault = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q;
+        int systemThemeType = Integer.parseInt(sharedPreferences.getString(SharedPreferencesUtils.THEME_KEY, "2"));
+        switch (systemThemeType) {
+            case 0:
+                AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_NO);
+                getTheme().applyStyle(R.style.Theme_Normal, true);
+                break;
+            case 1:
+                AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_YES);
+                if (sharedPreferences.getBoolean(SharedPreferencesUtils.AMOLED_DARK_KEY, false)) {
+                    getTheme().applyStyle(R.style.Theme_Normal_AmoledDark, true);
+                } else {
+                    getTheme().applyStyle(R.style.Theme_Normal_NormalDark, true);
+                }
+                break;
+            case 2:
+                if (systemDefault) {
+                    AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_FOLLOW_SYSTEM);
+                } else {
+                    AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_AUTO_BATTERY);
+                }
+                if ((getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_NO) {
+                    getTheme().applyStyle(R.style.Theme_Normal, true);
+                } else {
+                    if (sharedPreferences.getBoolean(SharedPreferencesUtils.AMOLED_DARK_KEY, false)) {
+                        getTheme().applyStyle(R.style.Theme_Normal_AmoledDark, true);
+                    } else {
+                        getTheme().applyStyle(R.style.Theme_Normal_NormalDark, true);
+                    }
+                }
+        }
 
         getTheme().applyStyle(FontStyle.valueOf(sharedPreferences
                 .getString(SharedPreferencesUtils.FONT_SIZE_KEY, FontStyle.Normal.name())).getResId(), true);
@@ -91,12 +138,22 @@ public class ViewRedditGalleryActivity extends AppCompatActivity implements SetA
 
         ButterKnife.bind(this);
 
-        ActionBar actionBar = getSupportActionBar();
-        Drawable upArrow = getResources().getDrawable(R.drawable.ic_arrow_back_white_24dp);
-        actionBar.setHomeAsUpIndicator(upArrow);
-        actionBar.setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.transparentActionBarAndExoPlayerControllerColor)));
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
 
-        setTitle(" ");
+        useBottomAppBar = sharedPreferences.getBoolean(SharedPreferencesUtils.USE_BOTTOM_TOOLBAR_IN_MEDIA_VIEWER, false);
+
+        if (!useBottomAppBar) {
+            ActionBar actionBar = getSupportActionBar();
+            Drawable upArrow = getResources().getDrawable(R.drawable.ic_arrow_back_white_24dp);
+            actionBar.setHomeAsUpIndicator(upArrow);
+            actionBar.setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.transparentActionBarAndExoPlayerControllerColor)));
+            setTitle(" ");
+        } else {
+            getSupportActionBar().hide();
+        }
 
         gallery = getIntent().getParcelableArrayListExtra(EXTRA_REDDIT_GALLERY);
         if (gallery == null || gallery.isEmpty()) {
@@ -104,6 +161,7 @@ public class ViewRedditGalleryActivity extends AppCompatActivity implements SetA
             return;
         }
         subredditName = getIntent().getStringExtra(EXTRA_SUBREDDIT_NAME);
+        isNsfw = getIntent().getBooleanExtra(EXTRA_IS_NSFW, false);
 
         if (sharedPreferences.getBoolean(SharedPreferencesUtils.SWIPE_VERTICALLY_TO_GO_BACK_FROM_MEDIA, true)) {
             haulerView.setOnDragDismissedListener(dragDirection -> {
@@ -118,26 +176,33 @@ public class ViewRedditGalleryActivity extends AppCompatActivity implements SetA
         setupViewPager();
     }
 
+    public boolean isUseBottomAppBar() {
+        return useBottomAppBar;
+    }
+
     private void setupViewPager() {
-        setToolbarTitle(0);
+        if (!useBottomAppBar) {
+            setToolbarTitle(0);
+            viewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+                @Override
+                public void onPageSelected(int position) {
+                    setToolbarTitle(position);
+                }
+            });
+        }
         sectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-        viewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-            @Override
-            public void onPageSelected(int position) {
-                setToolbarTitle(position);
-            }
-        });
         viewPager.setAdapter(sectionsPagerAdapter);
+        viewPager.setOffscreenPageLimit(3);
     }
 
     private void setToolbarTitle(int position) {
         if (gallery != null && position >= 0 && position < gallery.size()) {
             if (gallery.get(position).mediaType == Post.Gallery.TYPE_IMAGE) {
-                setTitle(getString(R.string.view_reddit_gallery_activity_image_label, position + 1, gallery.size()));
+                setTitle(Utils.getTabTextWithCustomFont(typeface, Html.fromHtml("<font color=\"#FFFFFF\">" + getString(R.string.view_reddit_gallery_activity_image_label, position + 1, gallery.size()) + "</font>")));
             } else if (gallery.get(position).mediaType == Post.Gallery.TYPE_GIF) {
-                setTitle(getString(R.string.view_reddit_gallery_activity_gif_label, position + 1, gallery.size()));
+                setTitle(Utils.getTabTextWithCustomFont(typeface, Html.fromHtml("<font color=\"#FFFFFF\">" + getString(R.string.view_reddit_gallery_activity_gif_label, position + 1, gallery.size()) + "</font>")));
             } else {
-                setTitle(getString(R.string.view_reddit_gallery_activity_video_label, position + 1, gallery.size()));
+                setTitle(Utils.getTabTextWithCustomFont(typeface, Html.fromHtml("<font color=\"#FFFFFF\">" + getString(R.string.view_reddit_gallery_activity_video_label, position + 1, gallery.size()) + "</font>")));
             }
         }
     }
@@ -215,6 +280,11 @@ public class ViewRedditGalleryActivity extends AppCompatActivity implements SetA
         return viewPager.getCurrentItem();
     }
 
+    @Override
+    public void setCustomFont(Typeface typeface, Typeface titleTypeface, Typeface contentTypeface) {
+        this.typeface = typeface;
+    }
+
     private class SectionsPagerAdapter extends FragmentStatePagerAdapter {
 
         SectionsPagerAdapter(@NonNull FragmentManager fm) {
@@ -230,6 +300,9 @@ public class ViewRedditGalleryActivity extends AppCompatActivity implements SetA
                 Bundle bundle = new Bundle();
                 bundle.putParcelable(ViewRedditGalleryVideoFragment.EXTRA_REDDIT_GALLERY_VIDEO, media);
                 bundle.putString(ViewRedditGalleryVideoFragment.EXTRA_SUBREDDIT_NAME, subredditName);
+                bundle.putInt(ViewRedditGalleryVideoFragment.EXTRA_INDEX, position);
+                bundle.putInt(ViewRedditGalleryVideoFragment.EXTRA_MEDIA_COUNT, gallery.size());
+                bundle.putBoolean(ViewRedditGalleryVideoFragment.EXTRA_IS_NSFW, isNsfw);
                 fragment.setArguments(bundle);
                 return fragment;
             } else {
@@ -237,6 +310,9 @@ public class ViewRedditGalleryActivity extends AppCompatActivity implements SetA
                 Bundle bundle = new Bundle();
                 bundle.putParcelable(ViewRedditGalleryImageOrGifFragment.EXTRA_REDDIT_GALLERY_MEDIA, media);
                 bundle.putString(ViewRedditGalleryImageOrGifFragment.EXTRA_SUBREDDIT_NAME, subredditName);
+                bundle.putInt(ViewRedditGalleryImageOrGifFragment.EXTRA_INDEX, position);
+                bundle.putInt(ViewRedditGalleryImageOrGifFragment.EXTRA_MEDIA_COUNT, gallery.size());
+                bundle.putBoolean(ViewRedditGalleryImageOrGifFragment.EXTRA_IS_NSFW, false);
                 fragment.setArguments(bundle);
                 return fragment;
             }

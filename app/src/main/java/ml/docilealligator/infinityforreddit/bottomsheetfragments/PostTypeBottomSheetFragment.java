@@ -1,7 +1,6 @@
 package ml.docilealligator.infinityforreddit.bottomsheetfragments;
 
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Build;
@@ -14,22 +13,24 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.deishelon.roundedbottomsheet.RoundedBottomSheetDialogFragment;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
+import ml.docilealligator.infinityforreddit.customviews.LandscapeExpandedRoundedBottomSheetDialogFragment;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class PostTypeBottomSheetFragment extends RoundedBottomSheetDialogFragment {
+public class PostTypeBottomSheetFragment extends LandscapeExpandedRoundedBottomSheetDialogFragment {
 
     public static final int TYPE_TEXT = 0;
     public static final int TYPE_LINK = 1;
     public static final int TYPE_IMAGE = 2;
     public static final int TYPE_VIDEO = 3;
+    public static final int TYPE_GALLERY = 4;
     @BindView(R.id.text_type_linear_layout_post_type_bottom_sheet_fragment)
     TextView textTypeTextView;
     @BindView(R.id.link_type_linear_layout_post_type_bottom_sheet_fragment)
@@ -38,7 +39,9 @@ public class PostTypeBottomSheetFragment extends RoundedBottomSheetDialogFragmen
     TextView imageTypeTextView;
     @BindView(R.id.video_type_linear_layout_post_type_bottom_sheet_fragment)
     TextView videoTypeTextView;
-    private Activity activity;
+    @BindView(R.id.gallery_type_linear_layout_post_type_bottom_sheet_fragment)
+    TextView galleryTypeTextView;
+    private BaseActivity activity;
 
     public PostTypeBottomSheetFragment() {
         // Required empty public constructor
@@ -75,13 +78,22 @@ public class PostTypeBottomSheetFragment extends RoundedBottomSheetDialogFragmen
             dismiss();
         });
 
+        galleryTypeTextView.setOnClickListener(view -> {
+            ((PostTypeSelectionCallback) activity).postTypeSelected(TYPE_GALLERY);
+            dismiss();
+        });
+
+        if (activity.typeface != null) {
+            Utils.setFontToAllTextViews(rootView, activity.typeface);
+        }
+
         return rootView;
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        this.activity = (Activity) context;
+        this.activity = (BaseActivity) context;
     }
 
     public interface PostTypeSelectionCallback {

@@ -19,6 +19,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.r0adkll.slidr.Slidr;
 
 import org.greenrobot.eventbus.EventBus;
@@ -49,10 +50,10 @@ import retrofit2.Retrofit;
 
 public class SubredditSelectionActivity extends BaseActivity implements ActivityToolbarInterface {
 
-    static final String EXTRA_EXTRA_CLEAR_SELECTION = "EECS";
-    static final String EXTRA_RETURN_SUBREDDIT_NAME = "ERSN";
-    static final String EXTRA_RETURN_SUBREDDIT_ICON_URL = "ERSIURL";
-    static final String EXTRA_RETURN_SUBREDDIT_IS_USER = "ERSIU";
+    public static final String EXTRA_EXTRA_CLEAR_SELECTION = "EECS";
+    public static final String EXTRA_RETURN_SUBREDDIT_NAME = "ERSN";
+    public static final String EXTRA_RETURN_SUBREDDIT_ICON_URL = "ERSIURL";
+    public static final String EXTRA_RETURN_SUBREDDIT_IS_USER = "ERSIU";
 
     private static final int SUBREDDIT_SEARCH_REQUEST_CODE = 0;
     private static final String INSERT_SUBSCRIBED_SUBREDDIT_STATE = "ISSS";
@@ -62,6 +63,8 @@ public class SubredditSelectionActivity extends BaseActivity implements Activity
     CoordinatorLayout coordinatorLayout;
     @BindView(R.id.appbar_layout_subreddit_selection_activity)
     AppBarLayout appBarLayout;
+    @BindView(R.id.collapsing_toolbar_layout_subreddit_selection_activity)
+    CollapsingToolbarLayout collapsingToolbarLayout;
     @BindView(R.id.toolbar_subreddit_selection_activity)
     Toolbar toolbar;
     @Inject
@@ -153,7 +156,7 @@ public class SubredditSelectionActivity extends BaseActivity implements Activity
     @Override
     protected void applyCustomTheme() {
         coordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, collapsingToolbarLayout, toolbar);
     }
 
     private void bindView(boolean initializeFragment) {

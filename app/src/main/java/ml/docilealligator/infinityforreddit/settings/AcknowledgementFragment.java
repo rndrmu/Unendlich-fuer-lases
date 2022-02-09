@@ -1,7 +1,6 @@
 package ml.docilealligator.infinityforreddit.settings;
 
 
-import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
@@ -11,15 +10,16 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import ml.docilealligator.infinityforreddit.adapters.AcknowledgementRecyclerViewAdapter;
 import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
+import ml.docilealligator.infinityforreddit.adapters.AcknowledgementRecyclerViewAdapter;
+import ml.docilealligator.infinityforreddit.customviews.LinearLayoutManagerBugFixed;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -28,7 +28,7 @@ public class AcknowledgementFragment extends Fragment {
 
     @BindView(R.id.recycler_view_acknowledgement_fragment)
     RecyclerView recyclerView;
-    private Activity activity;
+    private BaseActivity activity;
 
     public AcknowledgementFragment() {
         // Required empty public constructor
@@ -50,12 +50,6 @@ public class AcknowledgementFragment extends Fragment {
         acknowledgements.add(new Acknowledgement("Glide",
                 "A fast and efficient open source media management and image loading framework for Android",
                 Uri.parse("https://github.com/bumptech/glide")));
-        acknowledgements.add(new Acknowledgement("RxAndroid",
-                "Android specific bindings for RxJava 2",
-                Uri.parse("https://github.com/ReactiveX/RxAndroid")));
-        acknowledgements.add(new Acknowledgement("RxJava",
-                "Reactive extensions for the JVM",
-                Uri.parse("https://github.com/ReactiveX/RxJava")));
         acknowledgements.add(new Acknowledgement("Retrofit",
                 "Type-safe HTTP client for Android and Java by Square, Inc.",
                 Uri.parse("https://github.com/square/retrofit")));
@@ -125,9 +119,12 @@ public class AcknowledgementFragment extends Fragment {
         acknowledgements.add(new Acknowledgement("BetterLinkMovementMethod",
                 "Attempts to improve how clickable links are detected, highlighted and handled in TextView.",
                 Uri.parse("https://github.com/saket/Better-Link-Movement-Method")));
+        acknowledgements.add(new Acknowledgement("ZoomLayout",
+                "2D zoom and pan behavior for View hierarchies, images, video streams, and much more, written in Kotlin for Android.",
+                Uri.parse("https://github.com/natario1/ZoomLayout")));
 
         AcknowledgementRecyclerViewAdapter adapter = new AcknowledgementRecyclerViewAdapter(activity, acknowledgements);
-        recyclerView.setLayoutManager(new LinearLayoutManager(activity));
+        recyclerView.setLayoutManager(new LinearLayoutManagerBugFixed(activity));
         recyclerView.setAdapter(adapter);
 
         return rootView;
@@ -136,6 +133,6 @@ public class AcknowledgementFragment extends Fragment {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        activity = (Activity) context;
+        activity = (BaseActivity) context;
     }
 }

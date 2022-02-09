@@ -1,9 +1,15 @@
 package ml.docilealligator.infinityforreddit.activities;
 
+import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY;
+import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
+import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO;
+import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES;
+
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.TypedValue;
@@ -43,30 +49,31 @@ import javax.inject.Named;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import ml.docilealligator.infinityforreddit.AppBarStateChangeListener;
+import ml.docilealligator.infinityforreddit.CustomFontReceiver;
+import ml.docilealligator.infinityforreddit.Infinity;
+import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.customtheme.CustomTheme;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeSettingsItem;
+import ml.docilealligator.infinityforreddit.customviews.ViewPagerBugFixed;
 import ml.docilealligator.infinityforreddit.font.ContentFontStyle;
 import ml.docilealligator.infinityforreddit.font.FontStyle;
 import ml.docilealligator.infinityforreddit.font.TitleFontStyle;
 import ml.docilealligator.infinityforreddit.fragments.ThemePreviewCommentsFragment;
 import ml.docilealligator.infinityforreddit.fragments.ThemePreviewPostsFragment;
-import ml.docilealligator.infinityforreddit.Infinity;
-import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
-import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY;
-import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
-import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO;
-import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES;
-
-public class CustomThemePreviewActivity extends AppCompatActivity {
+public class CustomThemePreviewActivity extends AppCompatActivity implements CustomFontReceiver {
 
     public static final String EXTRA_CUSTOM_THEME_SETTINGS_ITEMS = "ECTSI";
+    public Typeface typeface;
+    public Typeface titleTypeface;
+    public Typeface contentTypeface;
 
     @BindView(R.id.coordinator_layout_theme_preview_activity)
     CoordinatorLayout coordinatorLayout;
     @BindView(R.id.view_pager_theme_preview_activity)
-    ViewPager viewPager;
+    ViewPagerBugFixed viewPager;
     @BindView(R.id.appbar_layout_theme_preview_activity)
     AppBarLayout appBarLayout;
     @BindView(R.id.collapsing_toolbar_layout_theme_preview_activity)
@@ -356,6 +363,13 @@ public class CustomThemePreviewActivity extends AppCompatActivity {
         applyFABTheme(fab);
         unsubscribedColor = customTheme.unsubscribed;
         subscribedColor = customTheme.subscribed;
+        if (typeface != null) {
+            subredditNameTextView.setTypeface(typeface);
+            usernameTextView.setTypeface(typeface);
+            primaryTextView.setTypeface(typeface);
+            secondaryTextView.setTypeface(typeface);
+            subscribeSubredditChip.setTypeface(typeface);
+        }
     }
 
     protected void applyAppBarLayoutAndToolbarTheme(AppBarLayout appBarLayout, Toolbar toolbar) {
@@ -367,6 +381,15 @@ public class CustomThemePreviewActivity extends AppCompatActivity {
         }
         if (toolbar.getOverflowIcon() != null) {
             toolbar.getOverflowIcon().setColorFilter(customTheme.toolbarPrimaryTextAndIconColor, android.graphics.PorterDuff.Mode.SRC_IN);
+        }
+        if (typeface != null) {
+            toolbar.addOnLayoutChangeListener((view, i, i1, i2, i3, i4, i5, i6, i7) -> {
+                for (int j = 0; j < toolbar.getChildCount(); j++) {
+                    if (toolbar.getChildAt(j) instanceof TextView) {
+                        ((TextView) toolbar.getChildAt(j)).setTypeface(typeface);
+                    }
+                }
+            });
         }
     }
 
@@ -423,6 +446,13 @@ public class CustomThemePreviewActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void setCustomFont(Typeface typeface, Typeface titleTypeface, Typeface contentTypeface) {
+        this.typeface = typeface;
+        this.titleTypeface = titleTypeface;
+        this.contentTypeface = contentTypeface;
+    }
+
     private class SectionsPagerAdapter extends FragmentPagerAdapter {
         private ThemePreviewPostsFragment themePreviewPostsFragment;
         private ThemePreviewCommentsFragment themePreviewCommentsFragment;
@@ -449,9 +479,9 @@ public class CustomThemePreviewActivity extends AppCompatActivity {
         public CharSequence getPageTitle(int position) {
             switch (position) {
                 case 0:
-                    return "Posts";
+                    return Utils.getTabTextWithCustomFont(typeface, "Posts");
                 case 1:
-                    return "Comments";
+                    return Utils.getTabTextWithCustomFont(typeface, "Comments");
             }
             return null;
         }

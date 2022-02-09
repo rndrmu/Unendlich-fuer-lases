@@ -17,8 +17,14 @@ public interface PostFilterUsageDao {
     @Query("SELECT * FROM post_filter_usage WHERE name = :name")
     List<PostFilterUsage> getAllPostFilterUsage(String name);
 
+    @Query("SELECT * FROM post_filter_usage")
+    List<PostFilterUsage> getAllPostFilterUsageForBackup();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insertPostFilterUsage(PostFilterUsage postFilterUsage);
+    void insert(PostFilterUsage postFilterUsage);
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<PostFilterUsage> postFilterUsageList);
 
     @Delete
     void deletePostFilterUsage(PostFilterUsage postFilterUsage);

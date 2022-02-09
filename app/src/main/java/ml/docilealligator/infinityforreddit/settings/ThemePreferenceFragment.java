@@ -1,6 +1,10 @@
 package ml.docilealligator.infinityforreddit.settings;
 
-import android.content.Context;
+import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY;
+import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
+import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO;
+import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -8,15 +12,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
-import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SwitchPreference;
 
 import org.greenrobot.eventbus.EventBus;
@@ -33,22 +34,20 @@ import ml.docilealligator.infinityforreddit.activities.CustomThemeListingActivit
 import ml.docilealligator.infinityforreddit.activities.CustomizeThemeActivity;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeViewModel;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
+import ml.docilealligator.infinityforreddit.customviews.CustomFontPreferenceFragmentCompat;
 import ml.docilealligator.infinityforreddit.events.RecreateActivityEvent;
 import ml.docilealligator.infinityforreddit.utils.CustomThemeSharedPreferencesUtils;
 import ml.docilealligator.infinityforreddit.utils.MaterialYouUtils;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 
-import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY;
-import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
-import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO;
-import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES;
-
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ThemePreferenceFragment extends PreferenceFragmentCompat {
+public class ThemePreferenceFragment extends CustomFontPreferenceFragmentCompat {
 
-    private AppCompatActivity activity;
+    @Inject
+    @Named("default")
+    SharedPreferences sharedPreferences;
     @Inject
     @Named("light_theme")
     SharedPreferences lightThemeSharedPreferences;
@@ -72,6 +71,10 @@ public class ThemePreferenceFragment extends PreferenceFragmentCompat {
 
         ((Infinity) activity.getApplication()).getAppComponent().inject(this);
 
+        if (activity.typeface != null) {
+            setFont(activity.typeface);
+        }
+
         ListPreference themePreference = findPreference(SharedPreferencesUtils.THEME_KEY);
         SwitchPreference amoledDarkSwitch = findPreference(SharedPreferencesUtils.AMOLED_DARK_KEY);
         Preference customizeLightThemePreference = findPreference(SharedPreferencesUtils.CUSTOMIZE_LIGHT_THEME);
@@ -79,6 +82,7 @@ public class ThemePreferenceFragment extends PreferenceFragmentCompat {
         Preference customizeAmoledThemePreference = findPreference(SharedPreferencesUtils.CUSTOMIZE_AMOLED_THEME);
         Preference selectAndCustomizeThemePreference = findPreference(SharedPreferencesUtils.MANAGE_THEMES);
         SwitchPreference enableMaterialYouSwitchPreference = findPreference(SharedPreferencesUtils.ENABLE_MATERIAL_YOU);
+        Preference applyMaterialYouPreference = findPreference(SharedPreferencesUtils.APPLY_MATERIAL_YOU);
 
         boolean systemDefault = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q;
         if (themePreference != null && amoledDarkSwitch != null) {
@@ -110,7 +114,7 @@ public class ThemePreferenceFragment extends PreferenceFragmentCompat {
                             AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_AUTO_BATTERY);
                         }
 
-                        if((getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_NO) {
+                        if ((getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_NO) {
                             customThemeWrapper.setThemeType(CustomThemeSharedPreferencesUtils.LIGHT);
                         } else {
                             if (amoledDarkSwitch.isChecked()) {
@@ -169,13 +173,28 @@ public class ThemePreferenceFragment extends PreferenceFragmentCompat {
             });
         }
 
-        if (enableMaterialYouSwitchPreference != null) {
-            Handler handler = new Handler();
+        if (enableMaterialYouSwitchPreference != null && applyMaterialYouPreference != null) {
+            applyMaterialYouPreference.setVisible(
+                    sharedPreferences.getBoolean(SharedPreferencesUtils.ENABLE_MATERIAL_YOU, false));
+
             enableMaterialYouSwitchPreference.setOnPreferenceChangeListener((preference, newValue) -> {
-                if (true) {
-                    MaterialYouUtils.changeTheme(activity, executor, new Handler(), customThemeWrapper,
-                            lightThemeSharedPreferences, darkThemeSharedPreferences, amoledThemeSharedPreferences);
+                if ((Boolean) newValue) {
+                    MaterialYouUtils.changeTheme(activity, executor, new Handler(),
+                            redditDataRoomDatabase, customThemeWrapper,
+                            lightThemeSharedPreferences, darkThemeSharedPreferences,
+                            amoledThemeSharedPreferences, null);
+                    applyMaterialYouPreference.setVisible(true);
+                } else {
+                    applyMaterialYouPreference.setVisible(false);
                 }
+                return true;
+            });
+
+            applyMaterialYouPreference.setOnPreferenceClickListener(preference -> {
+                MaterialYouUtils.changeTheme(activity, executor, new Handler(),
+                        redditDataRoomDatabase, customThemeWrapper,
+                        lightThemeSharedPreferences, darkThemeSharedPreferences,
+                        amoledThemeSharedPreferences, null);
                 return true;
             });
         }
@@ -213,11 +232,5 @@ public class ThemePreferenceFragment extends PreferenceFragmentCompat {
                 }
             }
         });
-    }
-
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        activity = (AppCompatActivity) context;
     }
 }

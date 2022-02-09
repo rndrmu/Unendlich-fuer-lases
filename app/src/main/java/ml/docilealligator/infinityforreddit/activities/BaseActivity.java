@@ -1,11 +1,17 @@
 package ml.docilealligator.infinityforreddit.activities;
 
+import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY;
+import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
+import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO;
+import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES;
+
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,6 +32,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 
@@ -33,6 +41,7 @@ import java.util.Locale;
 
 import ml.docilealligator.infinityforreddit.ActivityToolbarInterface;
 import ml.docilealligator.infinityforreddit.AppBarStateChangeListener;
+import ml.docilealligator.infinityforreddit.CustomFontReceiver;
 import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.font.ContentFontFamily;
@@ -43,13 +52,9 @@ import ml.docilealligator.infinityforreddit.font.TitleFontFamily;
 import ml.docilealligator.infinityforreddit.font.TitleFontStyle;
 import ml.docilealligator.infinityforreddit.utils.CustomThemeSharedPreferencesUtils;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
-import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY;
-import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM;
-import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO;
-import static androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES;
-
-public abstract class BaseActivity extends AppCompatActivity {
+public abstract class BaseActivity extends AppCompatActivity implements CustomFontReceiver {
     private boolean immersiveInterface;
     private boolean changeStatusBarIconColor;
     private boolean transparentStatusBarAfterToolbarCollapsed;
@@ -58,6 +63,9 @@ public abstract class BaseActivity extends AppCompatActivity {
     private int systemVisibilityToolbarExpanded = 0;
     private int systemVisibilityToolbarCollapsed = 0;
     private CustomThemeWrapper customThemeWrapper;
+    public Typeface typeface;
+    public Typeface titleTypeface;
+    public Typeface contentTypeface;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -128,10 +136,10 @@ public abstract class BaseActivity extends AppCompatActivity {
                 }
         }
 
-        boolean userDefinedChangeSatusBarIconColorInImmersiveInterface =
+        boolean userDefinedChangeStatusBarIconColorInImmersiveInterface =
                 customThemeWrapper.isChangeStatusBarIconColorAfterToolbarCollapsedInImmersiveInterface();
         if (immersiveInterface && isImmersiveInterfaceApplicable) {
-            changeStatusBarIconColor = userDefinedChangeSatusBarIconColorInImmersiveInterface;
+            changeStatusBarIconColor = userDefinedChangeStatusBarIconColorInImmersiveInterface;
         } else {
             changeStatusBarIconColor = false;
         }
@@ -275,6 +283,15 @@ public abstract class BaseActivity extends AppCompatActivity {
         return 0;
     }
 
+    public int getStatusBarHeight() {
+        int result = 0;
+        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            result = getResources().getDimensionPixelSize(resourceId);
+        }
+        return result;
+    }
+
     protected void setTransparentStatusBarAfterToolbarCollapsed() {
         this.transparentStatusBarAfterToolbarCollapsed = true;
     }
@@ -287,8 +304,18 @@ public abstract class BaseActivity extends AppCompatActivity {
         isImmersiveInterfaceApplicable = false;
     }
 
-    protected void applyAppBarLayoutAndToolbarTheme(AppBarLayout appBarLayout, Toolbar toolbar) {
+    protected void applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(AppBarLayout appBarLayout, @Nullable CollapsingToolbarLayout collapsingToolbarLayout, Toolbar toolbar) {
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, collapsingToolbarLayout, toolbar, true);
+    }
+
+    protected void applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(AppBarLayout appBarLayout, @Nullable CollapsingToolbarLayout collapsingToolbarLayout, Toolbar toolbar, boolean setToolbarBackgroundColor) {
         appBarLayout.setBackgroundColor(customThemeWrapper.getColorPrimary());
+        if (collapsingToolbarLayout != null) {
+            collapsingToolbarLayout.setContentScrimColor(customThemeWrapper.getColorPrimary());
+        }
+        if (setToolbarBackgroundColor) {
+            toolbar.setBackgroundColor(customThemeWrapper.getColorPrimary());
+        }
         toolbar.setTitleTextColor(customThemeWrapper.getToolbarPrimaryTextAndIconColor());
         toolbar.setSubtitleTextColor(customThemeWrapper.getToolbarSecondaryTextColor());
         if (toolbar.getNavigationIcon() != null) {
@@ -297,13 +324,21 @@ public abstract class BaseActivity extends AppCompatActivity {
         if (toolbar.getOverflowIcon() != null) {
             toolbar.getOverflowIcon().setColorFilter(customThemeWrapper.getToolbarPrimaryTextAndIconColor(), android.graphics.PorterDuff.Mode.SRC_IN);
         }
+        if (typeface != null) {
+            toolbar.addOnLayoutChangeListener((view, i, i1, i2, i3, i4, i5, i6, i7) -> {
+                for (int j = 0; j < toolbar.getChildCount(); j++) {
+                    if (toolbar.getChildAt(j) instanceof TextView) {
+                        ((TextView) toolbar.getChildAt(j)).setTypeface(typeface);
+                    }
+                }
+            });
+        }
     }
 
     @SuppressLint("RestrictedApi")
     protected boolean applyMenuItemTheme(Menu menu) {
         if (customThemeWrapper != null) {
-            int size = Math.min(menu.size(), 2);
-            for (int i = 0; i < size; i++) {
+            for (int i = 0; i < menu.size(); i++) {
                 MenuItem item = menu.getItem(i);
                 if (((MenuItemImpl) item).requestsActionButton()) {
                     Drawable drawable = item.getIcon();
@@ -312,6 +347,7 @@ public abstract class BaseActivity extends AppCompatActivity {
                         item.setIcon(drawable);
                     }
                 }
+                Utils.setTitleWithCustomFontToMenuItem(typeface, item, null);
             }
         }
         return true;
@@ -346,5 +382,12 @@ public abstract class BaseActivity extends AppCompatActivity {
                 touchSlopField.set(recyclerView, touchSlop * 4);
             }
         } catch (NoSuchFieldException | IllegalAccessException ignore) {}
+    }
+
+    @Override
+    public void setCustomFont(Typeface typeface, Typeface titleTypeface, Typeface contentTypeface) {
+        this.typeface = typeface;
+        this.titleTypeface = titleTypeface;
+        this.contentTypeface = contentTypeface;
     }
 }

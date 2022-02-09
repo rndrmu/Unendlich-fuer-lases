@@ -1,16 +1,14 @@
 package ml.docilealligator.infinityforreddit.activities;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.text.SpannableStringBuilder;
 import android.text.Spanned;
-import android.text.TextPaint;
-import android.text.style.ClickableSpan;
 import android.text.util.Linkify;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
@@ -20,7 +18,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.appbar.AppBarLayout;
@@ -29,9 +26,8 @@ import com.r0adkll.slidr.Slidr;
 import com.r0adkll.slidr.model.SlidrInterface;
 
 import org.commonmark.ext.gfm.tables.TableBlock;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -44,6 +40,11 @@ import io.noties.markwon.MarkwonConfiguration;
 import io.noties.markwon.core.MarkwonTheme;
 import io.noties.markwon.ext.strikethrough.StrikethroughPlugin;
 import io.noties.markwon.html.HtmlPlugin;
+import io.noties.markwon.html.tag.SuperScriptHandler;
+import io.noties.markwon.inlineparser.AutolinkInlineProcessor;
+import io.noties.markwon.inlineparser.BangInlineProcessor;
+import io.noties.markwon.inlineparser.HtmlInlineProcessor;
+import io.noties.markwon.inlineparser.MarkwonInlineParserPlugin;
 import io.noties.markwon.linkify.LinkifyPlugin;
 import io.noties.markwon.recycler.MarkwonAdapter;
 import io.noties.markwon.recycler.table.TableEntry;
@@ -51,13 +52,19 @@ import io.noties.markwon.recycler.table.TableEntryPlugin;
 import ml.docilealligator.infinityforreddit.Infinity;
 import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
+import ml.docilealligator.infinityforreddit.customviews.LinearLayoutManagerBugFixed;
 import ml.docilealligator.infinityforreddit.customviews.MarkwonLinearLayoutManager;
+import ml.docilealligator.infinityforreddit.events.SwitchAccountEvent;
+import ml.docilealligator.infinityforreddit.markdown.SpoilerParserPlugin;
+import ml.docilealligator.infinityforreddit.markdown.SuperscriptInlineProcessor;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
 public class FullMarkdownActivity extends BaseActivity {
 
     public static final String EXTRA_COMMENT_MARKDOWN = "ECM";
     public static final String EXTRA_IS_NSFW = "EIN";
+    public static final String EXTRA_SUBMIT_POST = "ESP";
 
     @BindView(R.id.coordinator_layout_comment_full_markdown_activity)
     CoordinatorLayout coordinatorLayout;
@@ -84,6 +91,8 @@ public class FullMarkdownActivity extends BaseActivity {
         setContentView(R.layout.activity_comment_full_markdown);
 
         ButterKnife.bind(this);
+
+        EventBus.getDefault().register(this);
 
         applyCustomTheme();
 
@@ -112,7 +121,7 @@ public class FullMarkdownActivity extends BaseActivity {
                     window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
                 }
                 adjustToolbar(toolbar);
-                markdownRecyclerView.setPadding(0, 0, 0, getNavBarHeight());
+                markdownRecyclerView.setPadding(markdownRecyclerView.getPaddingLeft(), 0, markdownRecyclerView.getPaddingRight(), getNavBarHeight());
             }
         }
 
@@ -122,67 +131,27 @@ public class FullMarkdownActivity extends BaseActivity {
         int spoilerBackgroundColor = markdownColor | 0xFF000000;
         int linkColor = mCustomThemeWrapper.getLinkColor();
         Markwon markwon = Markwon.builder(this)
-                .usePlugin(HtmlPlugin.create())
+                .usePlugin(MarkwonInlineParserPlugin.create(plugin -> {
+                    plugin.excludeInlineProcessor(AutolinkInlineProcessor.class);
+                    plugin.excludeInlineProcessor(HtmlInlineProcessor.class);
+                    plugin.excludeInlineProcessor(BangInlineProcessor.class);
+                    plugin.addInlineProcessor(new SuperscriptInlineProcessor());
+                }))
+                .usePlugin(HtmlPlugin.create(plugin -> {
+                    plugin.excludeDefaults(true).addHandler(new SuperScriptHandler());
+                }))
                 .usePlugin(new AbstractMarkwonPlugin() {
                     @NonNull
                     @Override
                     public String processMarkdown(@NonNull String markdown) {
-                        StringBuilder markdownStringBuilder = new StringBuilder(markdown);
-                        Pattern spoilerPattern = Pattern.compile(">![\\S\\s]*?!<");
-                        Matcher matcher = spoilerPattern.matcher(markdownStringBuilder);
-                        while (matcher.find()) {
-                            markdownStringBuilder.replace(matcher.start(), matcher.start() + 1, "&gt;");
-                        }
-                        return super.processMarkdown(markdownStringBuilder.toString());
-                    }
-
-                    @Override
-                    public void afterSetText(@NonNull TextView textView) {
-                        textView.setHighlightColor(Color.TRANSPARENT);
-                        SpannableStringBuilder markdownStringBuilder = new SpannableStringBuilder(textView.getText().toString());
-                        Pattern spoilerPattern = Pattern.compile(">![\\S\\s]*?!<");
-                        Matcher matcher = spoilerPattern.matcher(markdownStringBuilder);
-                        int start = 0;
-                        boolean find = false;
-                        while (matcher.find(start)) {
-                            if (markdownStringBuilder.length() < 4
-                                    || matcher.start() < 0
-                                    || matcher.end() > markdownStringBuilder.length()) {
-                                break;
-                            }
-                            find = true;
-                            markdownStringBuilder.delete(matcher.end() - 2, matcher.end());
-                            markdownStringBuilder.delete(matcher.start(), matcher.start() + 2);
-                            ClickableSpan clickableSpan = new ClickableSpan() {
-                                private boolean isShowing = false;
-                                @Override
-                                public void updateDrawState(@NonNull TextPaint ds) {
-                                    if (isShowing) {
-                                        super.updateDrawState(ds);
-                                        ds.setColor(markdownColor);
-                                    } else {
-                                        ds.bgColor = spoilerBackgroundColor;
-                                        ds.setColor(markdownColor);
-                                    }
-                                    ds.setUnderlineText(false);
-                                }
-
-                                @Override
-                                public void onClick(@NonNull View view) {
-                                    isShowing = !isShowing;
-                                    view.invalidate();
-                                }
-                            };
-                            markdownStringBuilder.setSpan(clickableSpan, matcher.start(), matcher.end() - 4, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                            start = matcher.end() - 4;
-                        }
-                        if (find) {
-                            textView.setText(markdownStringBuilder);
-                        }
+                        return Utils.fixSuperScript(markdown);
                     }
 
                     @Override
                     public void beforeSetText(@NonNull TextView textView, @NonNull Spanned markdown) {
+                        if (typeface != null) {
+                            textView.setTypeface(typeface);
+                        }
                         textView.setTextColor(markdownColor);
                     }
 
@@ -202,6 +171,7 @@ public class FullMarkdownActivity extends BaseActivity {
                         builder.linkColor(linkColor);
                     }
                 })
+                .usePlugin(SpoilerParserPlugin.create(markdownColor, spoilerBackgroundColor))
                 .usePlugin(StrikethroughPlugin.create())
                 .usePlugin(LinkifyPlugin.create(Linkify.WEB_URLS))
                 .usePlugin(TableEntryPlugin.create(this))
@@ -212,7 +182,7 @@ public class FullMarkdownActivity extends BaseActivity {
                         .tableLayout(R.layout.adapter_table_block, R.id.table_layout)
                         .textLayoutIsRoot(R.layout.view_table_entry_cell)))
                 .build();
-        LinearLayoutManager linearLayoutManager = new MarkwonLinearLayoutManager(this, new MarkwonLinearLayoutManager.HorizontalScrollViewScrolledListener() {
+        LinearLayoutManagerBugFixed linearLayoutManager = new MarkwonLinearLayoutManager(this, new MarkwonLinearLayoutManager.HorizontalScrollViewScrolledListener() {
             @Override
             public void onScrolledLeft() {
                 if (mSlidrInterface != null) {
@@ -234,8 +204,24 @@ public class FullMarkdownActivity extends BaseActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        if (getIntent().getBooleanExtra(EXTRA_SUBMIT_POST, false)) {
+            getMenuInflater().inflate(R.menu.full_markdown_activity, menu);
+            applyMenuItemTheme(menu);
+            return true;
+        }
+
+        return false;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        } else if (item.getItemId() == R.id.action_send_full_markdown_activity) {
+            Intent returnIntent = new Intent();
+            setResult(Activity.RESULT_OK, returnIntent);
             finish();
             return true;
         }
@@ -256,6 +242,19 @@ public class FullMarkdownActivity extends BaseActivity {
     @Override
     protected void applyCustomTheme() {
         coordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, collapsingToolbarLayout, toolbar);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Subscribe
+    public void onAccountSwitchEvent(SwitchAccountEvent event) {
+        if (!getClass().getName().equals(event.excludeActivityClassName)) {
+            finish();
+        }
     }
 }

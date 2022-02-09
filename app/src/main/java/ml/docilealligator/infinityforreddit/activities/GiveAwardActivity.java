@@ -17,10 +17,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.switchmaterial.SwitchMaterial;
@@ -39,6 +37,7 @@ import ml.docilealligator.infinityforreddit.RedditDataRoomDatabase;
 import ml.docilealligator.infinityforreddit.adapters.AwardRecyclerViewAdapter;
 import ml.docilealligator.infinityforreddit.award.GiveAward;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
+import ml.docilealligator.infinityforreddit.customviews.LinearLayoutManagerBugFixed;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 import retrofit2.Retrofit;
 
@@ -113,7 +112,7 @@ public class GiveAwardActivity extends BaseActivity {
     }
 
     private void bindView() {
-        adapter = new AwardRecyclerViewAdapter(Glide.with(this), mCustomThemeWrapper, award -> {
+        adapter = new AwardRecyclerViewAdapter(this, mCustomThemeWrapper, award -> {
             LayoutInflater inflater = getLayoutInflater();
             View layout = inflater.inflate(R.layout.dialog_give_award, null);
             SwitchMaterial switchMaterial = layout.findViewById(R.id.switch_material_give_award_dialog);
@@ -162,7 +161,7 @@ public class GiveAwardActivity extends BaseActivity {
                     .setNegativeButton(R.string.no, null)
                     .show();
         });
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setLayoutManager(new LinearLayoutManagerBugFixed(this));
         recyclerView.setAdapter(adapter);
     }
 
@@ -189,6 +188,6 @@ public class GiveAwardActivity extends BaseActivity {
     @Override
     protected void applyCustomTheme() {
         coordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, null, toolbar);
     }
 }

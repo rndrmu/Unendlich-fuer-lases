@@ -1,5 +1,6 @@
 package ml.docilealligator.infinityforreddit.bottomsheetfragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,13 +10,14 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
-import com.deishelon.roundedbottomsheet.RoundedBottomSheetDialogFragment;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
+import ml.docilealligator.infinityforreddit.customviews.LandscapeExpandedRoundedBottomSheetDialogFragment;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
-public class FilteredThingFABMoreOptionsBottomSheetFragment extends RoundedBottomSheetDialogFragment {
+public class FilteredThingFABMoreOptionsBottomSheetFragment extends LandscapeExpandedRoundedBottomSheetDialogFragment {
 
     public static final int FAB_OPTION_FILTER = 0;
     public static final int FAB_OPTION_HIDE_READ_POSTS = 1;
@@ -47,6 +49,13 @@ public class FilteredThingFABMoreOptionsBottomSheetFragment extends RoundedBotto
             activity.fabOptionSelected(FAB_OPTION_HIDE_READ_POSTS);
             dismiss();
         });
+
+        Activity baseActivity = getActivity();
+        if (baseActivity instanceof BaseActivity) {
+            if (((BaseActivity) baseActivity).typeface != null) {
+                Utils.setFontToAllTextViews(rootView, ((BaseActivity) baseActivity).typeface);
+            }
+        }
 
         return rootView;
     }

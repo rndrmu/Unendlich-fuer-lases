@@ -14,10 +14,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -43,6 +41,7 @@ import ml.docilealligator.infinityforreddit.activities.ViewMultiRedditDetailActi
 import ml.docilealligator.infinityforreddit.adapters.MultiRedditListingRecyclerViewAdapter;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.MultiRedditOptionsBottomSheetFragment;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
+import ml.docilealligator.infinityforreddit.customviews.LinearLayoutManagerBugFixed;
 import ml.docilealligator.infinityforreddit.multireddit.MultiReddit;
 import ml.docilealligator.infinityforreddit.multireddit.MultiRedditViewModel;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
@@ -78,9 +77,9 @@ public class MultiRedditListingFragment extends Fragment implements FragmentComm
     Executor mExecutor;
 
     public MultiRedditViewModel mMultiRedditViewModel;
-    private AppCompatActivity mActivity;
+    private BaseActivity mActivity;
     private RequestManager mGlide;
-    private LinearLayoutManager mLinearLayoutManager;
+    private LinearLayoutManagerBugFixed mLinearLayoutManager;
 
     public MultiRedditListingFragment() {
         // Required empty public constructor
@@ -108,13 +107,17 @@ public class MultiRedditListingFragment extends Fragment implements FragmentComm
             }
         }
 
-        String accountName = getArguments().getString(EXTRA_ACCOUNT_NAME);
+        String accountName = getArguments().getString(EXTRA_ACCOUNT_NAME, "-");
         String accessToken = getArguments().getString(EXTRA_ACCESS_TOKEN);
         boolean isGettingMultiredditInfo = getArguments().getBoolean(EXTRA_IS_GETTING_MULTIREDDIT_INFO, false);
 
+        if (accessToken == null) {
+            mSwipeRefreshLayout.setEnabled(false);
+        }
+
         mGlide = Glide.with(this);
 
-        mLinearLayoutManager = new LinearLayoutManager(mActivity);
+        mLinearLayoutManager = new LinearLayoutManagerBugFixed(mActivity);
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
         MultiRedditListingRecyclerViewAdapter adapter = new MultiRedditListingRecyclerViewAdapter(mActivity,
                 mExecutor, mOauthRetrofit, mRedditDataRoomDatabase, mCustomThemeWrapper, accessToken,
@@ -196,10 +199,14 @@ public class MultiRedditListingFragment extends Fragment implements FragmentComm
         }
     }
 
+    public void changeSearchQuery(String searchQuery) {
+        mMultiRedditViewModel.setSearchQuery(searchQuery);
+    }
+
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        mActivity = (AppCompatActivity) context;
+        mActivity = (BaseActivity) context;
     }
 
     @Override
@@ -213,6 +220,9 @@ public class MultiRedditListingFragment extends Fragment implements FragmentComm
         }
 
         mErrorTextView.setTextColor(mCustomThemeWrapper.getSecondaryTextColor());
+        if (mActivity.typeface != null) {
+            mErrorTextView.setTypeface(mActivity.typeface);
+        }
     }
 
     @Override

@@ -9,15 +9,15 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
-import com.deishelon.roundedbottomsheet.RoundedBottomSheetDialogFragment;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.activities.PostFilterUsageListingActivity;
+import ml.docilealligator.infinityforreddit.customviews.LandscapeExpandedRoundedBottomSheetDialogFragment;
 import ml.docilealligator.infinityforreddit.postfilter.PostFilterUsage;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
-public class NewPostFilterUsageBottomSheetFragment extends RoundedBottomSheetDialogFragment {
+public class NewPostFilterUsageBottomSheetFragment extends LandscapeExpandedRoundedBottomSheetDialogFragment {
 
     @BindView(R.id.home_text_view_new_post_filter_usage_bottom_sheet_fragment)
     TextView homeTextView;
@@ -67,6 +67,10 @@ public class NewPostFilterUsageBottomSheetFragment extends RoundedBottomSheetDia
             activity.newPostFilterUsage(PostFilterUsage.SEARCH_TYPE);
             dismiss();
         });
+
+        if (activity.typeface != null) {
+            Utils.setFontToAllTextViews(rootView, activity.typeface);
+        }
 
         return rootView;
     }

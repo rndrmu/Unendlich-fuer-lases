@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -13,7 +14,6 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,8 +21,11 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
 import com.google.android.material.snackbar.Snackbar;
 import com.r0adkll.slidr.Slidr;
+
+import java.util.concurrent.Executor;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -38,6 +41,7 @@ import ml.docilealligator.infinityforreddit.multireddit.FetchMultiRedditInfo;
 import ml.docilealligator.infinityforreddit.multireddit.MultiReddit;
 import ml.docilealligator.infinityforreddit.multireddit.MultiRedditJSONModel;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 import retrofit2.Retrofit;
 
 public class EditMultiRedditActivity extends BaseActivity {
@@ -49,6 +53,8 @@ public class EditMultiRedditActivity extends BaseActivity {
     CoordinatorLayout coordinatorLayout;
     @BindView(R.id.appbar_layout_edit_multi_reddit_activity)
     AppBarLayout appBarLayout;
+    @BindView(R.id.collapsing_toolbar_layout_edit_multi_reddit_activity)
+    CollapsingToolbarLayout collapsingToolbarLayout;
     @BindView(R.id.toolbar_edit_multi_reddit_activity)
     Toolbar toolbar;
     @BindView(R.id.progress_bar_edit_multi_reddit_activity)
@@ -84,6 +90,8 @@ public class EditMultiRedditActivity extends BaseActivity {
     SharedPreferences mCurrentAccountSharedPreferences;
     @Inject
     CustomThemeWrapper mCustomThemeWrapper;
+    @Inject
+    Executor mExecutor;
     private String mAccessToken;
     private String mAccountName;
     private MultiReddit multiReddit;
@@ -114,11 +122,10 @@ public class EditMultiRedditActivity extends BaseActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mAccessToken = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCESS_TOKEN, null);
-        mAccountName = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, null);
+        mAccountName = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, "-");
 
         if (mAccessToken == null) {
-            Toast.makeText(this, R.string.logged_out, Toast.LENGTH_SHORT).show();
-            finish();
+            visibilityLinearLayout.setVisibility(View.GONE);
         }
 
         if (savedInstanceState != null) {
@@ -133,22 +140,41 @@ public class EditMultiRedditActivity extends BaseActivity {
 
     private void bindView() {
         if (multiReddit == null) {
-            FetchMultiRedditInfo.fetchMultiRedditInfo(mRetrofit, mAccessToken, multipath, new FetchMultiRedditInfo.FetchMultiRedditInfoListener() {
-                @Override
-                public void success(MultiReddit multiReddit) {
-                    EditMultiRedditActivity.this.multiReddit = multiReddit;
-                    progressBar.setVisibility(View.GONE);
-                    linearLayout.setVisibility(View.VISIBLE);
-                    nameEditText.setText(multiReddit.getDisplayName());
-                    descriptionEditText.setText(multiReddit.getDescription());
-                    visibilitySwitch.setChecked(!multiReddit.getVisibility().equals("public"));
-                }
+            if (mAccessToken == null) {
+                FetchMultiRedditInfo.anonymousFetchMultiRedditInfo(mExecutor, new Handler(),
+                        mRedditDataRoomDatabase, multipath, new FetchMultiRedditInfo.FetchMultiRedditInfoListener() {
+                            @Override
+                            public void success(MultiReddit multiReddit) {
+                                EditMultiRedditActivity.this.multiReddit = multiReddit;
+                                progressBar.setVisibility(View.GONE);
+                                linearLayout.setVisibility(View.VISIBLE);
+                                nameEditText.setText(multiReddit.getDisplayName());
+                                descriptionEditText.setText(multiReddit.getDescription());
+                            }
 
-                @Override
-                public void failed() {
-                    Snackbar.make(coordinatorLayout, R.string.cannot_fetch_multireddit, Snackbar.LENGTH_SHORT).show();
-                }
-            });
+                            @Override
+                            public void failed() {
+                                //Will not be called
+                            }
+                        });
+            } else {
+                FetchMultiRedditInfo.fetchMultiRedditInfo(mRetrofit, mAccessToken, multipath, new FetchMultiRedditInfo.FetchMultiRedditInfoListener() {
+                    @Override
+                    public void success(MultiReddit multiReddit) {
+                        EditMultiRedditActivity.this.multiReddit = multiReddit;
+                        progressBar.setVisibility(View.GONE);
+                        linearLayout.setVisibility(View.VISIBLE);
+                        nameEditText.setText(multiReddit.getDisplayName());
+                        descriptionEditText.setText(multiReddit.getDescription());
+                        visibilitySwitch.setChecked(!multiReddit.getVisibility().equals("public"));
+                    }
+
+                    @Override
+                    public void failed() {
+                        Snackbar.make(coordinatorLayout, R.string.cannot_fetch_multireddit, Snackbar.LENGTH_SHORT).show();
+                    }
+                });
+            }
         } else {
             progressBar.setVisibility(View.GONE);
             linearLayout.setVisibility(View.VISIBLE);
@@ -180,29 +206,41 @@ public class EditMultiRedditActivity extends BaseActivity {
             finish();
             return true;
         } else if (itemId == R.id.action_save_edit_multi_reddit_activity) {
-            if (mAccountName == null || mAccessToken == null) {
-                Snackbar.make(coordinatorLayout, R.string.something_went_wrong, Snackbar.LENGTH_SHORT).show();
-                return true;
-            }
             if (nameEditText.getText() == null || nameEditText.getText().toString().equals("")) {
                 Snackbar.make(coordinatorLayout, R.string.no_multi_reddit_name, Snackbar.LENGTH_SHORT).show();
                 return true;
             }
 
-            String jsonModel = new MultiRedditJSONModel(nameEditText.getText().toString(), descriptionEditText.getText().toString(),
-                    visibilitySwitch.isChecked(), multiReddit.getSubreddits()).createJSONModel();
-            EditMultiReddit.editMultiReddit(mRetrofit, mAccessToken, multiReddit.getPath(),
-                    jsonModel, new EditMultiReddit.EditMultiRedditListener() {
-                        @Override
-                        public void success() {
-                            finish();
-                        }
+            if (mAccessToken == null) {
+                EditMultiReddit.anonymousEditMultiReddit(mExecutor, new Handler(), mRedditDataRoomDatabase,
+                        multiReddit, new EditMultiReddit.EditMultiRedditListener() {
+                            @Override
+                            public void success() {
+                                finish();
+                            }
 
-                        @Override
-                        public void failed() {
-                            Snackbar.make(coordinatorLayout, R.string.edit_multi_reddit_failed, Snackbar.LENGTH_SHORT).show();
-                        }
-                    });
+                            @Override
+                            public void failed() {
+                                //Will not be called
+                            }
+                        });
+            } else {
+                String jsonModel = new MultiRedditJSONModel(nameEditText.getText().toString(), descriptionEditText.getText().toString(),
+                        visibilitySwitch.isChecked(), multiReddit.getSubreddits()).createJSONModel();
+                EditMultiReddit.editMultiReddit(mRetrofit, mAccessToken, multiReddit.getPath(),
+                        jsonModel, new EditMultiReddit.EditMultiRedditListener() {
+                            @Override
+                            public void success() {
+                                finish();
+                            }
+
+                            @Override
+                            public void failed() {
+                                Snackbar.make(coordinatorLayout, R.string.edit_multi_reddit_failed, Snackbar.LENGTH_SHORT).show();
+                            }
+                        });
+            }
+            return true;
         }
         return false;
     }
@@ -238,7 +276,7 @@ public class EditMultiRedditActivity extends BaseActivity {
     @Override
     protected void applyCustomTheme() {
         coordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, collapsingToolbarLayout, toolbar);
         progressBar.setIndeterminateTintList(ColorStateList.valueOf(mCustomThemeWrapper.getColorAccent()));
         int primaryTextColor = mCustomThemeWrapper.getPrimaryTextColor();
         int secondaryTextColor = mCustomThemeWrapper.getSecondaryTextColor();
@@ -251,5 +289,9 @@ public class EditMultiRedditActivity extends BaseActivity {
         descriptionEditText.setHintTextColor(secondaryTextColor);
         visibilityTextView.setTextColor(primaryTextColor);
         selectSubredditTextView.setTextColor(primaryTextColor);
+
+        if (typeface != null) {
+            Utils.setFontToAllTextViews(coordinatorLayout, typeface);
+        }
     }
 }

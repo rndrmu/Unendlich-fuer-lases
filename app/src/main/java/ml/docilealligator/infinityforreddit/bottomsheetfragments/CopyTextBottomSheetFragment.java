@@ -1,7 +1,6 @@
 package ml.docilealligator.infinityforreddit.bottomsheetfragments;
 
 
-import android.app.Activity;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -15,17 +14,19 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.deishelon.roundedbottomsheet.RoundedBottomSheetDialogFragment;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
+import ml.docilealligator.infinityforreddit.customviews.LandscapeExpandedRoundedBottomSheetDialogFragment;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class CopyTextBottomSheetFragment extends RoundedBottomSheetDialogFragment {
+public class CopyTextBottomSheetFragment extends LandscapeExpandedRoundedBottomSheetDialogFragment {
     public static final String EXTRA_RAW_TEXT = "ERT";
     public static final String EXTRA_MARKDOWN = "EM";
 
@@ -38,7 +39,7 @@ public class CopyTextBottomSheetFragment extends RoundedBottomSheetDialogFragmen
     @BindView(R.id.copy_all_markdown_text_view_copy_text_bottom_sheet_fragment)
     TextView copyAllMarkdownTextView;
 
-    private Activity activity;
+    private BaseActivity activity;
     private String markdownText;
 
     public CopyTextBottomSheetFragment() {
@@ -53,23 +54,26 @@ public class CopyTextBottomSheetFragment extends RoundedBottomSheetDialogFragmen
         View rootView = inflater.inflate(R.layout.fragment_copy_text_bottom_sheet, container, false);
         ButterKnife.bind(this, rootView);
 
-        String rawText = getArguments().getString(EXTRA_RAW_TEXT);
-        markdownText = getArguments().getString(EXTRA_MARKDOWN);
-        if (markdownText != null) {
-            markdownText = markdownText.replaceAll("<sup>", "^").replaceAll("</sup>", "");
+        String rawText = getArguments().getString(EXTRA_RAW_TEXT, null);
+        markdownText = getArguments().getString(EXTRA_MARKDOWN, null);
+
+        if (rawText != null) {
+            copyRawTextTextView.setOnClickListener(view -> {
+                showCopyDialog(rawText);
+                dismiss();
+            });
+
+            copyAllRawTextTextView.setOnClickListener(view -> {
+                copyText(rawText);
+                dismiss();
+            });
+        } else {
+            copyRawTextTextView.setVisibility(View.GONE);
+            copyAllRawTextTextView.setVisibility(View.GONE);
         }
 
-        copyRawTextTextView.setOnClickListener(view -> {
-            showCopyDialog(rawText);
-            dismiss();
-        });
-
-        copyAllRawTextTextView.setOnClickListener(view -> {
-            copyText(rawText);
-            dismiss();
-        });
-
         if (markdownText != null) {
+            //markdownText = markdownText.replaceAll("<sup>", "^").replaceAll("</sup>", "");
             copyMarkdownTextView.setOnClickListener(view -> {
                 showCopyDialog(markdownText);
                 dismiss();
@@ -82,6 +86,10 @@ public class CopyTextBottomSheetFragment extends RoundedBottomSheetDialogFragmen
         } else {
             copyMarkdownTextView.setVisibility(View.GONE);
             copyAllMarkdownTextView.setVisibility(View.GONE);
+        }
+
+        if (activity.typeface != null) {
+            Utils.setFontToAllTextViews(rootView, activity.typeface);
         }
 
         return rootView;
@@ -114,6 +122,6 @@ public class CopyTextBottomSheetFragment extends RoundedBottomSheetDialogFragmen
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        activity = (Activity) context;
+        activity = (BaseActivity) context;
     }
 }

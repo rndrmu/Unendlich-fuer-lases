@@ -15,7 +15,6 @@ import ml.docilealligator.infinityforreddit.subscribedsubreddit.SubscribedSubred
 import ml.docilealligator.infinityforreddit.utils.APIUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class SubredditSubscription {
@@ -31,25 +30,15 @@ public class SubredditSubscription {
                                                      RedditDataRoomDatabase redditDataRoomDatabase,
                                                      String subredditName,
                                                      SubredditSubscriptionListener subredditSubscriptionListener) {
-        retrofit.create(RedditAPI.class).getSubredditData(subredditName).enqueue(new Callback<String>() {
+        FetchSubredditData.fetchSubredditData(null, retrofit, subredditName, "", new FetchSubredditData.FetchSubredditDataListener() {
             @Override
-            public void onResponse(@NonNull Call<String> call, @NonNull Response<String> response) {
-                FetchSubredditData.fetchSubredditData(retrofit, subredditName, new FetchSubredditData.FetchSubredditDataListener() {
-                    @Override
-                    public void onFetchSubredditDataSuccess(SubredditData subredditData, int nCurrentOnlineSubscribers) {
-                        insertSubscription(executor, handler, redditDataRoomDatabase,
-                                subredditData, "-", subredditSubscriptionListener);
-                    }
-
-                    @Override
-                    public void onFetchSubredditDataFail(boolean isQuarantined) {
-
-                    }
-                });
+            public void onFetchSubredditDataSuccess(SubredditData subredditData, int nCurrentOnlineSubscribers) {
+                insertSubscription(executor, handler, redditDataRoomDatabase,
+                        subredditData, "-", subredditSubscriptionListener);
             }
 
             @Override
-            public void onFailure(@NonNull Call<String> call, @NonNull Throwable t) {
+            public void onFetchSubredditDataFail(boolean isQuarantined) {
                 subredditSubscriptionListener.onSubredditSubscriptionFail();
             }
         });
@@ -87,7 +76,7 @@ public class SubredditSubscription {
             public void onResponse(@NonNull Call<String> call, @NonNull retrofit2.Response<String> response) {
                 if (response.isSuccessful()) {
                     if (action.equals("sub")) {
-                        FetchSubredditData.fetchSubredditData(retrofit, subredditName, new FetchSubredditData.FetchSubredditDataListener() {
+                        FetchSubredditData.fetchSubredditData(oauthRetrofit, retrofit, subredditName, accessToken, new FetchSubredditData.FetchSubredditDataListener() {
                             @Override
                             public void onFetchSubredditDataSuccess(SubredditData subredditData, int nCurrentOnlineSubscribers) {
                                 insertSubscription(executor, handler, redditDataRoomDatabase,

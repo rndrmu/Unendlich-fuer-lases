@@ -1,5 +1,6 @@
 package ml.docilealligator.infinityforreddit.bottomsheetfragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -9,13 +10,14 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
-import com.deishelon.roundedbottomsheet.RoundedBottomSheetDialogFragment;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
+import ml.docilealligator.infinityforreddit.customviews.LandscapeExpandedRoundedBottomSheetDialogFragment;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
-public class RandomBottomSheetFragment extends RoundedBottomSheetDialogFragment {
+public class RandomBottomSheetFragment extends LandscapeExpandedRoundedBottomSheetDialogFragment {
 
     public static final String EXTRA_IS_NSFW = "EIN";
     public static final int RANDOM_SUBREDDIT = 0;
@@ -72,6 +74,13 @@ public class RandomBottomSheetFragment extends RoundedBottomSheetDialogFragment 
             activity.randomOptionSelected(RANDOM_POST);
             dismiss();
         });
+
+        Activity baseActivity = getActivity();
+        if (baseActivity instanceof BaseActivity) {
+            if (((BaseActivity) activity).typeface != null) {
+                Utils.setFontToAllTextViews(rootView, ((BaseActivity) activity).typeface);
+            }
+        }
 
         return rootView;
     }

@@ -1,7 +1,7 @@
 package ml.docilealligator.infinityforreddit.bottomsheetfragments;
 
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
@@ -13,19 +13,20 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.deishelon.roundedbottomsheet.RoundedBottomSheetDialogFragment;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.SortType;
 import ml.docilealligator.infinityforreddit.SortTypeSelectionCallback;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
+import ml.docilealligator.infinityforreddit.customviews.LandscapeExpandedRoundedBottomSheetDialogFragment;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class UserThingSortTypeBottomSheetFragment extends RoundedBottomSheetDialogFragment {
+public class UserThingSortTypeBottomSheetFragment extends LandscapeExpandedRoundedBottomSheetDialogFragment {
 
     @BindView(R.id.new_type_text_view_user_thing_sort_type_bottom_sheet_fragment)
     TextView newTypeTextView;
@@ -35,6 +36,8 @@ public class UserThingSortTypeBottomSheetFragment extends RoundedBottomSheetDial
     TextView topTypeTextView;
     @BindView(R.id.controversial_type_text_view_user_thing_sort_type_bottom_sheet_fragment)
     TextView controversialTypeTextView;
+    private BaseActivity activity;
+
     public UserThingSortTypeBottomSheetFragment() {
         // Required empty public constructor
     }
@@ -45,8 +48,6 @@ public class UserThingSortTypeBottomSheetFragment extends RoundedBottomSheetDial
         View rootView = inflater.inflate(R.layout.fragment_user_thing_sort_type_bottom_sheet, container, false);
 
         ButterKnife.bind(this, rootView);
-
-        Activity activity = getActivity();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                 && (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) != Configuration.UI_MODE_NIGHT_YES) {
@@ -81,6 +82,16 @@ public class UserThingSortTypeBottomSheetFragment extends RoundedBottomSheetDial
             dismiss();
         });
 
+        if (activity.typeface != null) {
+            Utils.setFontToAllTextViews(rootView, activity.typeface);
+        }
+
         return rootView;
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        this.activity = (BaseActivity) context;
     }
 }

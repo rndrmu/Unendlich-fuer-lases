@@ -38,7 +38,7 @@ import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.events.ChangeNSFWEvent;
 import ml.docilealligator.infinityforreddit.events.SwitchAccountEvent;
 import ml.docilealligator.infinityforreddit.fragments.PostFragment;
-import ml.docilealligator.infinityforreddit.post.PostDataSource;
+import ml.docilealligator.infinityforreddit.post.PostPagingSource;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 
 public class AccountPostsActivity extends BaseActivity implements SortTypeSelectionCallback,
@@ -46,15 +46,14 @@ public class AccountPostsActivity extends BaseActivity implements SortTypeSelect
 
     static final String EXTRA_USER_WHERE = "EUW";
 
-    private static final String IS_IN_LAZY_MODE_STATE = "IILMS";
     private static final String FRAGMENT_OUT_STATE = "FOS";
 
     @BindView(R.id.coordinator_layout_account_posts_activity)
     CoordinatorLayout coordinatorLayout;
-    @BindView(R.id.collapsing_toolbar_layout_account_posts_activity)
-    CollapsingToolbarLayout collapsingToolbarLayout;
     @BindView(R.id.appbar_layout_account_posts_activity)
     AppBarLayout appBarLayout;
+    @BindView(R.id.collapsing_toolbar_layout_account_posts_activity)
+    CollapsingToolbarLayout collapsingToolbarLayout;
     @BindView(R.id.toolbar_account_posts_activity)
     Toolbar toolbar;
     @Inject
@@ -68,13 +67,10 @@ public class AccountPostsActivity extends BaseActivity implements SortTypeSelect
     SharedPreferences mCurrentAccountSharedPreferences;
     @Inject
     CustomThemeWrapper mCustomThemeWrapper;
-    private boolean isInLazyMode = false;
     private String mAccessToken;
     private String mAccountName;
     private String mUserWhere;
     private Fragment mFragment;
-    private Menu mMenu;
-    private AppBarLayout.LayoutParams params;
     private PostLayoutBottomSheetFragment postLayoutBottomSheetFragment;
 
     @Override
@@ -115,13 +111,13 @@ public class AccountPostsActivity extends BaseActivity implements SortTypeSelect
         }
 
         mUserWhere = getIntent().getExtras().getString(EXTRA_USER_WHERE);
-        if (mUserWhere.equals(PostDataSource.USER_WHERE_UPVOTED)) {
+        if (mUserWhere.equals(PostPagingSource.USER_WHERE_UPVOTED)) {
             toolbar.setTitle(R.string.upvoted);
-        } else if (mUserWhere.equals(PostDataSource.USER_WHERE_DOWNVOTED)) {
+        } else if (mUserWhere.equals(PostPagingSource.USER_WHERE_DOWNVOTED)) {
             toolbar.setTitle(R.string.downvoted);
-        } else if (mUserWhere.equals(PostDataSource.USER_WHERE_HIDDEN)) {
+        } else if (mUserWhere.equals(PostPagingSource.USER_WHERE_HIDDEN)) {
             toolbar.setTitle(R.string.hidden);
-        } else if (mUserWhere.equals(PostDataSource.USER_WHERE_GILDED)) {
+        } else if (mUserWhere.equals(PostPagingSource.USER_WHERE_GILDED)) {
             toolbar.setTitle(R.string.gilded);
         }
 
@@ -129,16 +125,12 @@ public class AccountPostsActivity extends BaseActivity implements SortTypeSelect
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setToolbarGoToTop(toolbar);
 
-        params = (AppBarLayout.LayoutParams) collapsingToolbarLayout.getLayoutParams();
-
         postLayoutBottomSheetFragment = new PostLayoutBottomSheetFragment();
 
         mAccessToken = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCESS_TOKEN, null);
         mAccountName = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, null);
 
         if (savedInstanceState != null) {
-            isInLazyMode = savedInstanceState.getBoolean(IS_IN_LAZY_MODE_STATE);
-
             mFragment = getSupportFragmentManager().getFragment(savedInstanceState, FRAGMENT_OUT_STATE);
             getSupportFragmentManager().beginTransaction().replace(R.id.frame_layout_account_posts_activity, mFragment).commit();
         } else {
@@ -168,13 +160,13 @@ public class AccountPostsActivity extends BaseActivity implements SortTypeSelect
     @Override
     protected void applyCustomTheme() {
         coordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, collapsingToolbarLayout, toolbar);
     }
 
     private void initializeFragment() {
         mFragment = new PostFragment();
         Bundle bundle = new Bundle();
-        bundle.putInt(PostFragment.EXTRA_POST_TYPE, PostDataSource.TYPE_USER);
+        bundle.putInt(PostFragment.EXTRA_POST_TYPE, PostPagingSource.TYPE_USER);
         bundle.putString(PostFragment.EXTRA_USER_NAME, mAccountName);
         bundle.putString(PostFragment.EXTRA_USER_WHERE, mUserWhere);
         bundle.putString(PostFragment.EXTRA_ACCESS_TOKEN, mAccessToken);
@@ -188,54 +180,23 @@ public class AccountPostsActivity extends BaseActivity implements SortTypeSelect
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.account_posts_activity, menu);
         applyMenuItemTheme(menu);
-        mMenu = menu;
-        MenuItem lazyModeItem = mMenu.findItem(R.id.action_lazy_mode_account_posts_activity);
-        if (isInLazyMode) {
-            lazyModeItem.setTitle(R.string.action_stop_lazy_mode);
-            params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_NO_SCROLL);
-            collapsingToolbarLayout.setLayoutParams(params);
-        } else {
-            lazyModeItem.setTitle(R.string.action_start_lazy_mode);
-            params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS);
-            collapsingToolbarLayout.setLayoutParams(params);
-        }
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_refresh_account_posts_activity:
-                if (mMenu != null) {
-                    mMenu.findItem(R.id.action_lazy_mode_account_posts_activity).setTitle(R.string.action_start_lazy_mode);
-                }
-                if (mFragment != null) {
-                    ((PostFragment) mFragment).refresh();
-                }
-                return true;
-            case R.id.action_lazy_mode_account_posts_activity:
-                MenuItem lazyModeItem = mMenu.findItem(R.id.action_lazy_mode_account_posts_activity);
-                if (isInLazyMode) {
-                    ((FragmentCommunicator) mFragment).stopLazyMode();
-                    isInLazyMode = false;
-                    lazyModeItem.setTitle(R.string.action_start_lazy_mode);
-                    params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS);
-                    collapsingToolbarLayout.setLayoutParams(params);
-                } else {
-                    if (((FragmentCommunicator) mFragment).startLazyMode()) {
-                        isInLazyMode = true;
-                        lazyModeItem.setTitle(R.string.action_stop_lazy_mode);
-                        params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_NO_SCROLL);
-                        collapsingToolbarLayout.setLayoutParams(params);
-                    }
-                }
-                return true;
-            case R.id.action_change_post_layout_account_posts_activity:
-                postLayoutBottomSheetFragment.show(getSupportFragmentManager(), postLayoutBottomSheetFragment.getTag());
-                return true;
-            case android.R.id.home:
-                finish();
-                return true;
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_refresh_account_posts_activity) {
+            if (mFragment != null) {
+                ((PostFragment) mFragment).refresh();
+            }
+            return true;
+        } else if (itemId == R.id.action_change_post_layout_account_posts_activity) {
+            postLayoutBottomSheetFragment.show(getSupportFragmentManager(), postLayoutBottomSheetFragment.getTag());
+            return true;
+        } else if (itemId == android.R.id.home) {
+            finish();
+            return true;
         }
         return false;
     }
@@ -244,7 +205,6 @@ public class AccountPostsActivity extends BaseActivity implements SortTypeSelect
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         getSupportFragmentManager().putFragment(outState, FRAGMENT_OUT_STATE, mFragment);
-        outState.putBoolean(IS_IN_LAZY_MODE_STATE, isInLazyMode);
     }
 
     @Override

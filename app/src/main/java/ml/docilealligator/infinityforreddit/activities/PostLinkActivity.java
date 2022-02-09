@@ -2,7 +2,6 @@ package ml.docilealligator.infinityforreddit.activities;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
@@ -10,8 +9,8 @@ import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,7 +26,9 @@ import com.bumptech.glide.request.RequestOptions;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.divider.MaterialDivider;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.libRG.CustomTextView;
 
 import org.greenrobot.eventbus.EventBus;
@@ -89,19 +90,23 @@ public class PostLinkActivity extends BaseActivity implements FlairBottomSheetFr
     @BindView(R.id.subreddit_name_text_view_post_link_activity)
     TextView subredditNameTextView;
     @BindView(R.id.rules_button_post_link_activity)
-    Button rulesButton;
+    MaterialButton rulesButton;
     @BindView(R.id.divider_1_post_link_activity)
-    View divider1;
+    MaterialDivider divider1;
     @BindView(R.id.divider_2_post_link_activity)
-    View divider2;
-    @BindView(R.id.divider_3_post_link_activity)
-    View divider3;
+    MaterialDivider divider2;
     @BindView(R.id.flair_custom_text_view_post_link_activity)
     CustomTextView flairTextView;
     @BindView(R.id.spoiler_custom_text_view_post_link_activity)
     CustomTextView spoilerTextView;
     @BindView(R.id.nsfw_custom_text_view_post_link_activity)
     CustomTextView nsfwTextView;
+    @BindView(R.id.receive_post_reply_notifications_linear_layout_post_link_activity)
+    LinearLayout receivePostReplyNotificationsLinearLayout;
+    @BindView(R.id.receive_post_reply_notifications_text_view_post_link_activity)
+    TextView receivePostReplyNotificationsTextView;
+    @BindView(R.id.receive_post_reply_notifications_switch_material_post_link_activity)
+    SwitchMaterial receivePostReplyNotificationsSwitchMaterial;
     @BindView(R.id.post_title_edit_text_post_link_activity)
     EditText titleEditText;
     @BindView(R.id.suggest_title_button_post_link_activity)
@@ -310,6 +315,10 @@ public class PostLinkActivity extends BaseActivity implements FlairBottomSheetFr
             }
         });
 
+        receivePostReplyNotificationsLinearLayout.setOnClickListener(view -> {
+            receivePostReplyNotificationsSwitchMaterial.performClick();
+        });
+
         suggestTitleButton.setOnClickListener(view -> {
             Toast.makeText(this, R.string.please_wait, Toast.LENGTH_SHORT).show();
             String url = linkEditText.getText().toString().trim();
@@ -350,16 +359,16 @@ public class PostLinkActivity extends BaseActivity implements FlairBottomSheetFr
     @Override
     protected void applyCustomTheme() {
         coordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, null, toolbar);
         int secondaryTextColor = mCustomThemeWrapper.getSecondaryTextColor();
         subredditNameTextView.setTextColor(secondaryTextColor);
         rulesButton.setTextColor(mCustomThemeWrapper.getButtonTextColor());
-        rulesButton.setBackgroundTintList(ColorStateList.valueOf(mCustomThemeWrapper.getColorPrimaryLightTheme()));
-        int dividerColor = mCustomThemeWrapper.getDividerColor();
-        divider1.setBackgroundColor(dividerColor);
-        divider2.setBackgroundColor(dividerColor);
-        divider3.setBackgroundColor(dividerColor);
+        rulesButton.setBackgroundColor(mCustomThemeWrapper.getColorPrimaryLightTheme());
         primaryTextColor = mCustomThemeWrapper.getPrimaryTextColor();
+        receivePostReplyNotificationsTextView.setTextColor(primaryTextColor);
+        int dividerColor = mCustomThemeWrapper.getDividerColor();
+        divider1.setDividerColor(dividerColor);
+        divider2.setDividerColor(dividerColor);
         flairBackgroundColor = mCustomThemeWrapper.getFlairBackgroundColor();
         flairTextColor = mCustomThemeWrapper.getFlairTextColor();
         spoilerBackgroundColor = mCustomThemeWrapper.getSpoilerBackgroundColor();
@@ -375,6 +384,19 @@ public class PostLinkActivity extends BaseActivity implements FlairBottomSheetFr
         suggestTitleButton.setTextColor(mCustomThemeWrapper.getButtonTextColor());
         linkEditText.setTextColor(primaryTextColor);
         linkEditText.setHintTextColor(secondaryTextColor);
+        if (typeface != null) {
+            subredditNameTextView.setTypeface(typeface);
+            rulesButton.setTypeface(typeface);
+            receivePostReplyNotificationsTextView.setTypeface(typeface);
+            flairTextView.setTypeface(typeface);
+            spoilerTextView.setTypeface(typeface);
+            nsfwTextView.setTypeface(typeface);
+            titleEditText.setTypeface(typeface);
+            suggestTitleButton.setTypeface(typeface);
+        }
+        if (contentTypeface != null) {
+            linkEditText.setTypeface(contentTypeface);
+        }
     }
 
     private void displaySubredditIcon() {
@@ -393,7 +415,7 @@ public class PostLinkActivity extends BaseActivity implements FlairBottomSheetFr
 
     private void loadSubredditIcon() {
         LoadSubredditIcon.loadSubredditIcon(mExecutor, new Handler(), mRedditDataRoomDatabase, subredditName,
-                mRetrofit, iconImageUrl -> {
+                mAccessToken, mOauthRetrofit, mRetrofit, iconImageUrl -> {
             iconUrl = iconImageUrl;
             displaySubredditIcon();
             loadSubredditIconSuccessful = true;
@@ -404,7 +426,7 @@ public class PostLinkActivity extends BaseActivity implements FlairBottomSheetFr
         new MaterialAlertDialogBuilder(this, R.style.MaterialAlertDialogTheme)
                 .setTitle(titleResId)
                 .setMessage(messageResId)
-                .setPositiveButton(R.string.yes, (dialogInterface, i) -> finish())
+                .setPositiveButton(R.string.discard_dialog_button, (dialogInterface, i) -> finish())
                 .setNegativeButton(R.string.no, null)
                 .show();
     }
@@ -475,6 +497,7 @@ public class PostLinkActivity extends BaseActivity implements FlairBottomSheetFr
             intent.putExtra(SubmitPostService.EXTRA_FLAIR, flair);
             intent.putExtra(SubmitPostService.EXTRA_IS_SPOILER, isSpoiler);
             intent.putExtra(SubmitPostService.EXTRA_IS_NSFW, isNSFW);
+            intent.putExtra(SubmitPostService.EXTRA_RECEIVE_POST_REPLY_NOTIFICATIONS, receivePostReplyNotificationsSwitchMaterial.isChecked());
             intent.putExtra(SubmitPostService.EXTRA_POST_TYPE, SubmitPostService.EXTRA_POST_TEXT_OR_LINK);
             ContextCompat.startForegroundService(this, intent);
 

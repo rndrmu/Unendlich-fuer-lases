@@ -14,6 +14,9 @@ public interface PostFilterDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(PostFilter postFilter);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<PostFilter> postFilters);
+
     @Query("DELETE FROM post_filter")
     void deleteAllPostFilters();
 
@@ -28,6 +31,9 @@ public interface PostFilterDao {
 
     @Query("SELECT * FROM post_filter ORDER BY name")
     LiveData<List<PostFilter>> getAllPostFiltersLiveData();
+
+    @Query("SELECT * FROM post_filter")
+    List<PostFilter> getAllPostFilters();
 
     @Query("SELECT * FROM post_filter WHERE post_filter.name IN " +
             "(SELECT post_filter_usage.name FROM post_filter_usage WHERE (usage = :usage AND name_of_usage = :nameOfUsage) " +

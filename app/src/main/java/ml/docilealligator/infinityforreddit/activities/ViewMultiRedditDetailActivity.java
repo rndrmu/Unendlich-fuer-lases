@@ -39,6 +39,7 @@ import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.RedditDataRoomDatabase;
 import ml.docilealligator.infinityforreddit.SortType;
 import ml.docilealligator.infinityforreddit.SortTypeSelectionCallback;
+import ml.docilealligator.infinityforreddit.asynctasks.DeleteMultiredditInDatabase;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.PostLayoutBottomSheetFragment;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.SortTimeBottomSheetFragment;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.SortTypeBottomSheetFragment;
@@ -48,7 +49,7 @@ import ml.docilealligator.infinityforreddit.fragments.PostFragment;
 import ml.docilealligator.infinityforreddit.multireddit.DeleteMultiReddit;
 import ml.docilealligator.infinityforreddit.multireddit.MultiReddit;
 import ml.docilealligator.infinityforreddit.post.Post;
-import ml.docilealligator.infinityforreddit.post.PostDataSource;
+import ml.docilealligator.infinityforreddit.post.PostPagingSource;
 import ml.docilealligator.infinityforreddit.readpost.InsertReadPost;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 import ml.docilealligator.infinityforreddit.utils.Utils;
@@ -61,7 +62,6 @@ public class ViewMultiRedditDetailActivity extends BaseActivity implements SortT
     public static final String EXTRA_MULTIREDDIT_PATH = "EMP";
 
     private static final String FRAGMENT_OUT_STATE_KEY = "FOSK";
-    private static final String IS_IN_LAZY_MODE_STATE = "IILMS";
 
     @BindView(R.id.coordinator_layout_view_multi_reddit_detail_activity)
     CoordinatorLayout coordinatorLayout;
@@ -98,10 +98,7 @@ public class ViewMultiRedditDetailActivity extends BaseActivity implements SortT
     private String mAccessToken;
     private String mAccountName;
     private String multiPath;
-    private boolean isInLazyMode = false;
     private Fragment mFragment;
-    private Menu mMenu;
-    private AppBarLayout.LayoutParams params;
     private SortTypeBottomSheetFragment sortTypeBottomSheetFragment;
     private SortTimeBottomSheetFragment sortTimeBottomSheetFragment;
     private PostLayoutBottomSheetFragment postLayoutBottomSheetFragment;
@@ -159,11 +156,9 @@ public class ViewMultiRedditDetailActivity extends BaseActivity implements SortT
         setToolbarGoToTop(toolbar);
 
         mAccessToken = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCESS_TOKEN, null);
-        mAccountName = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, null);
+        mAccountName = mCurrentAccountSharedPreferences.getString(SharedPreferencesUtils.ACCOUNT_NAME, "-");
 
         if (savedInstanceState != null) {
-            isInLazyMode = savedInstanceState.getBoolean(IS_IN_LAZY_MODE_STATE);
-
             mFragment = getSupportFragmentManager().getFragment(savedInstanceState, FRAGMENT_OUT_STATE_KEY);
             getSupportFragmentManager().beginTransaction().replace(R.id.frame_layout_view_multi_reddit_detail_activity, mFragment).commit();
         } else {
@@ -178,15 +173,13 @@ public class ViewMultiRedditDetailActivity extends BaseActivity implements SortT
         sortTimeBottomSheetFragment = new SortTimeBottomSheetFragment();
 
         postLayoutBottomSheetFragment = new PostLayoutBottomSheetFragment();
-
-        params = (AppBarLayout.LayoutParams) collapsingToolbarLayout.getLayoutParams();
     }
 
     private void initializeFragment() {
         mFragment = new PostFragment();
         Bundle bundle = new Bundle();
         bundle.putString(PostFragment.EXTRA_NAME, multiPath);
-        bundle.putInt(PostFragment.EXTRA_POST_TYPE, PostDataSource.TYPE_MULTI_REDDIT);
+        bundle.putInt(PostFragment.EXTRA_POST_TYPE, mAccessToken == null ? PostPagingSource.TYPE_ANONYMOUS_MULTIREDDIT : PostPagingSource.TYPE_MULTI_REDDIT);
         bundle.putString(PostFragment.EXTRA_ACCESS_TOKEN, mAccessToken);
         bundle.putString(PostFragment.EXTRA_ACCOUNT_NAME, mAccountName);
         mFragment.setArguments(bundle);
@@ -197,17 +190,6 @@ public class ViewMultiRedditDetailActivity extends BaseActivity implements SortT
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.view_multi_reddit_detail_activity, menu);
         applyMenuItemTheme(menu);
-        mMenu = menu;
-        MenuItem lazyModeItem = mMenu.findItem(R.id.action_lazy_mode_view_multi_reddit_detail_activity);
-        if (isInLazyMode) {
-            lazyModeItem.setTitle(R.string.action_stop_lazy_mode);
-            params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_NO_SCROLL);
-            collapsingToolbarLayout.setLayoutParams(params);
-        } else {
-            lazyModeItem.setTitle(R.string.action_start_lazy_mode);
-            params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS);
-            collapsingToolbarLayout.setLayoutParams(params);
-        }
         return true;
     }
 
@@ -225,31 +207,8 @@ public class ViewMultiRedditDetailActivity extends BaseActivity implements SortT
             startActivity(intent);
             return true;
         } else if (itemId == R.id.action_refresh_view_multi_reddit_detail_activity) {
-            if (mMenu != null) {
-                mMenu.findItem(R.id.action_lazy_mode_view_multi_reddit_detail_activity).setTitle(R.string.action_start_lazy_mode);
-            }
             if (mFragment instanceof FragmentCommunicator) {
                 ((FragmentCommunicator) mFragment).refresh();
-            }
-            return true;
-        } else if (itemId == R.id.action_lazy_mode_view_multi_reddit_detail_activity) {
-            MenuItem lazyModeItem = mMenu.findItem(R.id.action_lazy_mode_view_multi_reddit_detail_activity);
-            if (isInLazyMode) {
-                isInLazyMode = false;
-                ((FragmentCommunicator) mFragment).stopLazyMode();
-                lazyModeItem.setTitle(R.string.action_start_lazy_mode);
-                params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_SCROLL | AppBarLayout.LayoutParams.SCROLL_FLAG_ENTER_ALWAYS);
-                collapsingToolbarLayout.setLayoutParams(params);
-            } else {
-                isInLazyMode = true;
-                if (((FragmentCommunicator) mFragment).startLazyMode()) {
-                    lazyModeItem.setTitle(R.string.action_stop_lazy_mode);
-                    appBarLayout.setExpanded(false);
-                    params.setScrollFlags(AppBarLayout.LayoutParams.SCROLL_FLAG_NO_SCROLL);
-                    collapsingToolbarLayout.setLayoutParams(params);
-                } else {
-                    isInLazyMode = false;
-                }
             }
             return true;
         } else if (itemId == R.id.action_change_post_layout_view_multi_reddit_detail_activity) {
@@ -265,22 +224,32 @@ public class ViewMultiRedditDetailActivity extends BaseActivity implements SortT
                     .setTitle(R.string.delete)
                     .setMessage(R.string.delete_multi_reddit_dialog_message)
                     .setPositiveButton(R.string.delete, (dialogInterface, i)
-                            -> DeleteMultiReddit.deleteMultiReddit(mExecutor, new Handler(), mOauthRetrofit, mRedditDataRoomDatabase,
-                            mAccessToken, mAccountName, multiPath, new DeleteMultiReddit.DeleteMultiRedditListener() {
-                                @Override
-                                public void success() {
-                                    Toast.makeText(ViewMultiRedditDetailActivity.this,
-                                            R.string.delete_multi_reddit_success, Toast.LENGTH_SHORT).show();
-                                    EventBus.getDefault().post(new RefreshMultiRedditsEvent());
-                                    finish();
-                                }
+                            -> {
+                        if (mAccessToken == null) {
+                            DeleteMultiredditInDatabase.deleteMultiredditInDatabase(mExecutor, new Handler(), mRedditDataRoomDatabase, mAccountName, multiPath,
+                                    () -> {
+                                        Toast.makeText(this, R.string.delete_multi_reddit_success, Toast.LENGTH_SHORT).show();
+                                        finish();
+                                    });
+                        } else {
+                            DeleteMultiReddit.deleteMultiReddit(mExecutor, new Handler(), mOauthRetrofit, mRedditDataRoomDatabase,
+                                    mAccessToken, mAccountName, multiPath, new DeleteMultiReddit.DeleteMultiRedditListener() {
+                                        @Override
+                                        public void success() {
+                                            Toast.makeText(ViewMultiRedditDetailActivity.this,
+                                                    R.string.delete_multi_reddit_success, Toast.LENGTH_SHORT).show();
+                                            EventBus.getDefault().post(new RefreshMultiRedditsEvent());
+                                            finish();
+                                        }
 
-                                @Override
-                                public void failed() {
-                                    Toast.makeText(ViewMultiRedditDetailActivity.this,
-                                            R.string.delete_multi_reddit_failed, Toast.LENGTH_SHORT).show();
-                                }
-                            }))
+                                        @Override
+                                        public void failed() {
+                                            Toast.makeText(ViewMultiRedditDetailActivity.this,
+                                                    R.string.delete_multi_reddit_failed, Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                        }
+                    })
                     .setNegativeButton(R.string.cancel, null)
                     .show();
             return true;
@@ -291,7 +260,6 @@ public class ViewMultiRedditDetailActivity extends BaseActivity implements SortT
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putBoolean(IS_IN_LAZY_MODE_STATE, isInLazyMode);
         getSupportFragmentManager().putFragment(outState, FRAGMENT_OUT_STATE_KEY, mFragment);
     }
 
@@ -330,7 +298,7 @@ public class ViewMultiRedditDetailActivity extends BaseActivity implements SortT
     @Override
     protected void applyCustomTheme() {
         coordinatorLayout.setBackgroundColor(mCustomThemeWrapper.getBackgroundColor());
-        applyAppBarLayoutAndToolbarTheme(appBarLayout, toolbar);
+        applyAppBarLayoutAndCollapsingToolbarLayoutAndToolbarTheme(appBarLayout, collapsingToolbarLayout, toolbar);
     }
 
     @Override

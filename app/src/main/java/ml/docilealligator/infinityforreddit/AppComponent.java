@@ -5,7 +5,6 @@ import javax.inject.Singleton;
 import dagger.Component;
 import ml.docilealligator.infinityforreddit.activities.AccountPostsActivity;
 import ml.docilealligator.infinityforreddit.activities.AccountSavedThingActivity;
-import ml.docilealligator.infinityforreddit.activities.AnonymousSubscriptionsActivity;
 import ml.docilealligator.infinityforreddit.activities.CommentActivity;
 import ml.docilealligator.infinityforreddit.activities.CreateMultiRedditActivity;
 import ml.docilealligator.infinityforreddit.activities.CustomThemeListingActivity;
@@ -14,6 +13,7 @@ import ml.docilealligator.infinityforreddit.activities.CustomizePostFilterActivi
 import ml.docilealligator.infinityforreddit.activities.CustomizeThemeActivity;
 import ml.docilealligator.infinityforreddit.activities.EditCommentActivity;
 import ml.docilealligator.infinityforreddit.activities.EditMultiRedditActivity;
+import ml.docilealligator.infinityforreddit.activities.EditProfileActivity;
 import ml.docilealligator.infinityforreddit.activities.EditPostActivity;
 import ml.docilealligator.infinityforreddit.activities.FetchRandomSubredditOrPostActivity;
 import ml.docilealligator.infinityforreddit.activities.FilteredPostsActivity;
@@ -27,10 +27,12 @@ import ml.docilealligator.infinityforreddit.activities.MainActivity;
 import ml.docilealligator.infinityforreddit.activities.MultiredditSelectionActivity;
 import ml.docilealligator.infinityforreddit.activities.PostFilterPreferenceActivity;
 import ml.docilealligator.infinityforreddit.activities.PostFilterUsageListingActivity;
+import ml.docilealligator.infinityforreddit.activities.PostGalleryActivity;
 import ml.docilealligator.infinityforreddit.activities.PostImageActivity;
 import ml.docilealligator.infinityforreddit.activities.PostLinkActivity;
 import ml.docilealligator.infinityforreddit.activities.PostTextActivity;
 import ml.docilealligator.infinityforreddit.activities.PostVideoActivity;
+import ml.docilealligator.infinityforreddit.activities.RPANActivity;
 import ml.docilealligator.infinityforreddit.activities.ReportActivity;
 import ml.docilealligator.infinityforreddit.activities.RulesActivity;
 import ml.docilealligator.infinityforreddit.activities.SearchActivity;
@@ -46,6 +48,7 @@ import ml.docilealligator.infinityforreddit.activities.SubredditMultiselectionAc
 import ml.docilealligator.infinityforreddit.activities.SubredditSelectionActivity;
 import ml.docilealligator.infinityforreddit.activities.SubscribedThingListingActivity;
 import ml.docilealligator.infinityforreddit.activities.SuicidePreventionActivity;
+import ml.docilealligator.infinityforreddit.activities.TrendingActivity;
 import ml.docilealligator.infinityforreddit.activities.ViewImageOrGifActivity;
 import ml.docilealligator.infinityforreddit.activities.ViewImgurMediaActivity;
 import ml.docilealligator.infinityforreddit.activities.ViewMultiRedditDetailActivity;
@@ -56,6 +59,7 @@ import ml.docilealligator.infinityforreddit.activities.ViewSubredditDetailActivi
 import ml.docilealligator.infinityforreddit.activities.ViewUserDetailActivity;
 import ml.docilealligator.infinityforreddit.activities.ViewVideoActivity;
 import ml.docilealligator.infinityforreddit.activities.WebViewActivity;
+import ml.docilealligator.infinityforreddit.activities.WikiActivity;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.FlairBottomSheetFragment;
 import ml.docilealligator.infinityforreddit.fragments.CommentsListingFragment;
 import ml.docilealligator.infinityforreddit.fragments.FollowedUsersListingFragment;
@@ -69,17 +73,21 @@ import ml.docilealligator.infinityforreddit.fragments.UserListingFragment;
 import ml.docilealligator.infinityforreddit.fragments.ViewImgurImageFragment;
 import ml.docilealligator.infinityforreddit.fragments.ViewImgurVideoFragment;
 import ml.docilealligator.infinityforreddit.fragments.ViewPostDetailFragment;
+import ml.docilealligator.infinityforreddit.fragments.ViewRPANBroadcastFragment;
 import ml.docilealligator.infinityforreddit.fragments.ViewRedditGalleryImageOrGifFragment;
 import ml.docilealligator.infinityforreddit.fragments.ViewRedditGalleryVideoFragment;
 import ml.docilealligator.infinityforreddit.services.DownloadMediaService;
 import ml.docilealligator.infinityforreddit.services.DownloadRedditVideoService;
+import ml.docilealligator.infinityforreddit.services.EditProfileService;
 import ml.docilealligator.infinityforreddit.services.MaterialYouService;
 import ml.docilealligator.infinityforreddit.services.SubmitPostService;
 import ml.docilealligator.infinityforreddit.settings.AdvancedPreferenceFragment;
+import ml.docilealligator.infinityforreddit.settings.CommentPreferenceFragment;
 import ml.docilealligator.infinityforreddit.settings.CrashReportsFragment;
 import ml.docilealligator.infinityforreddit.settings.CustomizeBottomAppBarFragment;
 import ml.docilealligator.infinityforreddit.settings.CustomizeMainPageTabsFragment;
 import ml.docilealligator.infinityforreddit.settings.DownloadLocationPreferenceFragment;
+import ml.docilealligator.infinityforreddit.settings.FontPreferenceFragment;
 import ml.docilealligator.infinityforreddit.settings.GesturesAndButtonsPreferenceFragment;
 import ml.docilealligator.infinityforreddit.settings.MainPreferenceFragment;
 import ml.docilealligator.infinityforreddit.settings.MiscellaneousPreferenceFragment;
@@ -264,9 +272,27 @@ public interface AppComponent {
 
     void inject(CrashReportsFragment crashReportsFragment);
 
-    void inject(AnonymousSubscriptionsActivity anonymousSubscriptionsActivity);
-
     void inject(LockScreenActivity lockScreenActivity);
 
     void inject(MaterialYouService materialYouService);
+
+    void inject(RPANActivity rpanActivity);
+
+    void inject(ViewRPANBroadcastFragment viewRPANBroadcastFragment);
+
+    void inject(PostGalleryActivity postGalleryActivity);
+
+    void inject(TrendingActivity trendingActivity);
+
+    void inject(WikiActivity wikiActivity);
+
+    void inject(Infinity infinity);
+
+    void inject(EditProfileService editProfileService);
+
+    void inject(EditProfileActivity editProfileActivity);
+
+    void inject(FontPreferenceFragment fontPreferenceFragment);
+
+    void inject(CommentPreferenceFragment commentPreferenceFragment);
 }

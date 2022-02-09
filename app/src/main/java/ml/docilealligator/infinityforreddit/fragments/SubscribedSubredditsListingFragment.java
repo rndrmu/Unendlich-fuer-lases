@@ -1,7 +1,6 @@
 package ml.docilealligator.infinityforreddit.fragments;
 
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
@@ -17,7 +16,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -32,15 +30,16 @@ import javax.inject.Named;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import me.zhanghai.android.fastscroll.FastScrollerBuilder;
+import ml.docilealligator.infinityforreddit.FragmentCommunicator;
+import ml.docilealligator.infinityforreddit.Infinity;
+import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.RedditDataRoomDatabase;
 import ml.docilealligator.infinityforreddit.activities.BaseActivity;
 import ml.docilealligator.infinityforreddit.activities.SubredditSelectionActivity;
 import ml.docilealligator.infinityforreddit.activities.SubscribedThingListingActivity;
 import ml.docilealligator.infinityforreddit.adapters.SubscribedSubredditsRecyclerViewAdapter;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
-import ml.docilealligator.infinityforreddit.FragmentCommunicator;
-import ml.docilealligator.infinityforreddit.Infinity;
-import ml.docilealligator.infinityforreddit.R;
-import ml.docilealligator.infinityforreddit.RedditDataRoomDatabase;
+import ml.docilealligator.infinityforreddit.customviews.LinearLayoutManagerBugFixed;
 import ml.docilealligator.infinityforreddit.subscribedsubreddit.SubscribedSubredditViewModel;
 import ml.docilealligator.infinityforreddit.utils.SharedPreferencesUtils;
 import retrofit2.Retrofit;
@@ -80,9 +79,9 @@ public class SubscribedSubredditsListingFragment extends Fragment implements Fra
     @Inject
     Executor mExecutor;
     public SubscribedSubredditViewModel mSubscribedSubredditViewModel;
-    private Activity mActivity;
+    private BaseActivity mActivity;
     private RequestManager mGlide;
-    private LinearLayoutManager mLinearLayoutManager;
+    private LinearLayoutManagerBugFixed mLinearLayoutManager;
 
     public SubscribedSubredditsListingFragment() {
         // Required empty public constructor
@@ -110,12 +109,16 @@ public class SubscribedSubredditsListingFragment extends Fragment implements Fra
             }
         }
 
-        String accountName = getArguments().getString(EXTRA_ACCOUNT_NAME);
+        String accountName = getArguments().getString(EXTRA_ACCOUNT_NAME, "-");
         String accessToken = getArguments().getString(EXTRA_ACCESS_TOKEN);
+
+        if (accessToken == null) {
+            mSwipeRefreshLayout.setEnabled(false);
+        }
 
         mGlide = Glide.with(this);
 
-        mLinearLayoutManager = new LinearLayoutManager(mActivity);
+        mLinearLayoutManager = new LinearLayoutManagerBugFixed(mActivity);
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
 
         SubscribedSubredditsRecyclerViewAdapter adapter;
@@ -169,7 +172,7 @@ public class SubscribedSubredditsListingFragment extends Fragment implements Fra
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        mActivity = (Activity) context;
+        mActivity = (BaseActivity) context;
     }
 
     @Override
@@ -187,11 +190,18 @@ public class SubscribedSubredditsListingFragment extends Fragment implements Fra
             mSwipeRefreshLayout.setEnabled(false);
         }
         mErrorTextView.setTextColor(mCustomThemeWrapper.getSecondaryTextColor());
+        if (mActivity.typeface != null) {
+            mErrorTextView.setTypeface(mActivity.contentTypeface);
+        }
     }
 
     public void goBackToTop() {
         if (mLinearLayoutManager != null) {
             mLinearLayoutManager.scrollToPositionWithOffset(0, 0);
         }
+    }
+
+    public void changeSearchQuery(String searchQuery) {
+        mSubscribedSubredditViewModel.setSearchQuery(searchQuery);
     }
 }

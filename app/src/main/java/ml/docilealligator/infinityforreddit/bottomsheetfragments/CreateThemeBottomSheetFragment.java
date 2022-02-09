@@ -1,6 +1,5 @@
 package ml.docilealligator.infinityforreddit.bottomsheetfragments;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,17 +11,18 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.deishelon.roundedbottomsheet.RoundedBottomSheetDialogFragment;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import ml.docilealligator.infinityforreddit.activities.CustomizeThemeActivity;
 import ml.docilealligator.infinityforreddit.R;
+import ml.docilealligator.infinityforreddit.activities.BaseActivity;
+import ml.docilealligator.infinityforreddit.activities.CustomizeThemeActivity;
+import ml.docilealligator.infinityforreddit.customviews.LandscapeExpandedRoundedBottomSheetDialogFragment;
+import ml.docilealligator.infinityforreddit.utils.Utils;
 
 /**
  * A simple {@link Fragment} subclass.
  */
-public class CreateThemeBottomSheetFragment extends RoundedBottomSheetDialogFragment {
+public class CreateThemeBottomSheetFragment extends LandscapeExpandedRoundedBottomSheetDialogFragment {
 
     @BindView(R.id.import_theme_text_view_create_theme_bottom_sheet_fragment)
     TextView importTextView;
@@ -32,7 +32,7 @@ public class CreateThemeBottomSheetFragment extends RoundedBottomSheetDialogFrag
     TextView darkThemeTextView;
     @BindView(R.id.amoled_theme_text_view_create_theme_bottom_sheet_fragment)
     TextView amoledThemeTextView;
-    private Activity activity;
+    private BaseActivity activity;
 
     public interface SelectBaseThemeBottomSheetFragmentListener {
         void importTheme();
@@ -79,12 +79,16 @@ public class CreateThemeBottomSheetFragment extends RoundedBottomSheetDialogFrag
             startActivity(intent);
             dismiss();
         });
+
+        if (activity.typeface != null) {
+            Utils.setFontToAllTextViews(rootView, activity.typeface);
+        }
         return rootView;
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        activity = (Activity) context;
+        activity = (BaseActivity) context;
     }
 }
