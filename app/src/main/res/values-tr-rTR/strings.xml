@@ -799,7 +799,6 @@ Sekmeler, diğerlerine geçtikten sonra tüm içeriği kaybedebilir. Bu, sayfay�
     <string name="settings_swipe_action_threshold">"Düzey"</string>
     <string name="settings_pull_to_refresh_title">"Yenilemek İçin Çektir"</string>
     <string name="settings_security_title">"Güvenlik"</string>
-    <string name="settings_require_authentication_to_go_to_account_section_in_navigation_drawer_title">"Gezinme Çekmecesinde Hesap Bölümüne Gitmek İçin Kimlik Doğrulaması İste"</string>
 
     <!-- Fuzzy -->
     <string name="settings_long_press_to_hide_toolbar_in_compact_layout_title">"Araç Çubuğunu Gizlemek İçin Uzun Bas"</string>
@@ -832,7 +831,6 @@ Otomatik video oynatma kapatılır."</string>
     <string name="downloading_image_or_gif_failed_cannot_get_destination_directory">"İndirme başarısız: hedef dizine erişilemiyor"</string>
     <string name="downloading_media_failed_cannot_download_media">"İndirme başarısız"</string>
     <string name="downloading_media_failed_cannot_save_to_destination_directory">"İndirme başarısız: dosya hedef dizine kaydedilemiyor"</string>
-    <string name="view_full_comment_markdown">"Tüm Markdown'u Görüntüle"</string>
     <string name="select_user_flair_success">"Kullanıcı rozeti seçildi"</string>
     <string name="select_this_user_flair">"Bu kullanıcı rozeti seçilsin mi?"</string>
     <string name="select_header_size">"Başlık Boyutunu Seç"</string>

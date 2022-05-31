@@ -83,8 +83,8 @@ import ml.docilealligator.infinityforreddit.RedditDataRoomDatabase;
 import ml.docilealligator.infinityforreddit.SortType;
 import ml.docilealligator.infinityforreddit.SortTypeSelectionCallback;
 import ml.docilealligator.infinityforreddit.account.AccountViewModel;
-import ml.docilealligator.infinityforreddit.adapters.NavigationDrawerRecyclerViewAdapter;
 import ml.docilealligator.infinityforreddit.adapters.SubredditAutocompleteRecyclerViewAdapter;
+import ml.docilealligator.infinityforreddit.adapters.navigationdrawer.NavigationDrawerRecyclerViewMergedAdapter;
 import ml.docilealligator.infinityforreddit.apis.RedditAPI;
 import ml.docilealligator.infinityforreddit.asynctasks.InsertSubscribedThings;
 import ml.docilealligator.infinityforreddit.asynctasks.SwitchAccount;
@@ -98,6 +98,7 @@ import ml.docilealligator.infinityforreddit.bottomsheetfragments.SortTypeBottomS
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.customviews.LinearLayoutManagerBugFixed;
 import ml.docilealligator.infinityforreddit.events.ChangeDisableSwipingBetweenTabsEvent;
+import ml.docilealligator.infinityforreddit.events.ChangeInboxCountEvent;
 import ml.docilealligator.infinityforreddit.events.ChangeLockBottomAppBarEvent;
 import ml.docilealligator.infinityforreddit.events.ChangeNSFWEvent;
 import ml.docilealligator.infinityforreddit.events.ChangeRequireAuthToAccountSectionEvent;
@@ -212,12 +213,15 @@ public class MainActivity extends BaseActivity implements SortTypeSelectionCallb
     @Named("navigation_drawer")
     SharedPreferences mNavigationDrawerSharedPreferences;
     @Inject
+    @Named("security")
+    SharedPreferences mSecuritySharedPreferences;
+    @Inject
     CustomThemeWrapper mCustomThemeWrapper;
     @Inject
     Executor mExecutor;
     private FragmentManager fragmentManager;
     private SectionsPagerAdapter sectionsPagerAdapter;
-    private NavigationDrawerRecyclerViewAdapter adapter;
+    private NavigationDrawerRecyclerViewMergedAdapter adapter;
     private Call<String> subredditAutocompleteCall;
     private String mAccessToken;
     private String mAccountName;
@@ -297,9 +301,7 @@ public class MainActivity extends BaseActivity implements SortTypeSelectionCallb
             @Override
             public void onDrawerClosed(View drawerView) {
                 if (adapter != null) {
-                    if (adapter.closeAccountSectionWithoutChangeIconResource(true)) {
-                        adapter.notifyItemChanged(0);
-                    }
+                    adapter.closeAccountSectionWithoutChangeIconResource(true);
                 }
             }
         });
@@ -322,11 +324,11 @@ public class MainActivity extends BaseActivity implements SortTypeSelectionCallb
             mMessageFullname = savedInstanceState.getString(MESSAGE_FULLNAME_STATE);
             mNewAccountName = savedInstanceState.getString(NEW_ACCOUNT_NAME_STATE);
             inboxCount = savedInstanceState.getInt(INBOX_COUNT_STATE);
-            initializeNotificationAndBindView(true);
+            initializeNotificationAndBindView();
         } else {
             mMessageFullname = getIntent().getStringExtra(EXTRA_MESSSAGE_FULLNAME);
             mNewAccountName = getIntent().getStringExtra(EXTRA_NEW_ACCOUNT_NAME);
-            initializeNotificationAndBindView(false);
+            initializeNotificationAndBindView();
         }
     }
 
@@ -356,7 +358,7 @@ public class MainActivity extends BaseActivity implements SortTypeSelectionCallb
         applyFABTheme(fab);
     }
 
-    private void initializeNotificationAndBindView(boolean doNotInitializeNotificationIfNoNewAccount) {
+    private void initializeNotificationAndBindView() {
         boolean enableNotification = mSharedPreferences.getBoolean(SharedPreferencesUtils.ENABLE_NOTIFICATION_KEY, true);
         long notificationInterval = Long.parseLong(mSharedPreferences.getString(SharedPreferencesUtils.NOTIFICATION_INTERVAL_KEY, "1"));
         TimeUnit timeUnit = (notificationInterval == 15 || notificationInterval == 30) ? TimeUnit.MINUTES : TimeUnit.HOURS;
@@ -386,9 +388,7 @@ public class MainActivity extends BaseActivity implements SortTypeSelectionCallb
                 bindView();
             }
         } else {
-            if (doNotInitializeNotificationIfNoNewAccount) {
-                setNotification(workManager, notificationInterval, timeUnit, enableNotification);
-            }
+            setNotification(workManager, notificationInterval, timeUnit, enableNotification);
 
             bindView();
         }
@@ -567,7 +567,7 @@ public class MainActivity extends BaseActivity implements SortTypeSelectionCallb
     }
 
     private void bindView() {
-        if (isDestroyed()) {
+        if (isFinishing() || isDestroyed()) {
             return;
         }
 
@@ -726,9 +726,9 @@ public class MainActivity extends BaseActivity implements SortTypeSelectionCallb
         });
         fab.setVisibility(View.VISIBLE);
 
-        adapter = new NavigationDrawerRecyclerViewAdapter(this, mSharedPreferences,
-                mNsfwAndSpoilerSharedPreferences, mNavigationDrawerSharedPreferences, mCustomThemeWrapper, mAccountName,
-                new NavigationDrawerRecyclerViewAdapter.ItemClickListener() {
+        adapter = new NavigationDrawerRecyclerViewMergedAdapter(this, mSharedPreferences,
+                mNsfwAndSpoilerSharedPreferences, mNavigationDrawerSharedPreferences, mSecuritySharedPreferences,
+                mCustomThemeWrapper, mAccountName, new NavigationDrawerRecyclerViewMergedAdapter.ItemClickListener() {
                     @Override
                     public void onMenuClick(int stringId) {
                         Intent intent = null;
@@ -830,7 +830,7 @@ public class MainActivity extends BaseActivity implements SortTypeSelectionCallb
                 });
         adapter.setInboxCount(inboxCount);
         navDrawerRecyclerView.setLayoutManager(new LinearLayoutManagerBugFixed(this));
-        navDrawerRecyclerView.setAdapter(adapter);
+        navDrawerRecyclerView.setAdapter(adapter.getConcatAdapter());
 
         int tabCount = mMainActivityTabsSharedPreferences.getInt((mAccountName == null ? "" : mAccountName) + SharedPreferencesUtils.MAIN_PAGE_TAB_COUNT, 3);
         mShowFavoriteMultiReddits = mMainActivityTabsSharedPreferences.getBoolean((mAccountName == null ? "" : mAccountName) + SharedPreferencesUtils.MAIN_PAGE_SHOW_FAVORITE_MULTIREDDITS, false);
@@ -938,7 +938,7 @@ public class MainActivity extends BaseActivity implements SortTypeSelectionCallb
         });
 
         accountViewModel = new ViewModelProvider(this,
-                new AccountViewModel.Factory(getApplication(), mRedditDataRoomDatabase, mAccountName)).get(AccountViewModel.class);
+                new AccountViewModel.Factory(mRedditDataRoomDatabase)).get(AccountViewModel.class);
         accountViewModel.getAccountsExceptCurrentAccountLiveData().observe(this, adapter::changeAccountsDataset);
         accountViewModel.getCurrentAccountLiveData().observe(this, account -> {
             if (account != null) {
@@ -1163,6 +1163,10 @@ public class MainActivity extends BaseActivity implements SortTypeSelectionCallb
             case PostTypeBottomSheetFragment.TYPE_GALLERY:
                 intent = new Intent(MainActivity.this, PostGalleryActivity.class);
                 startActivity(intent);
+                break;
+            case PostTypeBottomSheetFragment.TYPE_POLL:
+                intent = new Intent(MainActivity.this, PostPollActivity.class);
+                startActivity(intent);
         }
     }
 
@@ -1241,12 +1245,19 @@ public class MainActivity extends BaseActivity implements SortTypeSelectionCallb
             RecyclerView.LayoutManager layoutManager = navDrawerRecyclerView.getLayoutManager();
             navDrawerRecyclerView.setAdapter(null);
             navDrawerRecyclerView.setLayoutManager(null);
-            navDrawerRecyclerView.setAdapter(adapter);
+            navDrawerRecyclerView.setAdapter(adapter.getConcatAdapter());
             navDrawerRecyclerView.setLayoutManager(layoutManager);
 
             if (previousPosition > 0) {
                 navDrawerRecyclerView.scrollToPosition(previousPosition);
             }
+        }
+    }
+
+    @Subscribe
+    public void onChangeInboxCountEvent(ChangeInboxCountEvent event) {
+        if (adapter != null) {
+            adapter.setInboxCount(event.inboxCount);
         }
     }
 

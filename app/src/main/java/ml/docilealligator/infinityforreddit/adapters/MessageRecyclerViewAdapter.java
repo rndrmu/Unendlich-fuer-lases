@@ -17,6 +17,8 @@ import androidx.paging.PagedListAdapter;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.util.ArrayList;
 
 import butterknife.BindView;
@@ -40,6 +42,7 @@ import ml.docilealligator.infinityforreddit.activities.LinkResolverActivity;
 import ml.docilealligator.infinityforreddit.activities.ViewPrivateMessagesActivity;
 import ml.docilealligator.infinityforreddit.activities.ViewUserDetailActivity;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
+import ml.docilealligator.infinityforreddit.events.ChangeInboxCountEvent;
 import ml.docilealligator.infinityforreddit.markdown.SpoilerParserPlugin;
 import ml.docilealligator.infinityforreddit.markdown.SuperscriptInlineProcessor;
 import ml.docilealligator.infinityforreddit.message.FetchMessage;
@@ -52,7 +55,7 @@ public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, Recycl
     private static final int VIEW_TYPE_DATA = 0;
     private static final int VIEW_TYPE_ERROR = 1;
     private static final int VIEW_TYPE_LOADING = 2;
-    private static final DiffUtil.ItemCallback<Message> DIFF_CALLBACK = new DiffUtil.ItemCallback<Message>() {
+    private static final DiffUtil.ItemCallback<Message> DIFF_CALLBACK = new DiffUtil.ItemCallback<>() {
         @Override
         public boolean areItemsTheSame(@NonNull Message message, @NonNull Message t1) {
             return message.getId().equals(t1.getId());
@@ -171,7 +174,7 @@ public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, Recycl
                     if (markAllMessagesAsRead) {
                         message.setNew(false);
                     } else {
-                        ((DataViewHolder) holder).itemView.setBackgroundColor(
+                        holder.itemView.setBackgroundColor(
                                 mUnreadMessageBackgroundColor);
                     }
                 }
@@ -187,7 +190,7 @@ public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, Recycl
                 ((DataViewHolder) holder).subjectTextView.setText(subject);
                 mMarkwon.setMarkdown(((DataViewHolder) holder).contentCustomMarkwonView, displayedMessage.getBody());
 
-                ((DataViewHolder) holder).itemView.setOnClickListener(view -> {
+                holder.itemView.setOnClickListener(view -> {
                     if (mMessageType == FetchMessage.MESSAGE_TYPE_INBOX
                             && message.getContext() != null && !message.getContext().equals("")) {
                         Uri uri = Uri.parse(message.getContext());
@@ -196,25 +199,26 @@ public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, Recycl
                         mActivity.startActivity(intent);
                     } else if (mMessageType == FetchMessage.MESSAGE_TYPE_PRIVATE_MESSAGE) {
                         Intent intent = new Intent(mActivity, ViewPrivateMessagesActivity.class);
-                        intent.putExtra(ViewPrivateMessagesActivity.EXTRA_PRIVATE_MESSAGE, message);
+                        intent.putExtra(ViewPrivateMessagesActivity.EXTRA_PRIVATE_MESSAGE_INDEX, holder.getBindingAdapterPosition());
                         intent.putExtra(ViewPrivateMessagesActivity.EXTRA_MESSAGE_POSITION, holder.getBindingAdapterPosition());
                         mActivity.startActivity(intent);
                     }
 
                     if (displayedMessage.isNew()) {
-                        ((DataViewHolder) holder).itemView.setBackgroundColor(mMessageBackgroundColor);
+                        holder.itemView.setBackgroundColor(mMessageBackgroundColor);
                         message.setNew(false);
 
                         ReadMessage.readMessage(mOauthRetrofit, mAccessToken, message.getFullname(),
                                 new ReadMessage.ReadMessageListener() {
                                     @Override
                                     public void readSuccess() {
+                                        EventBus.getDefault().post(new ChangeInboxCountEvent(-1));
                                     }
 
                                     @Override
                                     public void readFailed() {
                                         message.setNew(true);
-                                        ((DataViewHolder) holder).itemView.setBackgroundColor(mUnreadMessageBackgroundColor);
+                                        holder.itemView.setBackgroundColor(mUnreadMessageBackgroundColor);
                                     }
                                 });
                     }
@@ -224,12 +228,6 @@ public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, Recycl
                     Intent intent = new Intent(mActivity, ViewUserDetailActivity.class);
                     intent.putExtra(ViewUserDetailActivity.EXTRA_USER_NAME_KEY, message.getAuthor());
                     mActivity.startActivity(intent);
-                });
-
-                ((DataViewHolder) holder).contentCustomMarkwonView.setOnClickListener(view -> {
-                    if (((DataViewHolder) holder).contentCustomMarkwonView.getSelectionStart() == -1 && ((DataViewHolder) holder).contentCustomMarkwonView.getSelectionEnd() == -1) {
-                        ((DataViewHolder) holder).itemView.performClick();
-                    }
                 });
             }
         }
@@ -290,7 +288,6 @@ public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, Recycl
         if (position >= 0 && position < super.getItemCount()) {
             Message message = getItem(position);
             if (message != null) {
-                message.addReply(newReply);
                 notifyItemChanged(position);
             }
         }
@@ -330,6 +327,12 @@ public class MessageRecyclerViewAdapter extends PagedListAdapter<Message, Recycl
             contentCustomMarkwonView.setTextColor(mSecondaryTextColor);
 
             contentCustomMarkwonView.setMovementMethod(LinkMovementMethod.getInstance());
+
+            contentCustomMarkwonView.setOnClickListener(view -> {
+                if (contentCustomMarkwonView.getSelectionStart() == -1 && contentCustomMarkwonView.getSelectionEnd() == -1) {
+                    itemView.performClick();
+                }
+            });
         }
     }
 

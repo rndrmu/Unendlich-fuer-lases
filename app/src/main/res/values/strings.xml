@@ -44,6 +44,7 @@
     <string name="trending_activity_label">Trending</string>
     <string name="wiki_activity_label">Wiki</string>
     <string name="edit_profile_activity_label">Edit Profile</string>
+    <string name="post_poll_activity_label">Poll Post</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
@@ -197,10 +198,12 @@
     <string name="title_required">The post needs a good title</string>
     <string name="link_required">Hey where is the link?</string>
     <string name="select_an_image">Please select an image first</string>
+    <string name="voting_length">Voting length: %1$d days</string>
     <string name="posting">Posting</string>
     <string name="post_failed">Could not post it</string>
     <string name="error_processing_image">Error processing image</string>
     <string name="error_processing_video">Error processing video</string>
+    <string name="two_options_required">A good poll needs two or more options!</string>
 
     <string name="download_started">Download Started. Check the notification for progress.</string>
 
@@ -229,6 +232,7 @@
     <string name="bottom_sheet_post_image">Image</string>
     <string name="bottom_sheet_post_video">Video</string>
     <string name="bottom_sheet_post_gallery">Gallery</string>
+    <string name="bottom_sheet_post_poll">Poll</string>
     <string name="post_type_gif">Gif</string>
     <string name="post_type_gallery">Gallery</string>
 
@@ -528,7 +532,7 @@
     <string name="settings_swipe_action_threshold">Threshold</string>
     <string name="settings_pull_to_refresh_title">Pull to Refresh</string>
     <string name="settings_security_title">Security</string>
-    <string name="settings_require_authentication_to_go_to_account_section_in_navigation_drawer_title">Require Authentication to Go to Account Section in Navigation Drawer</string>
+    <string name="settings_require_authentication_to_show_accounts">Require Authentication to Show Accounts</string>
     <string name="settings_long_press_to_hide_toolbar_in_compact_layout_title">Long Press to Hide Toolbar</string>
     <string name="settings_post_compact_layout_toolbar_hidden_by_default_title">Hide Toolbar by Default</string>
     <string name="settings_customize_bottom_app_bar_title">Customize Bottom Navigation Bar</string>
@@ -629,7 +633,14 @@
     <string name="settings_hide_comment_awards_title">Hide Comment Awards</string>
     <string name="settings_show_fewer_toolbar_options_threshold_title">Show Fewer Toolbar Options Starting From</string>
     <string name="settings_show_fewer_toolbar_options_threshold_summary">Level %1$d</string>
-    <string name="settings_show_author_avatar_title">Hide Author Avatar</string>
+    <string name="settings_show_author_avatar_title">Show Author Avatar</string>
+    <string name="settings_reddit_user_agreement_title">Reddit User Agreement</string>
+    <string name="settings_always_show_child_comment_count_title">Always Show the Number of Child Comments</string>
+    <string name="settings_hide_upvote_ratio_title">Hide Upvote Ratio</string>
+    <string name="settings_miscellaneous_dangerous_group_title">Dangerous</string>
+    <string name="settings_post_feed_max_resolution_warning_title">Increase the value to show previews in higher resolution, but the app may crash unexpectedly.</string>
+    <string name="settings_post_feed_max_resolution_title">Post Feed Preview Max Resolution (Width * Height)</string>
+    <string name="settings_reddit_video_default_resolution">Reddit Video Default Resolution</string>
 
     <string name="no_link_available">Cannot get the link</string>
 
@@ -1042,8 +1053,6 @@
     <string name="block_user_success">Blocked</string>
     <string name="block_user_failed">Failed to block user</string>
 
-    <string name="view_full_comment_markdown">View Full Markdown</string>
-
     <string name="select_user_flair_success">User flair selected</string>
     <string name="select_this_user_flair">Select this user flair?</string>
 
@@ -1263,5 +1272,27 @@
 
     <string name="reddit_gallery_item_caption_hint">Caption (max 180 characters)</string>
     <string name="reddit_gallery_item_url_hint">Url</string>
+
+    <string name="user_agreement_dialog_title">User Agreement</string>
+    <string name="user_agreement_message">You need to agree to Reddit User Agreement (%1$s) and Infinity for Reddit\'s Privacy Policy (%2$s) before logging in.</string>
+    <string name="agree">Agree</string>
+    <string name="do_not_agree">Don\'t Agree</string>
+
+    <string name="option_1_hint">Option 1 (Required)</string>
+    <string name="option_2_hint">Option 2 (Required)</string>
+    <string name="option_3_hint">Option 3</string>
+    <string name="option_4_hint">Option 4</string>
+    <string name="option_5_hint">Option 5</string>
+    <string name="option_6_hint">Option 6</string>
+
+    <string name="not_a_valid_number">Not a valid number</string>
+
+    <string name="post_karma">Post Karma:</string>
+    <string name="comment_karma">Comment Karma:</string>
+    <string name="awarder_karma">Awarder Karma:</string>
+    <string name="awardee_karma">Awardee Karma:</string>
+
+    <string name="handle_link">Handle Link</string>
+    <string name="invalid_link">Invalid link</string>
 
 </resources>

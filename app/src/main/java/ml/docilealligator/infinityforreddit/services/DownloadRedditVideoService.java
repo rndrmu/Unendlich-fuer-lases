@@ -1,5 +1,7 @@
 package ml.docilealligator.infinityforreddit.services;
 
+import static android.os.Environment.getExternalStoragePublicDirectory;
+
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -47,6 +49,7 @@ import ml.docilealligator.infinityforreddit.DownloadProgressResponseBody;
 import ml.docilealligator.infinityforreddit.Infinity;
 import ml.docilealligator.infinityforreddit.R;
 import ml.docilealligator.infinityforreddit.apis.DownloadFile;
+import ml.docilealligator.infinityforreddit.broadcastreceivers.DownloadedMediaDeleteActionBroadcastReceiver;
 import ml.docilealligator.infinityforreddit.customtheme.CustomThemeWrapper;
 import ml.docilealligator.infinityforreddit.events.DownloadRedditVideoEvent;
 import ml.docilealligator.infinityforreddit.utils.NotificationUtils;
@@ -55,8 +58,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-
-import static android.os.Environment.getExternalStoragePublicDirectory;
 
 public class DownloadRedditVideoService extends Service {
 
@@ -202,7 +203,7 @@ public class DownloadRedditVideoService extends Service {
                                 checkForDuplicates = dir.findFile(fileNameWithoutExtension + ".mp4");
                                 num++;
                             }
-                            picFile = dir.createFile("video/*", fileNameWithoutExtension + ".mp4");
+                            picFile = dir.createFile("video/mp4", fileNameWithoutExtension + ".mp4");
                             if (picFile == null) {
                                 downloadFinished(null, ERROR_CANNOT_GET_DESTINATION_DIRECTORY, randomNotificationIdOffset);
                                 return;
@@ -414,7 +415,7 @@ public class DownloadRedditVideoService extends Service {
                 } else {
                     ContentValues contentValues = new ContentValues();
                     contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, destinationFileName);
-                    contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "video/*");
+                    contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4");
                     contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, destinationFileUriString);
                     contentValues.put(MediaStore.Video.Media.IS_PENDING, 1);
 
@@ -567,12 +568,7 @@ public class DownloadRedditVideoService extends Service {
             MediaScannerConnection.scanFile(
                     this, new String[]{destinationFileUri.toString()}, null,
                     (path, uri) -> {
-                        Intent intent = new Intent();
-                        intent.setAction(android.content.Intent.ACTION_VIEW);
-                        intent.setDataAndType(destinationFileUri, "video/*");
-                        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-                        updateNotification(R.string.downloading_reddit_video_finished, -1, randomNotificationIdOffset, pendingIntent);
+                        updateNotification(R.string.downloading_reddit_video_finished, -1, randomNotificationIdOffset, destinationFileUri);
                         EventBus.getDefault().post(new DownloadRedditVideoEvent(true));
                     }
             );
@@ -587,7 +583,7 @@ public class DownloadRedditVideoService extends Service {
                 .build();
     }
 
-    private void updateNotification(int contentStringResId, int progress, int randomNotificationIdOffset, PendingIntent pendingIntent) {
+    private void updateNotification(int contentStringResId, int progress, int randomNotificationIdOffset, Uri mediaUri) {
         if (notificationManager != null) {
             if (progress < 0) {
                 builder.setProgress(0, 0, false);
@@ -597,8 +593,29 @@ public class DownloadRedditVideoService extends Service {
             if (contentStringResId != 0) {
                 builder.setContentText(getString(contentStringResId));
             }
-            if (pendingIntent != null) {
+            if (mediaUri != null) {
+                Intent intent = new Intent();
+                intent.setAction(android.content.Intent.ACTION_VIEW);
+                intent.setDataAndType(mediaUri, "video/mp4");
+                intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                PendingIntent pendingIntent = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE) : PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+
                 builder.setContentIntent(pendingIntent);
+
+                Intent shareIntent = new Intent();
+                shareIntent.setAction(Intent.ACTION_SEND);
+                shareIntent.putExtra(Intent.EXTRA_STREAM, mediaUri);
+                shareIntent.setType("video/mp4");
+                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                Intent intentAction = Intent.createChooser(shareIntent, getString(R.string.share));
+                PendingIntent shareActionPendingIntent = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.getActivity(this, 1, intentAction, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE) : PendingIntent.getActivity(this, 1, intentAction, PendingIntent.FLAG_CANCEL_CURRENT);
+                builder.addAction(new NotificationCompat.Action(R.drawable.ic_notification, getString(R.string.share), shareActionPendingIntent));
+
+                Intent deleteIntent = new Intent(this, DownloadedMediaDeleteActionBroadcastReceiver.class);
+                deleteIntent.setData(mediaUri);
+                deleteIntent.putExtra(DownloadedMediaDeleteActionBroadcastReceiver.EXTRA_NOTIFICATION_ID, NotificationUtils.DOWNLOAD_REDDIT_VIDEO_NOTIFICATION_ID + randomNotificationIdOffset);
+                PendingIntent deleteActionPendingIntent = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.getBroadcast(this, 2, deleteIntent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE) : PendingIntent.getBroadcast(this, 2, deleteIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+                builder.addAction(new NotificationCompat.Action(R.drawable.ic_notification, getString(R.string.delete), deleteActionPendingIntent));
             }
             notificationManager.notify(NotificationUtils.DOWNLOAD_REDDIT_VIDEO_NOTIFICATION_ID + randomNotificationIdOffset, builder.build());
         }

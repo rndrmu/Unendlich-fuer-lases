@@ -44,7 +44,9 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
@@ -62,6 +64,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.cache.CacheDataSourceFactory;
 import com.google.android.exoplayer2.upstream.cache.SimpleCache;
+import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.Util;
 import com.google.android.exoplayer2.video.VideoListener;
 import com.google.android.material.bottomappbar.BottomAppBar;
@@ -188,7 +191,7 @@ public class ViewVideoActivity extends AppCompatActivity implements CustomFontRe
     private long resumePosition = -1;
     private int videoType;
     private boolean isDataSavingMode;
-    private boolean isHd;
+    private int dataSavingModeDefaultResolution;
     private Integer originalOrientation;
     private int playbackSpeed = 100;
     private boolean useBottomAppBar;
@@ -333,7 +336,7 @@ public class ViewVideoActivity extends AppCompatActivity implements CustomFontRe
         } else if (dataSavingModeString.equals(SharedPreferencesUtils.DATA_SAVING_MODE_ONLY_ON_CELLULAR_DATA)) {
             isDataSavingMode = networkType == Utils.NETWORK_TYPE_CELLULAR;
         }
-        isHd = !isDataSavingMode;
+        dataSavingModeDefaultResolution = Integer.parseInt(mSharedPreferences.getString(SharedPreferencesUtils.REDDIT_VIDEO_DEFAULT_RESOLUTION, "360"));
 
         if (!mSharedPreferences.getBoolean(SharedPreferencesUtils.VIDEO_PLAYER_IGNORE_NAV_BAR, false)) {
             if (resources.getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT || resources.getBoolean(R.bool.isTablet)) {
@@ -363,29 +366,33 @@ public class ViewVideoActivity extends AppCompatActivity implements CustomFontRe
             resumePosition = intent.getLongExtra(EXTRA_PROGRESS_SECONDS, -1);
             if (mSharedPreferences.getBoolean(SharedPreferencesUtils.VIDEO_PLAYER_AUTOMATIC_LANDSCAPE_ORIENTATION, false)) {
                 originalOrientation = resources.getConfiguration().orientation;
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+                try {
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
 
-                if (android.provider.Settings.System.getInt(getContentResolver(),
-                        Settings.System.ACCELEROMETER_ROTATION, 0) == 1) {
-                    OrientationEventListener orientationEventListener = new OrientationEventListener(this) {
-                        @Override
-                        public void onOrientationChanged(int orientation) {
-                            int epsilon = 10;
-                            int leftLandscape = 90;
-                            int rightLandscape = 270;
-                            if(epsilonCheck(orientation, leftLandscape, epsilon) ||
-                                    epsilonCheck(orientation, rightLandscape, epsilon)) {
-                                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
-                                disable();
+                    if (android.provider.Settings.System.getInt(getContentResolver(),
+                            Settings.System.ACCELEROMETER_ROTATION, 0) == 1) {
+                        OrientationEventListener orientationEventListener = new OrientationEventListener(this) {
+                            @Override
+                            public void onOrientationChanged(int orientation) {
+                                int epsilon = 10;
+                                int leftLandscape = 90;
+                                int rightLandscape = 270;
+                                if(epsilonCheck(orientation, leftLandscape, epsilon) ||
+                                        epsilonCheck(orientation, rightLandscape, epsilon)) {
+                                    try {
+                                        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+                                        disable();
+                                    } catch (Exception ignore) {}
+                                }
                             }
-                        }
 
-                        private boolean epsilonCheck(int a, int b, int epsilon) {
-                            return a > b - epsilon && a < b + epsilon;
-                        }
-                    };
-                    orientationEventListener.enable();
-                }
+                            private boolean epsilonCheck(int a, int b, int epsilon) {
+                                return a > b - epsilon && a < b + epsilon;
+                            }
+                        };
+                        orientationEventListener.enable();
+                    }
+                } catch (Exception ignore) {}
             }
         }
 
@@ -413,6 +420,11 @@ public class ViewVideoActivity extends AppCompatActivity implements CustomFontRe
 
         TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory();
         trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
+        if (videoType == VIDEO_TYPE_NORMAL && isDataSavingMode && dataSavingModeDefaultResolution > 0) {
+            trackSelector.setParameters(
+                    trackSelector.buildUponParameters()
+                            .setMaxVideoSize(dataSavingModeDefaultResolution, dataSavingModeDefaultResolution));
+        }
         player = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
 
         playerControlView.setPlayer(player);
@@ -606,12 +618,6 @@ public class ViewVideoActivity extends AppCompatActivity implements CustomFontRe
             public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
                 if (!trackGroups.isEmpty()) {
                     if (videoType == VIDEO_TYPE_NORMAL) {
-                        if (isDataSavingMode) {
-                            trackSelector.setParameters(
-                                    trackSelector.buildUponParameters()
-                                            .setMaxVideoSize(720, 720));
-                        }
-
                         hdButton.setVisibility(View.VISIBLE);
                         hdButton.setOnClickListener(view -> {
                             TrackSelectionDialogBuilder builder = new TrackSelectionDialogBuilder(ViewVideoActivity.this, getString(R.string.select_video_quality), trackSelector, 0);
@@ -647,6 +653,26 @@ public class ViewVideoActivity extends AppCompatActivity implements CustomFontRe
                 }
             }
         });
+    }
+
+    private int inferPrimaryTrackType(Format format) {
+        int trackType = MimeTypes.getTrackType(format.sampleMimeType);
+        if (trackType != C.TRACK_TYPE_UNKNOWN) {
+            return trackType;
+        }
+        if (MimeTypes.getVideoMediaMimeType(format.codecs) != null) {
+            return C.TRACK_TYPE_VIDEO;
+        }
+        if (MimeTypes.getAudioMediaMimeType(format.codecs) != null) {
+            return C.TRACK_TYPE_AUDIO;
+        }
+        if (format.width != Format.NO_VALUE || format.height != Format.NO_VALUE) {
+            return C.TRACK_TYPE_VIDEO;
+        }
+        if (format.channelCount != Format.NO_VALUE || format.sampleRate != Format.NO_VALUE) {
+            return C.TRACK_TYPE_AUDIO;
+        }
+        return C.TRACK_TYPE_UNKNOWN;
     }
 
     private void loadGfycatOrRedgifsVideo(Retrofit retrofit, String gfycatId, Bundle savedInstanceState, boolean needErrorHandling) {
@@ -896,7 +922,9 @@ public class ViewVideoActivity extends AppCompatActivity implements CustomFontRe
         wasPlaying = player.getPlayWhenReady();
         player.setPlayWhenReady(false);
         if (originalOrientation != null) {
-            setRequestedOrientation(originalOrientation);
+            try {
+                setRequestedOrientation(originalOrientation);
+            } catch (Exception ignore) {}
         }
     }
 

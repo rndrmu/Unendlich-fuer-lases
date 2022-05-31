@@ -815,7 +815,6 @@ Baziraj na Indigo Amoled temi"</string>
     <string name="settings_swipe_action_threshold">"Prag"</string>
     <string name="settings_pull_to_refresh_title">"Povuci za ovježavanje"</string>
     <string name="settings_security_title">"Sigurnost"</string>
-    <string name="settings_require_authentication_to_go_to_account_section_in_navigation_drawer_title">"Zatraži autentikaciju pri ulasku u Račun u navigacijskoj ladici"</string>
 
     <!-- Fuzzy -->
     <string name="settings_long_press_to_hide_toolbar_in_compact_layout_title">"Dugo pritisni za skrivanje alatne trake u Kompaktnom rasporedu"</string>
@@ -847,7 +846,6 @@ Reddit videi su niže rezolucije."</string>
     <string name="downloading_image_or_gif_failed_cannot_get_destination_directory">"Preuzimanje neuspješno:nije moguće pristupiti odredišnom direktoriju"</string>
     <string name="downloading_media_failed_cannot_download_media">"Preuzimanje neuspješno"</string>
     <string name="downloading_media_failed_cannot_save_to_destination_directory">"Preuzimanje neuspješno: nije moguće spremiti datoteku u odredišni direktorij"</string>
-    <string name="view_full_comment_markdown">"Pogledaj cijeli Markdown"</string>
     <string name="select_user_flair_success">"Korisnički flair odabran"</string>
     <string name="select_this_user_flair">"Odabrati ovaj korisnički flair?"</string>
     <string name="select_header_size">"Odaberi veličinu zaglavlja"</string>

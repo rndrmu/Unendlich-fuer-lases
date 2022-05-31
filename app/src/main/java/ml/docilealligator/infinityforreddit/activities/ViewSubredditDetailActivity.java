@@ -248,7 +248,6 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
     private int fabOption;
     private SlidrInterface mSlidrInterface;
     private MaterialAlertDialogBuilder nsfwWarningBuilder;
-    private boolean isOnCreateActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -371,7 +370,6 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
 
         checkNewAccountAndBindView();
 
-        isOnCreateActivity = true;
         fetchSubredditData();
 
         String title = "r/" + subredditName;
@@ -602,13 +600,8 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
                 public void onFetchSubredditDataSuccess(SubredditData subredditData, int nCurrentOnlineSubscribers) {
                     mNCurrentOnlineSubscribers = nCurrentOnlineSubscribers;
                     nOnlineSubscribersTextView.setText(getString(R.string.online_subscribers_number_detail, nCurrentOnlineSubscribers));
-                    if (isOnCreateActivity) {
-                        mFetchSubredditInfoSuccess = true;
-                        isOnCreateActivity = false;
-                    } else {
-                        InsertSubredditData.insertSubredditData(mExecutor, new Handler(), mRedditDataRoomDatabase,
-                                subredditData, () -> mFetchSubredditInfoSuccess = true);
-                    }
+                    InsertSubredditData.insertSubredditData(mExecutor, new Handler(), mRedditDataRoomDatabase,
+                            subredditData, () -> mFetchSubredditInfoSuccess = true);
                 }
 
                 @Override
@@ -1277,7 +1270,12 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
                 break;
             case PostTypeBottomSheetFragment.TYPE_GALLERY:
                 intent = new Intent(this, PostGalleryActivity.class);
-                intent.putExtra(PostVideoActivity.EXTRA_SUBREDDIT_NAME, subredditName);
+                intent.putExtra(PostGalleryActivity.EXTRA_SUBREDDIT_NAME, subredditName);
+                startActivity(intent);
+                break;
+            case PostTypeBottomSheetFragment.TYPE_POLL:
+                intent = new Intent(this, PostPollActivity.class);
+                intent.putExtra(PostPollActivity.EXTRA_SUBREDDIT_NAME, subredditName);
                 startActivity(intent);
         }
     }
@@ -1614,14 +1612,16 @@ public class ViewSubredditDetailActivity extends BaseActivity implements SortTyp
         }
 
         public void refresh(boolean refreshSubredditData) {
-            Fragment fragment = getCurrentFragment();
+            Fragment fragment = fragmentManager.findFragmentByTag("f0");
             if (fragment instanceof PostFragment) {
                 ((PostFragment) fragment).refresh();
                 if (refreshSubredditData) {
                     mFetchSubredditInfoSuccess = false;
                     fetchSubredditData();
                 }
-            } else if (fragment instanceof SidebarFragment) {
+            }
+            fragment = fragmentManager.findFragmentByTag("f1");
+            if (fragment instanceof SidebarFragment) {
                 ((SidebarFragment) fragment).fetchSubredditData();
             }
         }

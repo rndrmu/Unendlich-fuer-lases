@@ -105,15 +105,15 @@ public final class Utils {
         StringBuilder regexed = new StringBuilder(regexedMarkdown);
         boolean hasBracket = false;
         int nCarets = 0;
-        int new_lines = 0;
+        int newLines = 0;
         for (int i = 0; i < regexed.length(); i++) {
             char currentChar = regexed.charAt(i);
             if (hasBracket && currentChar == '\n') {
-                new_lines++;
-                if (new_lines > 1) {
+                newLines++;
+                if (newLines > 1) {
                     hasBracket = false;
                     nCarets = 0;
-                    new_lines = 0;
+                    newLines = 0;
                 }
             } else if (currentChar == '^') {
                 if (!(i > 0 && regexed.charAt(i - 1) == '\\')) {
@@ -147,7 +147,7 @@ public final class Utils {
                 }
                 nCarets = 0;
             } else {
-                new_lines = 0;
+                newLines = 0;
             }
         }
         if (!hasBracket) {
@@ -190,30 +190,32 @@ public final class Utils {
 
     public static String parseInlineEmotes(String markdown, JSONObject mediaMetadataObject) throws JSONException {
         JSONArray mediaMetadataNames = mediaMetadataObject.names();
-        for (int i = 0; i < mediaMetadataNames.length(); i++) {
-            if (!mediaMetadataNames.isNull(i)) {
-                String mediaMetadataKey = mediaMetadataNames.getString(i);
-                if (mediaMetadataObject.isNull(mediaMetadataKey)) {
-                    continue;
-                }
-                JSONObject item = mediaMetadataObject.getJSONObject(mediaMetadataKey);
-                if (item.isNull(JSONUtils.STATUS_KEY)
-                        || !item.getString(JSONUtils.STATUS_KEY).equals("valid")
-                        || item.isNull(JSONUtils.ID_KEY)
-                        || item.isNull(JSONUtils.T_KEY)
-                        || item.isNull(JSONUtils.S_KEY)) {
-                    continue;
-                }
-                String emote_type = item.getString(JSONUtils.T_KEY);
-                String emote_id = item.getString(JSONUtils.ID_KEY);
+        if (mediaMetadataNames != null) {
+            for (int i = 0; i < mediaMetadataNames.length(); i++) {
+                if (!mediaMetadataNames.isNull(i)) {
+                    String mediaMetadataKey = mediaMetadataNames.getString(i);
+                    if (mediaMetadataObject.isNull(mediaMetadataKey)) {
+                        continue;
+                    }
+                    JSONObject item = mediaMetadataObject.getJSONObject(mediaMetadataKey);
+                    if (item.isNull(JSONUtils.STATUS_KEY)
+                            || !item.getString(JSONUtils.STATUS_KEY).equals("valid")
+                            || item.isNull(JSONUtils.ID_KEY)
+                            || item.isNull(JSONUtils.T_KEY)
+                            || item.isNull(JSONUtils.S_KEY)) {
+                        continue;
+                    }
+                    String emote_type = item.getString(JSONUtils.T_KEY);
+                    String emote_id = item.getString(JSONUtils.ID_KEY);
 
-                JSONObject s_key = item.getJSONObject(JSONUtils.S_KEY);
-                if (s_key.isNull(JSONUtils.U_KEY)) {
-                    continue;
-                }
-                String emote_url = s_key.getString(JSONUtils.U_KEY);
+                    JSONObject s_key = item.getJSONObject(JSONUtils.S_KEY);
+                    if (s_key.isNull(JSONUtils.U_KEY)) {
+                        continue;
+                    }
+                    String emote_url = s_key.getString(JSONUtils.U_KEY);
 
-                markdown = markdown.replace("![img](" + emote_id + ")", "[" + emote_type + "](" + emote_url + ") ");
+                    markdown = markdown.replace("![img](" + emote_id + ")", "[" + emote_type + "](" + emote_url + ") ");
+                }
             }
         }
         return markdown;

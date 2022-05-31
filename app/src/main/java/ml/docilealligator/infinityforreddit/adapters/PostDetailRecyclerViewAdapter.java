@@ -141,6 +141,7 @@ public class PostDetailRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
     private Retrofit mStreamableRetrofit;
     private RedditDataRoomDatabase mRedditDataRoomDatabase;
     private RequestManager mGlide;
+    private SaveMemoryCenterInisdeDownsampleStrategy mSaveMemoryCenterInsideDownSampleStrategy;
     private Markwon mPostDetailMarkwon;
     private final MarkwonAdapter mMarkwonAdapter;
     private String mAccessToken;
@@ -166,6 +167,7 @@ public class PostDetailRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
     private boolean mOnlyDisablePreviewInVideoAndGifPosts;
     private boolean mHidePostType;
     private boolean mHidePostFlair;
+    private boolean mHideUpvoteRatio;
     private boolean mHideTheNumberOfAwards;
     private boolean mHideSubredditAndUserPrefix;
     private boolean mHideTheNumberOfVotes;
@@ -232,6 +234,7 @@ public class PostDetailRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
         mStreamableRetrofit = streamableRetrofit;
         mRedditDataRoomDatabase = redditDataRoomDatabase;
         mGlide = glide;
+        mSaveMemoryCenterInsideDownSampleStrategy = new SaveMemoryCenterInisdeDownsampleStrategy(Integer.parseInt(sharedPreferences.getString(SharedPreferencesUtils.POST_FEED_MAX_RESOLUTION, "5000000")));
         mSecondaryTextColor = customThemeWrapper.getSecondaryTextColor();
         int markdownColor = customThemeWrapper.getPostContentColor();
         int postSpoilerBackgroundColor = markdownColor | 0xFF000000;
@@ -256,7 +259,7 @@ public class PostDetailRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
                     @Override
                     public void beforeSetText(@NonNull TextView textView, @NonNull Spanned markdown) {
                         if (mActivity.contentTypeface != null) {
-                            textView.setTypeface(mActivity.typeface);
+                            textView.setTypeface(mActivity.contentTypeface);
                         }
                         textView.setTextColor(markdownColor);
                         textView.setOnLongClickListener(view -> {
@@ -353,6 +356,7 @@ public class PostDetailRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
 
         mHidePostType = postDetailsSharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_POST_TYPE, false);
         mHidePostFlair = postDetailsSharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_POST_FLAIR, false);
+        mHideUpvoteRatio = postDetailsSharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_UPVOTE_RATIO, false);
         mHideTheNumberOfAwards = postDetailsSharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_THE_NUMBER_OF_AWARDS, false);
         mHideSubredditAndUserPrefix = postDetailsSharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_SUBREDDIT_AND_USER_PREFIX, false);
         mHideTheNumberOfVotes = postDetailsSharedPreferences.getBoolean(SharedPreferencesUtils.HIDE_THE_NUMBER_OF_VOTES, false);
@@ -417,10 +421,13 @@ public class PostDetailRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
             case Post.GIF_TYPE:
                 if (mAutoplay) {
                     if ((!mAutoplayNsfwVideos && mPost.isNSFW()) || mPost.isSpoiler()) {
-                        return VIEW_TYPE_POST_DETAIL_VIDEO_AND_GIF_PREVIEW;
+                        return VIEW_TYPE_POST_DETAIL_NO_PREVIEW_LINK;
                     }
                     return VIEW_TYPE_POST_DETAIL_GIF_AUTOPLAY;
                 } else {
+                    if ((mPost.isNSFW() && mNeedBlurNsfw && !(mDoNotBlurNsfwInNsfwSubreddits && mFragment != null && mFragment.getIsNsfwSubreddit())) || (mPost.isSpoiler() && mNeedBlurSpoiler)) {
+                        return VIEW_TYPE_POST_DETAIL_NO_PREVIEW_LINK;
+                    }
                     return VIEW_TYPE_POST_DETAIL_VIDEO_AND_GIF_PREVIEW;
                 }
             case Post.IMAGE_TYPE:
@@ -586,7 +593,7 @@ public class PostDetailRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
             }
 
             if (!mHideSubredditAndUserPrefix) {
-                ((PostDetailBaseViewHolder) holder).mSubredditTextView.setText(mPost.getSubredditNamePrefixed());
+                ((PostDetailBaseViewHolder) holder).mSubredditTextView.setText("r/" + mPost.getSubredditName());
                 ((PostDetailBaseViewHolder) holder).mUserTextView.setText(mPost.getAuthorNamePrefixed());
             } else {
                 ((PostDetailBaseViewHolder) holder).mSubredditTextView.setText(mPost.getSubredditName());
@@ -622,7 +629,11 @@ public class PostDetailRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
                 Utils.setHTMLWithImageToTextView(((PostDetailBaseViewHolder) holder).mAwardsTextView, mPost.getAwards(), true);
             }
 
-            ((PostDetailBaseViewHolder) holder).mUpvoteRatioTextView.setText(mPost.getUpvoteRatio() + "%");
+            if (mHideUpvoteRatio) {
+                ((PostDetailBaseViewHolder) holder).mUpvoteRatioTextView.setVisibility(View.GONE);
+            } else {
+                ((PostDetailBaseViewHolder) holder).mUpvoteRatioTextView.setText(mPost.getUpvoteRatio() + "%");
+            }
 
             if (mPost.isNSFW()) {
                 ((PostDetailBaseViewHolder) holder).mNSFWTextView.setVisibility(View.VISIBLE);
@@ -649,7 +660,7 @@ public class PostDetailRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
                 Post.Preview preview = getSuitablePreview(mPost.getPreviews());
                 if (preview != null) {
                     ((PostDetailVideoAutoplayViewHolder) holder).aspectRatioFrameLayout.setAspectRatio((float) preview.getPreviewWidth() / preview.getPreviewHeight());
-                    mGlide.load(preview.getPreviewUrl()).centerInside().downsample(new SaveMemoryCenterInisdeDownsampleStrategy()).into(((PostDetailVideoAutoplayViewHolder) holder).previewImageView);
+                    mGlide.load(preview.getPreviewUrl()).centerInside().downsample(mSaveMemoryCenterInsideDownSampleStrategy).into(((PostDetailVideoAutoplayViewHolder) holder).previewImageView);
                 } else {
                     ((PostDetailVideoAutoplayViewHolder) holder).aspectRatioFrameLayout.setAspectRatio(1);
                 }
@@ -910,7 +921,7 @@ public class PostDetailRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
             if (blurImage) {
                 imageRequestBuilder.apply(RequestOptions.bitmapTransform(new BlurTransformation(50, 10))).into(((PostDetailImageAndGifAutoplayViewHolder) holder).mImageView);
             } else {
-                imageRequestBuilder.centerInside().downsample(new SaveMemoryCenterInisdeDownsampleStrategy()).into(((PostDetailImageAndGifAutoplayViewHolder) holder).mImageView);
+                imageRequestBuilder.centerInside().downsample(mSaveMemoryCenterInsideDownSampleStrategy).into(((PostDetailImageAndGifAutoplayViewHolder) holder).mImageView);
             }
         } else if (holder instanceof PostDetailVideoAndGifPreviewHolder) {
             RequestBuilder<Drawable> imageRequestBuilder = mGlide.load(preview.getPreviewUrl())
@@ -938,7 +949,7 @@ public class PostDetailRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
                 imageRequestBuilder.apply(RequestOptions.bitmapTransform(new BlurTransformation(50, 10)))
                         .into(((PostDetailVideoAndGifPreviewHolder) holder).mImageView);
             } else {
-                imageRequestBuilder.centerInside().downsample(new SaveMemoryCenterInisdeDownsampleStrategy()).into(((PostDetailVideoAndGifPreviewHolder) holder).mImageView);
+                imageRequestBuilder.centerInside().downsample(mSaveMemoryCenterInsideDownSampleStrategy).into(((PostDetailVideoAndGifPreviewHolder) holder).mImageView);
             }
         } else if (holder instanceof PostDetailLinkViewHolder) {
             RequestBuilder<Drawable> imageRequestBuilder = mGlide.load(preview.getPreviewUrl())
@@ -966,7 +977,7 @@ public class PostDetailRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
                 imageRequestBuilder.apply(RequestOptions.bitmapTransform(new BlurTransformation(50, 10)))
                         .into(((PostDetailLinkViewHolder) holder).mImageView);
             } else {
-                imageRequestBuilder.centerInside().downsample(new SaveMemoryCenterInisdeDownsampleStrategy()).into(((PostDetailLinkViewHolder) holder).mImageView);
+                imageRequestBuilder.centerInside().downsample(mSaveMemoryCenterInsideDownSampleStrategy).into(((PostDetailLinkViewHolder) holder).mImageView);
             }
         } else if (holder instanceof PostDetailGalleryViewHolder) {
             RequestBuilder<Drawable> imageRequestBuilder = mGlide.load(preview.getPreviewUrl())
@@ -993,7 +1004,7 @@ public class PostDetailRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
             if ((mPost.isNSFW() && mNeedBlurNsfw && !(mDoNotBlurNsfwInNsfwSubreddits && mFragment != null && mFragment.getIsNsfwSubreddit()) && !(mPost.getPostType() == Post.GIF_TYPE && mAutoplayNsfwVideos)) || (mPost.isSpoiler() && mNeedBlurSpoiler)) {
                 imageRequestBuilder.apply(RequestOptions.bitmapTransform(new BlurTransformation(50, 10))).into(((PostDetailGalleryViewHolder) holder).mImageView);
             } else {
-                imageRequestBuilder.centerInside().downsample(new SaveMemoryCenterInisdeDownsampleStrategy()).into(((PostDetailGalleryViewHolder) holder).mImageView);
+                imageRequestBuilder.centerInside().downsample(mSaveMemoryCenterInsideDownSampleStrategy).into(((PostDetailGalleryViewHolder) holder).mImageView);
             }
         }
     }
@@ -1185,14 +1196,9 @@ public class PostDetailRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
 
             mSubredditTextView.setOnClickListener(view -> {
                 Intent intent;
-                if (mPost.getSubredditNamePrefixed().equals("u/" + mPost.getAuthor())) {
-                    intent = new Intent(mActivity, ViewUserDetailActivity.class);
-                    intent.putExtra(ViewUserDetailActivity.EXTRA_USER_NAME_KEY, mPost.getAuthor());
-                } else {
-                    intent = new Intent(mActivity, ViewSubredditDetailActivity.class);
-                    intent.putExtra(ViewSubredditDetailActivity.EXTRA_SUBREDDIT_NAME_KEY,
-                            mPost.getSubredditNamePrefixed().substring(2));
-                }
+                intent = new Intent(mActivity, ViewSubredditDetailActivity.class);
+                intent.putExtra(ViewSubredditDetailActivity.EXTRA_SUBREDDIT_NAME_KEY,
+                        mPost.getSubredditName());
                 mActivity.startActivity(intent);
             });
 
@@ -1719,8 +1725,12 @@ public class PostDetailRecyclerViewAdapter extends RecyclerView.Adapter<Recycler
                 }
             });
 
-            previewImageView.setOnLongClickListener(view -> fullscreenButton.performClick());
-            playerView.setOnLongClickListener(view -> fullscreenButton.performClick());
+            previewImageView.setOnClickListener(view -> fullscreenButton.performClick());
+            playerView.setOnClickListener(view -> {
+                if (playerView.isControllerVisible()) {
+                    fullscreenButton.performClick();
+                }
+            });
         }
 
         void bindVideoUri(Uri videoUri) {

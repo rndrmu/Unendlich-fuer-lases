@@ -99,6 +99,7 @@ import ml.docilealligator.infinityforreddit.asynctasks.CheckIsFollowingUser;
 import ml.docilealligator.infinityforreddit.asynctasks.SwitchAccount;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.CopyTextBottomSheetFragment;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.FABMoreOptionsBottomSheetFragment;
+import ml.docilealligator.infinityforreddit.bottomsheetfragments.KarmaInfoBottomSheetFragment;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.PostLayoutBottomSheetFragment;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.PostTypeBottomSheetFragment;
 import ml.docilealligator.infinityforreddit.bottomsheetfragments.RandomBottomSheetFragment;
@@ -599,6 +600,16 @@ public class ViewUserDetailActivity extends BaseActivity implements SortTypeSele
         userThingSortTypeBottomSheetFragment = new UserThingSortTypeBottomSheetFragment();
         sortTimeBottomSheetFragment = new SortTimeBottomSheetFragment();
         postLayoutBottomSheetFragment = new PostLayoutBottomSheetFragment();
+
+        karmaTextView.setOnClickListener(view -> {
+            UserData userData = userViewModel.getUserLiveData().getValue();
+            if (userData != null) {
+                KarmaInfoBottomSheetFragment karmaInfoBottomSheetFragment = KarmaInfoBottomSheetFragment.newInstance(
+                        userData.getLinkKarma(), userData.getCommentKarma(), userData.getAwarderKarma(), userData.getAwardeeKarma()
+                );
+                karmaInfoBottomSheetFragment.show(getSupportFragmentManager(), karmaInfoBottomSheetFragment.getTag());
+            }
+        });
     }
 
     @Override
@@ -887,8 +898,6 @@ public class ViewUserDetailActivity extends BaseActivity implements SortTypeSele
             fabMoreOptionsBottomSheetFragment.show(getSupportFragmentManager(), fabMoreOptionsBottomSheetFragment.getTag());
             return true;
         });
-
-        fab.setVisibility(View.VISIBLE);
     }
 
     private void bottomAppBarOptionAction(int option) {
@@ -1570,6 +1579,10 @@ public class ViewUserDetailActivity extends BaseActivity implements SortTypeSele
             case PostTypeBottomSheetFragment.TYPE_GALLERY:
                 intent = new Intent(this, PostGalleryActivity.class);
                 startActivity(intent);
+                break;
+            case PostTypeBottomSheetFragment.TYPE_POLL:
+                intent = new Intent(this, PostPollActivity.class);
+                startActivity(intent);
         }
     }
 
@@ -1751,13 +1764,13 @@ public class ViewUserDetailActivity extends BaseActivity implements SortTypeSele
         }
     }
 
-    private void lockSwipeRightToGoBack() {
+    public void lockSwipeRightToGoBack() {
         if (mSlidrInterface != null) {
             mSlidrInterface.lock();
         }
     }
 
-    private void unlockSwipeRightToGoBack() {
+    public void unlockSwipeRightToGoBack() {
         if (mSlidrInterface != null) {
             mSlidrInterface.unlock();
         }
